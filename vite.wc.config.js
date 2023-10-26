@@ -15,7 +15,7 @@ export default defineConfig({
 		sourcemap: true,
 		target: "modules",
 		lib: {
-		  entry: "./src/components/index.ts",
+		  entry: "./src/components/index.js",
 		  name: "<<name>>",
 		  fileName: "components",
 		},
