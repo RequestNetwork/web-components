@@ -1,5 +1,5 @@
 <script>
-    import { AddStakeholder } from '$components'
+    import AddStakeholder from "../components/add-stakeholder.svelte";
 
     let rf = {
         show: false,
@@ -34,7 +34,7 @@
     </div>
 </div>
 {#if rf.show}
-<AddStakeholder
-    builderKey={rf.builderKey}
-    webhookUrl={rf.webhookURL}/>
+    <AddStakeholder
+        builderKey={rf.builderKey}
+        webhookUrl={rf.webhookURL}/>
 {/if}

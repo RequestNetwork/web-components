@@ -1,38 +1,49 @@
-# create-svelte
+# Request Network Web Components
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+## Introduction
 
-## Creating a project
+This repo contains a collection of [Web Components](https://opensource.com/article/21/7/web-components) which you can quickly embed in other projects and leverage the feature they provide.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Usage
 
+Node
 ```bash
-# create a new project in the current directory
-npm create svelte@latest
+# import the library for build time development
+npm i @requestnetwork/web-components
+```
 
-# create a new project in my-app
-npm create svelte@latest my-app
+Browser
+```html
+<script src="://unpkg/https://unpkg.com/@requestnetwork/web-components/<web-component>/dist/main.umd.js"></script>
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Clone the repo & install
+```bash
+npm i
+```
 
+Enter the desired component
+```bash
+cd <component>
+```
+
+Run the dev server
 ```bash
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Each web component directory contains a ./src/components folder with one or more component files.
 
-To create a production version of your app:
+These are imported into the local ./src/routes/+page.svelte for development purposes.
 
+You can then build the components via
 ```bash
-npm run build
+npm run build:wc
 ```
 
-You can preview the production build with `npm run preview`.
+This produces a single JS distribution in both UMD and ESM format.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+## Mocking Web Component Usage
+The ./index.html allows you quickly test the inclusion of any web component via relative import.
