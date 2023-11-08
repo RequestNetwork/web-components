@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repo contains a collection of [Web Components](https://opensource.com/article/21/7/web-components) which you can quickly embed in other projects and leverage the feature they provide.
+This repo contains a collection of [Web Components](https://opensource.com/article/21/7/web-components) which you can quickly embed in other projects and leverage the features they provide.
 
 ## Usage
 
@@ -14,19 +14,21 @@ npm i @requestnetwork/web-components
 
 Browser
 ```html
-<script src="://unpkg/https://unpkg.com/@requestnetwork/web-components/<web-component>/dist/main.umd.js"></script>
+<script
+    src="//unpkg/https://unpkg.com/@requestnetwork/web-components/<web-component>/dist/components.umd.js">
+</script>
 ```
 
 ## Developing
 
-Clone the repo & install
-```bash
-npm i
-```
-
 Enter the desired component
 ```bash
 cd <component>
+```
+
+Install dependencies
+```bash
+npm i
 ```
 
 Run the dev server
@@ -46,4 +48,5 @@ npm run build:wc
 This produces a single JS distribution in both UMD and ESM format.
 
 ## Mocking Web Component Usage
-The ./index.html allows you quickly test the inclusion of any web component via relative import.
+
+The root index.html allows you quickly test the inclusion of any web component via relative import.
