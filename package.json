@@ -1,10 +1,16 @@
 {
   "name": "@requestnetwork/web-components",
   "version": "1.0.0",
+  "private": true,
   "description": "Request Network Web Components",
   "main": "index.js",
+  "workspaces": {
+    "packages": ["./packages/*"],
+    "nohoist": ["**"]
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf packages/**/node_modules"
   },
   "author": "",
   "license": "ISC"
