@@ -1,1 +1,4 @@
-// place files you want to import through the `$lib` alias in this folder.
+// Reexport your entry components here
+
+export { default as AddStakeholder } from './add-stakeholder.svelte'
+

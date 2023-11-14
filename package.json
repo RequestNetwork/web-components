@@ -13,5 +13,5 @@
     "clean": "rm -rf packages/**/node_modules"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }

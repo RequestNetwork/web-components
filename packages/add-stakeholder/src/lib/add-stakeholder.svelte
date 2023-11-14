@@ -10,15 +10,18 @@
         left = 100,
         top = 100
 
-    function popup() {
-        let url = [
+    function getURL() {
+        return [
             `http://app.request.finance/add-stakeholder`,
             [
                 `stakeholder-public-key=${builderKey}`,
                 `webhook-url=${webhookUrl}`
             ].join(`&`)
         ].join(`?`)
+    }
 
+    function popup() {
+        let url = getURL()
         let features = [
             `popup`,
             { width },
@@ -38,7 +41,6 @@
     }
 
     onMount(() => {
-        console.log(`hi`)
         popup()
     })
 </script>

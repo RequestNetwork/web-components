@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
 	plugins: [
 		svelte({
-			include: ["./src/components/*.svelte"],
+			include: ["./src/lib/*.svelte"],
 		  	compilerOptions: {
 				customElement: true,
 		  	},
@@ -12,12 +12,13 @@ export default defineConfig({
 		}),
 	],
 	build: {
+		emptyOutDir: false,
 		sourcemap: true,
 		target: "modules",
 		lib: {
-			entry: "./src/components/index.js",
+			entry: "./src/lib/index.js",
 			name: "<<name>>",
-			fileName: "components"
+			fileName: "web-component"
 		}
 	}
 })
