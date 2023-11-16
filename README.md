@@ -20,3 +20,7 @@ cd packages/<component>
 ```
 
 Further details specific to the component can be found in the relevant pacakges/<component>/README.md
+
+## NPM Workspaces
+
+For more info about workinng with NPM workspaces see: https://docs.npmjs.com/cli/v8/using-npm/workspaces
