@@ -14,7 +14,7 @@ See packages/*
 ```bash
 git clone https://github.com/RequestNetwork/web-components.git
 
-yarn # required to monorepo workspaces
+npm install
 
 cd packages/<component>
 ```

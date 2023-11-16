@@ -55,7 +55,7 @@ git clone https://github.com/RequestNetwork/web-components.git
 
 cd packages/add-stakeholder
 
-yarn # required due to monorepo workspaces
+npm install
 ```
 
 Run the dev server
@@ -69,7 +69,7 @@ This file is imported into the local ./src/routes/+page.svelte for development p
 
 You can build the packakge via
 ```bash
-npm run build 
+npm run build
 ```
 
 The build process creates the native svelte component and web-component (in ESM & UMD) files to ./dist.
