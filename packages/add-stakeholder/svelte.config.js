@@ -15,9 +15,6 @@ const config = {
 	compilerOptions: {
 		customElement: true
 	},
-	alias: {
-
-	}
 };
 
 export default config;
