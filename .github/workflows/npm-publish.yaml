@@ -3,23 +3,16 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+  
 jobs:
   npm-publish:
     name: npm-publish
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Publish if version has been updated
-      uses: wtrocki/npm-publish-monorepo-action@2.0.0
-      with: 
-        workspace: "./packages"
-        versionFrom: "."
-        tag_name: "v%s"
-        tag_message: "v%s"
-        create_tag: "true"
-        commit_pattern: "^chore: Release (\\S+)"
-        publish_args: "--non-interactive --dry-run"
-      env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        NPM_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
+      uses: actions/checkout@v4
+    - name: Publish
+      run: yarn workspaces foreach --all -pt --since npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
