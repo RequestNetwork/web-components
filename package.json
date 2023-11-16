@@ -7,7 +7,7 @@
   "workspaces": ["./packages/*"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -rf packages/**/node_modules"
+    "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;"
   },
   "author": "",
   "license": "MIT",
