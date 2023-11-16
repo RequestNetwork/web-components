@@ -44,7 +44,6 @@
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"type": "module",
-	"dependencies": {},
 	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
