@@ -39,12 +39,12 @@ Browser
 <!-- render the web component -->
 <add-stakeholder
     builderKey="..."
-    webookUrl="..."/>
+    webhookUrl="..."/>
 
 <!-- render the svelte component -->
 <AddStakeholder
     builderKey="..."
-    webookUrl="..."/>
+    webhookUrl="..."/>
 ```
 
 ## Developing
