@@ -28,7 +28,7 @@ Node
 ```javascript
 import { AddStakeholder } from '@requestnetwork/add-stakeholder' // static import of the svelte component
 
-import('@requestnetwork/add-stakeholder') // dynamic import of web component via the parent on render
+import('@requestnetwork/add-stakeholder') // dynamic import of web component on render
 ```
 
 Browser

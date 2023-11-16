@@ -21,4 +21,4 @@ cd packages/<component>
 yarn dev
 ```
 
-Further details specific to the component can be found in it's README.md
+Further details specific to the component can be found in the relevant pacakges/<component>/README.md
