@@ -11,7 +11,8 @@
 		"prepublishOnly": "npm run package",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"clean": "rm -rf dist && rm -rf .svelte-kit"
+		"clean": "rm -rf dist && rm -rf .svelte-kit",
+		"is-release-needed": "../scripts/is-release-needed.sh"
 	},
 	"exports": {
 		".": {
