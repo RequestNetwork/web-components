@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script checks if a new release is needed.
+# This script checks if the current version of the package is already published on npm
 PACKAGE_VERSION="$(node -p -e "require('./package.json').version")"
 PACKAGE_NAME="$(node -p -e "require('./package.json').name")"
 
