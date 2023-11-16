@@ -1,0 +1,15 @@
+name: npm-publish
+on:
+  workflow_dispatch:
+
+jobs:
+  npm-publish:
+    name: npm-publish
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Publish
+      run: yarn workspaces foreach --all -pt --since npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}

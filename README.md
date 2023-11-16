@@ -6,47 +6,19 @@ This repo contains a collection of [Web Components](https://opensource.com/artic
 
 ## Usage
 
-Node
-```bash
-# import the library for build time development
-npm i @requestnetwork/web-components
-```
+See packages/*
 
-Browser
-```html
-<script
-    src="//unpkg/https://unpkg.com/@requestnetwork/web-components/<web-component>/dist/components.umd.js">
-</script>
-```
 
 ## Developing
 
-Enter the desired component
 ```bash
-cd <component>
+git clone https://github.com/RequestNetwork/web-components.git
+
+yarn # required to monorepo workspaces
+
+cd packages/<component>
+
+yarn dev
 ```
 
-Install dependencies
-```bash
-npm i
-```
-
-Run the dev server
-```bash
-npm run dev
-```
-
-Each web component directory contains a ./src/components folder with one or more component files.
-
-These are imported into the local ./src/routes/+page.svelte for development purposes.
-
-You can then build the components via
-```bash
-npm run build:wc
-```
-
-This produces a single JS distribution in both UMD and ESM format.
-
-## Mocking Web Component Usage
-
-The root index.html allows you quickly test the inclusion of any web component via relative import.
+Further details specific to the component can be found in the relevant pacakges/<component>/README.md
