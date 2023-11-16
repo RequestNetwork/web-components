@@ -17,8 +17,6 @@ git clone https://github.com/RequestNetwork/web-components.git
 yarn # required to monorepo workspaces
 
 cd packages/<component>
-
-yarn dev
 ```
 
 Further details specific to the component can be found in the relevant pacakges/<component>/README.md
