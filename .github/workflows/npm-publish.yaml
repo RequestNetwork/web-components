@@ -7,8 +7,16 @@ jobs:
     name: npm-publish
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm ci
-    - run: npm publish --workspaces --dry-run
+    - name: Checkout repository 🛎️
+      uses: actions/checkout@v4
+    - name: Setup .npmrc file to publish to npm 📝
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+    - name: Install dependencies 📥
+      run: npm ci
+    - name: Publish package on NPM 📦
+      run: npm publish --workspaces --dry-run
       env:
         NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
