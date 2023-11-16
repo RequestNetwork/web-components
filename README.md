@@ -29,4 +29,16 @@ npm run deep-clean
 
 ## NPM Workspaces
 
+Run a command in the context of all workspaces. Ignore workspaces missing target script.
+
+```bash
+npm run test --workspaces --if-present
+```
+
+Run a command in the context of specific workspaces.
+
+```bash
+npm run test --workspace=add-stakeholder --workspace=other
+```
+
 For more info about workinng with NPM workspaces see: https://docs.npmjs.com/cli/v8/using-npm/workspaces
