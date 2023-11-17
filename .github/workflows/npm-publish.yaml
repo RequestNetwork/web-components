@@ -1,4 +1,5 @@
-name: npm-publish
+name: release-if-necessary
+
 on:
   push:
     branches:
@@ -6,12 +7,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  npm-publish:
-    name: npm-publish
+  release-if-necessary:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - "@requestnetwork/add-stakeholder"
     steps:
     - name: Checkout repository 🛎️
       uses: actions/checkout@v4
+    - name: Check if version number has changed 🕵️‍♀️
+      id: is_release_needed
+      run: npm run is-release-needed --workspace=${{ matrix.package }} >> $GITHUB_OUTPUT
     - name: Setup .npmrc file to publish to npm 📝
       uses: actions/setup-node@v3
       with:
@@ -20,6 +27,7 @@ jobs:
     - name: Install dependencies 📥
       run: npm ci
     - name: Publish package on NPM 📦
-      run: npm publish --workspaces
+      if: ${{ steps.is_release_needed.outputs.is_release_needed == 'true' }}
+      run: npm publish --workspace=${{ matrix.package }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
