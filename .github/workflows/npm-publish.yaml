@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout repository 🛎️
       uses: actions/checkout@v4
-    - name: Check if version number has changed 🕵️‍♀️
+    - name: Check if version number has already been released 🕵️‍♀️
       id: is_release_needed
       run: npm run is-release-needed --workspace=${{ matrix.package }} --silent >> $GITHUB_OUTPUT
     - name: Setup .npmrc file to publish to npm 📝
