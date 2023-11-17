@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Check if version number has changed 🕵️‍♀️
       id: is_release_needed
-      run: npm run is-release-needed --workspace=${{ matrix.package }} >> $GITHUB_OUTPUT
+      run: npm run is-release-needed --workspace=${{ matrix.package }} --silent >> $GITHUB_OUTPUT
     - name: Setup .npmrc file to publish to npm 📝
       uses: actions/setup-node@v3
       with:
