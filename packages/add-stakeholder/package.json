@@ -18,6 +18,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"svelte": "./dist/index.js"
+		},
+		"./dist": {
+			"require": "./dist/web-component.umd.cjs",
+			"default": "./dist/web-component.js"
 		}
 	},
 	"files": [
