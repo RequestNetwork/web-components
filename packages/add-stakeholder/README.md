@@ -6,45 +6,50 @@ This package provides the Request Network Add Stakeholder html module, which all
 
 It exports a native [Svelte](https://svelte.dev/) component as well as a [Web Component](https://opensource.com/article/21/7/web-components) allowing for integration into any web page / application, regardless of implementation or framework.
 
-## Installation
-
-Node
-```bash
-# import the library for build time development
-npm i @requestnetwork/add-stakeholder
-```
-
-Browser
-```html
-<!-- Import directly in the browser from CDN -->
-<script
-    src="//unpkg.com/@requestnetwork/add-stakeholder">
-</script>
-```
-
 ## Usage
 
-Node
-```javascript
-import { AddStakeholder } from '@requestnetwork/add-stakeholder' // static import of the svelte component
+### Svelte
 
-import('@requestnetwork/add-stakeholder') // dynamic import of web component on render
+As a native svelte component
+
+```javascript
+import { AddStakeholder } from '@requestnetwork/add-stakeholder'
 ```
 
-Browser
 ```html
-<!-- import directly in the browser via local install -->
+<AddStakeholder builderKey="..." webhookUrl=".."/> 
+```
+
+As a web component
+
+```javascript
+import '@requestnetwork/add-stakeholder'
+```
+
+```html
+<add-stakeholder builderKey="..." webhookUrl="..."/>
+```
+
+### React
+
+```javascript
+import '@requestnetwork/add-stakeholder'
+
+export default function App() {
+    return (
+        <add-stakeholder builderKey="..." webhookUrl="..."/>
+    )
+}
+```
+
+### Browser
+
+```html
 <script src="./node_modules/add-stakeholder/dist/web-component.umd.cjs" defer></script>
+<!-- or -->
+<script src="//unpkg.com/@requestnetwork/add-stakeholder" defer></script>
 
-<!-- render the web component -->
-<add-stakeholder
-    builderKey="..."
-    webhookUrl="..."/>
-
-<!-- render the svelte component -->
-<AddStakeholder
-    builderKey="..."
-    webhookUrl="..."/>
+<add-stakeholder builderKey="..." webhookUrl="..."/>
 ```
 
 ## Developing
