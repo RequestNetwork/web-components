@@ -17,7 +17,7 @@ jobs:
     - name: Checkout repository 🛎️
       uses: actions/checkout@v4
     - name: Check if version number has already been released 🕵️‍♀️
-      id: is_release_needed
+      id: is-release-needed
       run: npm run is-release-needed --workspace=${{ matrix.package }} --silent >> $GITHUB_OUTPUT
     - name: Setup .npmrc file to publish to npm 📝
       uses: actions/setup-node@v3
@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies 📥
       run: npm ci
     - name: Publish package on NPM 📦
-      if: ${{ steps.is_release_needed.outputs.is_release_needed == 'true' }}
+      if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
       run: npm publish --workspace=${{ matrix.package }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
