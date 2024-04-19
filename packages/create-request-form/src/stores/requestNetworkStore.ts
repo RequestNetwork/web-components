@@ -1,23 +1,17 @@
-import { sepolia } from "viem/chains";
-import { createWalletClient, custom } from "viem";
 import { writable, type Writable } from "svelte/store";
 import { RequestNetwork } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 
 export const requestNetworkStore: Writable<{
-  requestNetwork: RequestNetwork;
+  requestNetwork: RequestNetwork | null;
   signer: string;
 } | null> = writable(null);
 
-export async function initializeRequestNetwork(): Promise<void> {
+export const initializeRequestNetwork = async (
+  walletClient: any,
+  signer: string
+): Promise<void> => {
   try {
-    const walletClient = createWalletClient({
-      chain: sepolia,
-      transport: custom(window.ethereum!),
-    });
-
-    const [account] = await walletClient.requestAddresses();
-
     const web3SignatureProvider = new Web3SignatureProvider(walletClient);
 
     const requestNetwork = new RequestNetwork({
@@ -29,11 +23,11 @@ export async function initializeRequestNetwork(): Promise<void> {
 
     requestNetworkStore.set({
       requestNetwork,
-      signer: account,
+      signer,
     });
-    console.log("Request Network initialized successfully with Viem.");
+    console.log("Request Network initialized successfully.");
   } catch (error) {
-    console.error("Failed to initialize the Request Network with Viem:", error);
+    console.error("Failed to initialize the Request Network:", error);
     requestNetworkStore.set(null);
   }
-}
+};

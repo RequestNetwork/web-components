@@ -1,11 +1,13 @@
 <script>
-    import 'bootstrap/dist/css/bootstrap.css'
+  import { Navbar } from "$lib/ui";
+  import "../app.css";
 </script>
 
-<style>
-    :global(body) {
-        background-color: rgb(0, 0, 0, 0.05);
-    }
-</style>
+<Navbar />
+<slot />
 
-<slot/>
+<style>
+  :global(body) {
+    background-color: #fafafa;
+  }
+</style>

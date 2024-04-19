@@ -10,6 +10,8 @@
     "sourceMap": true,
     "strict": true,
     "module": "ESNext",
-    "moduleResolution": "Node"
-  }
+    "moduleResolution": "Node",
+    "typeRoots": ["./src/types", "./node_modules/@types"]
+  },
+  "include": ["src/**/*", "src/*.d.ts"]
 }
