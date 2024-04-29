@@ -1,14 +1,17 @@
 <script lang="ts">
   import { parseUnits, zeroAddress } from "viem";
   import { Types, Utils } from "@requestnetwork/request-client.js";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Status } from "./ui";
-  import { currencies } from "$utils";
+  import { calculateInvoiceTotals, currencies } from "$utils";
   import { APP_STATUS } from "$src/types/enums";
   import { InvoiceForm, InvoiceView } from "./invoice";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export const config: any = {
     logo: "assets/logo-sm.svg",
+    color: {
+      main: "#1E3A8A",
+    },
   };
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
@@ -16,11 +19,15 @@
   let appStatus: APP_STATUS[] = [];
   let currency = currencies.keys().next().value;
   let formData: CustomFormData = {
-    amount: "",
+    creatorId: "",
+    note: "",
+    invoiceNumber: 1,
     payerAddress: "",
     payeeAddress: "",
     paymentReason: "",
     dueDate: "",
+    issuedOn: new Date().toString(),
+    miscellaneous: "",
     items: [
       {
         description: "",
@@ -28,19 +35,19 @@
         unitPrice: 0,
         discount: 0,
         tax: 0,
-        amount: "",
       },
     ],
   };
 
-  let amountWithoutTax = 0;
-  let totalTaxAmount = 0;
-  let totalAmount = 0;
+  let invoiceTotals = {
+    amountWithoutTax: 0,
+    totalTaxAmount: 0,
+    totalAmount: 0,
+  };
 
   $: {
-    amountWithoutTax = calculateAmountWithoutTax();
-    totalTaxAmount = calculateTotalTaxAmount();
-    totalAmount = calculateTotalAmount();
+    formData.creatorId = signer;
+    invoiceTotals = calculateInvoiceTotals(formData.items);
   }
 
   const handleInput = (event: Event, itemIndex?: number) => {
@@ -96,12 +103,12 @@
           network: currencies.get(currency)!.network,
         },
         expectedAmount: parseUnits(
-          formData.amount,
+          invoiceTotals.totalAmount.toFixed(2),
           currencies.get(currency)!.decimals
         ).toString(),
         payee: {
           type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-          value: formData.payeeAddress,
+          value: formData.creatorId,
         },
         payer: {
           type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -119,8 +126,29 @@
         },
       },
       contentData: {
-        reason: formData.paymentReason,
-        dueDate: formData.dueDate,
+        meta: {
+          format: {
+            const: "rnf_invoice",
+          },
+          version: {
+            const: "0.0.3",
+          },
+        },
+        miscellaneous: formData.miscellaneous,
+        creationDate: formData.issuedOn,
+        invoiceNumber: formData.invoiceNumber,
+        note: formData.note,
+        invoiceItems: formData.items.map((item) => ({
+          name: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount,
+          tax: item.tax,
+          currency: currencies.get(currency)!.value,
+        })),
+        paymentTerms: {
+          dueDate: formData.dueDate,
+        },
       },
       signer: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -146,25 +174,9 @@
       }
     }
   };
-
-  function calculateAmountWithoutTax(): number {
-    return formData.items.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity,
-      0
-    );
-  }
-
-  function calculateTotalTaxAmount(): number {
-    const taxRate = 0.05; // 5% tax rate
-    return amountWithoutTax * taxRate;
-  }
-
-  function calculateTotalAmount(): number {
-    return amountWithoutTax + totalTaxAmount;
-  }
 </script>
 
-<div class="flex flex-col gap-[20px] container m-auto w-full">
+<div class="flex flex-col gap-[20px]">
   <div class="flex gap-[20px] w-full">
     <InvoiceForm
       {currency}
@@ -180,10 +192,8 @@
         {requestNetwork}
         {formData}
         {currency}
+        {invoiceTotals}
         {submitForm}
-        {amountWithoutTax}
-        {totalTaxAmount}
-        {totalAmount}
       />
       <Status statuses={appStatus} />
     </div>

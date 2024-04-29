@@ -2,6 +2,8 @@
   import type { HTMLButtonAttributes } from "svelte/elements";
 
   export let text = "";
+  export let color = "bg-green";
+  export let padding = "px-[28px] py-[8px]";
   export let onClick: any;
   export let disabled = false;
   export let className = "";
@@ -16,7 +18,7 @@
   {type}
   on:click={onClick}
   {disabled}
-  class={`flex items-center gap-[10px] disabled:cursor-not-allowed disabled:bg-grey disabled:text-dark-grey bg-green text-white px-[28px] py-[8px] rounded-[6px] hover:bg-dark-green transition-all text-[14px] ${className}`}
+  class={`flex items-center gap-[10px] disabled:cursor-not-allowed disabled:bg-grey disabled:text-dark-grey text-white rounded-[6px] hover:bg-dark-green transition-all text-[14px] ${className} ${color} ${padding}`}
 >
   {#if icon}
     <i class={icon.class} style={icon.style}></i>

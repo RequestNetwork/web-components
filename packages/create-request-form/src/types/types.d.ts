@@ -4,14 +4,17 @@ interface InvoiceItem {
   unitPrice: number;
   discount: number;
   tax: number;
-  amount: string;
 }
 
 interface CustomFormData {
-  amount: string;
+  creatorId: string;
+  note: string;
+  miscellaneous: unknown;
+  invoiceNumber: number;
   payerAddress: string;
   payeeAddress: string;
   paymentReason: string;
   dueDate: string;
+  issuedOn: string;
   items: InvoiceItem[];
 }

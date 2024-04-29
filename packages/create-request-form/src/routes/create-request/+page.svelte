@@ -3,7 +3,9 @@
   import { requestNetworkStore } from "$stores/requestNetworkStore";
 </script>
 
-<CreateInvoiceForm
-  requestNetwork={$requestNetworkStore?.requestNetwork}
-  signer={$requestNetworkStore?.signer}
-/>
+<div class="container m-auto w-full">
+  <CreateInvoiceForm
+    signer={$requestNetworkStore?.signer}
+    requestNetwork={$requestNetworkStore?.requestNetwork}
+  />
+</div>

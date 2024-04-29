@@ -55,6 +55,9 @@ let walletBalance: string;
 
 export const connectWallet = async () => {
   const wallets = await onboard.connectWallet();
+  await onboard.setChain({
+    chainId: "0xaa36a7",
+  });
   const [wallet] = wallets;
   if (wallet) {
     connectedWallet = wallet;

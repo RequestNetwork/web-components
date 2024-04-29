@@ -1,3 +1,4 @@
+export { default as Copy } from "./copy.svelte";
 export { default as Input } from "./input.svelte";
 export { default as Button } from "./button.svelte";
 export { default as Navbar } from "./navbar.svelte";

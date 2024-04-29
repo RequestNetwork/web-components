@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { connectWallet } from "$utils/connectWallet";
+  import { connectWallet, formatAddress } from "$utils";
   import { requestNetworkStore } from "$stores/requestNetworkStore";
   import Button from "./button.svelte";
 
@@ -19,18 +19,6 @@
       href: "/create-request",
     },
   ];
-
-  const formatWalletAddress = (
-    address: string,
-    first: number = 6,
-    last: number = 4
-  ): string => {
-    if (address.length < first + last) {
-      throw new Error("Address too short to format properly.");
-    }
-
-    return `${address.slice(0, first)}...${address.slice(-last)}`;
-  };
 </script>
 
 <nav
@@ -54,7 +42,7 @@
     {/each}
   </ul>
   <Button
-    text={signer ? formatWalletAddress(signer) : "Connect Wallet"}
+    text={signer ? formatAddress(signer) : "Connect Wallet"}
     onClick={connectWallet}
     className="ml-auto"
   />
