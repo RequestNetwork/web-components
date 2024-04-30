@@ -1,5 +1,5 @@
 <script>
-  import { Navbar } from "$lib/ui";
+  import { Navbar } from "@requestnetwork/shared";
   import "../app.css";
 </script>
 

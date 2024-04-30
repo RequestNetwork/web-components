@@ -5,11 +5,8 @@
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
   import { formatUnits } from "viem";
-  import Skeleton from "./ui/skeleton.svelte";
-  import Dropdown from "./ui/dropdown.svelte";
-  import Input from "./ui/input.svelte";
+  import { Copy, Input, Dropdown } from "@requestnetwork/shared";
   import { onMount } from "svelte";
-  import Copy from "./ui/copy.svelte";
 
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
@@ -64,7 +61,6 @@
   }
 
   $: {
-    console.log(sortColumn, sortOrder);
     if (sortColumn && sortOrder) {
       requests = [...requests].sort((a, b) => {
         // Accessing nested properties

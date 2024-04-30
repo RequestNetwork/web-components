@@ -1,13 +1,14 @@
 <script lang="ts">
   import { parseUnits, zeroAddress } from "viem";
   import { Types, Utils } from "@requestnetwork/request-client.js";
-  import { Status } from "./ui";
+  import { APP_STATUS, Button, Status } from "@requestnetwork/shared";
   import { calculateInvoiceTotals, currencies } from "$utils";
-  import { APP_STATUS } from "$src/types/enums";
   import { InvoiceForm, InvoiceView } from "./invoice";
+  import { Modal } from "@requestnetwork/shared";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export const config: any = {
+    dashboardLink: "/",
     logo: "assets/logo-sm.svg",
     color: {
       main: "#1E3A8A",
@@ -37,6 +38,20 @@
         tax: 0,
       },
     ],
+    sellerInfo: {
+      firstName: "",
+      lastName: "",
+      address: "",
+      businessName: "",
+      taxRegistration: "",
+    },
+    buyerInfo: {
+      firstName: "",
+      lastName: "",
+      address: "",
+      businessName: "",
+      taxRegistration: "",
+    },
   };
 
   let invoiceTotals = {
@@ -90,6 +105,49 @@
 
   const removeAllStatuses = () => {
     appStatus = [];
+  };
+
+  const handleGoToDashboard = (dashboardLink: string) => {
+    removeAllStatuses();
+    window.location.href = dashboardLink;
+  };
+
+  const hanldeCreateNewRequest = () => {
+    removeAllStatuses();
+    formData = {
+      creatorId: "",
+      note: "",
+      invoiceNumber: 1,
+      payerAddress: "",
+      payeeAddress: "",
+      paymentReason: "",
+      dueDate: "",
+      issuedOn: new Date().toString(),
+      miscellaneous: "",
+      items: [
+        {
+          description: "",
+          quantity: 1,
+          unitPrice: 0,
+          discount: 0,
+          tax: 0,
+        },
+      ],
+      sellerInfo: {
+        firstName: "",
+        lastName: "",
+        address: "",
+        businessName: "",
+        taxRegistration: "",
+      },
+      buyerInfo: {
+        firstName: "",
+        lastName: "",
+        address: "",
+        businessName: "",
+        taxRegistration: "",
+      },
+    };
   };
 
   const submitForm = async (e: Event) => {
@@ -149,6 +207,8 @@
         paymentTerms: {
           dueDate: formData.dueDate,
         },
+        buyerInfo: formData.buyerInfo,
+        sellerInfo: formData.sellerInfo,
       },
       signer: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -195,7 +255,23 @@
         {invoiceTotals}
         {submitForm}
       />
-      <Status statuses={appStatus} />
     </div>
   </div>
+  <Modal title="Creating the invoice" isOpen={appStatus.length > 0}>
+    <Status statuses={appStatus} />
+    <div class="flex justify-between mt-[20px]">
+      <Button
+        type="button"
+        onClick={() => handleGoToDashboard(config.dashboardLink)}
+        text="Go to dashboard"
+        disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
+      />
+      <Button
+        type="button"
+        onClick={hanldeCreateNewRequest}
+        text="Create a new request"
+        disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
+      />
+    </div>
+  </Modal>
 </div>

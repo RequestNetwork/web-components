@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx,html,svelte}",
-    "../shared/src/**/*.{js,jsx,ts,tsx,html,svelte}",
-  ],
+  content: ["./src/**/*.{svelte,html,js,ts}"],
   theme: {
     extend: {
       boxShadow: {
@@ -12,7 +9,6 @@ export default {
       colors: {
         grey: "#E4E4E4",
         green: "#0BB489",
-        "light-green": "#57E1A5",
         "dark-grey": "#5A5A5A",
         "dark-blue": "#050B20",
         "dark-green": "#328965",

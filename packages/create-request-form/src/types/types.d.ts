@@ -17,4 +17,14 @@ interface CustomFormData {
   dueDate: string;
   issuedOn: string;
   items: InvoiceItem[];
+  buyerInfo?: SellerBuyerInfo;
+  sellerInfo?: SellerBuyerInfo;
+}
+
+interface SellerBuyerInfo {
+  firstName: string;
+  lastName: string;
+  businessName: string;
+  taxRegistration: string;
+  address: string;
 }

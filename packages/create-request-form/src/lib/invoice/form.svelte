@@ -1,7 +1,7 @@
 <script lang="ts">
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
   import { inputDateFormat } from "$src/utils/formatDate";
-  import { Input, Button, Dropdown } from "../ui";
+  import { Input, Button, Dropdown, Accordion } from "@requestnetwork/shared";
 
   export const invoiceNumber: number = 1;
   let creatorId = "";
@@ -20,6 +20,15 @@
     const baseWidth = 20;
     const width = Math.max(value.length, baseWidth) * 7.6;
     return `${width}px;`;
+  };
+
+  const handleAdditionalInfo = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const { id, value } = target;
+    const fieldType = id.split("-")[0];
+    const fieldName = id.split("-")[1];
+
+    formData[fieldType][fieldName] = value;
   };
 </script>
 
@@ -66,6 +75,45 @@
         placeholder="From"
         {handleInput}
       />
+      <Accordion title="Add Seller Info" icon="fa-plus">
+        <div class="grid grid-cols-2 grid-rows-2 gap-4">
+          <Input
+            id="sellerInfo-firstName"
+            type="text"
+            value={formData.sellerInfo?.firstName}
+            placeholder="Seller First Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="sellerInfo-lastName"
+            type="text"
+            value={formData.sellerInfo?.lastName}
+            placeholder="Seller Last Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="sellerInfo-businessName"
+            type="text"
+            value={formData.sellerInfo?.businessName}
+            placeholder="Company Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="sellerInfo-taxRegistration"
+            type="text"
+            value={formData.sellerInfo?.taxRegistration}
+            placeholder="Tax Registration"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="sellerInfo-address"
+            type="text"
+            value={formData.sellerInfo?.address}
+            placeholder="Address"
+            handleInput={handleAdditionalInfo}
+          />
+        </div>
+      </Accordion>
       <Input
         id="payerAddress"
         type="text"
@@ -73,6 +121,45 @@
         placeholder="Recipient"
         {handleInput}
       />
+      <Accordion title="Add Buyer Info" icon="fa-plus">
+        <div class="grid grid-cols-2 grid-rows-2 gap-4">
+          <Input
+            id="buyerInfo-firstName"
+            type="text"
+            value={formData.buyerInfo?.firstName}
+            placeholder="Seller First Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="buyerInfo-lastName"
+            type="text"
+            value={formData.buyerInfo?.lastName}
+            placeholder="Seller Last Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="buyerInfo-businessName"
+            type="text"
+            value={formData.buyerInfo?.businessName}
+            placeholder="Company Name"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="buyerInfo-taxRegistration"
+            type="text"
+            value={formData.buyerInfo?.taxRegistration}
+            placeholder="Tax Registration"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="buyerInfo-address"
+            type="text"
+            value={formData.buyerInfo?.address}
+            placeholder="Address"
+            handleInput={handleAdditionalInfo}
+          />
+        </div>
+      </Accordion>
     </div>
   </div>
   <div class="flex w-full gap-[20px] items-end">

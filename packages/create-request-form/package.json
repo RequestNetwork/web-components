@@ -70,6 +70,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@requestnetwork/shared": "0.1.1",
     "@web3-onboard/core": "^2.21.5",
     "@web3-onboard/injected-wallets": "^2.10.15",
     "@web3-onboard/walletconnect": "^2.5.4"

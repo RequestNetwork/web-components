@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from "../ui";
+  import { Button } from "@requestnetwork/shared";
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
