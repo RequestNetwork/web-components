@@ -2,7 +2,6 @@
 
 <script>
   import { onMount } from "svelte";
-  import Navbar from "../../../create-request-form/src/lib/ui/navbar.svelte";
 
   export let builderKey = ``,
     webhookUrl = ``,
@@ -39,5 +38,3 @@
     popup();
   });
 </script>
-
-<Navbar />

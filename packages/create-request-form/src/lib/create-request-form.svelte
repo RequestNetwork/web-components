@@ -1,3 +1,5 @@
+<svelte:options customElement="create-request-form" />
+
 <script lang="ts">
   import {
     config,

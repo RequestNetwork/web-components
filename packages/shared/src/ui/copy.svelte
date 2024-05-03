@@ -18,6 +18,7 @@
 </script>
 
 <div class="relative">
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <i
     class="fa-regular fa-copy cursor-pointer border border-gray-400 shadow-sm p-1 rounded-md hover:bg-gray-100 hover:border-gray-500 transition-colors duration-200 ease-in-out"
     on:click={copyToClipboard}

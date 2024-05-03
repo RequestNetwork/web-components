@@ -62,6 +62,8 @@
           {/each}
         {:else}
           {#each options as option}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <li
               class="text-black cursor-pointer hover:bg-gray-100 bg-white p-3 w-full"
               on:click={() => selectOption(option.value)}
