@@ -37,7 +37,6 @@ export default defineConfig({
     rollupOptions: {
       plugins: [
         nodePolyfills({ include: ["crypto", "http"] }),
-        inject({ Buffer: ["Buffer", "Buffer"] }),
       ],
     },
     commonjsOptions: {

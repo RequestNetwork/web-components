@@ -35,7 +35,6 @@ export default defineConfig({
       external: ["@web3-onboard/*"],
       plugins: [
         nodePolyfills({ include: ["crypto", "http"] }),
-        inject({ Buffer: ["Buffer", "Buffer"] }),
       ],
     },
     commonjsOptions: {
