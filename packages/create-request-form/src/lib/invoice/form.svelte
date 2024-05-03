@@ -1,13 +1,7 @@
 <script lang="ts">
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
   import { inputDateFormat } from "$src/utils/formatDate";
-  import {
-    Input,
-    Button,
-    Dropdown,
-    Accordion,
-    Labels,
-  } from "@requestnetwork/shared";
+  import { Input, Button, Dropdown, Accordion, Labels } from "../ui";
 
   export const invoiceNumber: number = 1;
   let creatorId = "";

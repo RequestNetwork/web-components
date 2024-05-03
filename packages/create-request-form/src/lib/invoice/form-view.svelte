@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from "@requestnetwork/shared";
+  import { Button } from "../ui";
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
 
   export let config: IConfig;

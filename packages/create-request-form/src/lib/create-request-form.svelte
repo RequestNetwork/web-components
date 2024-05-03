@@ -10,7 +10,8 @@
   } from "$utils";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { Modal, APP_STATUS, Button, Status } from "@requestnetwork/shared";
+  import { Modal, Button, Status } from "./ui";
+  import { APP_STATUS } from "$src/types/enums";
 
   let mainColor = config.colors.main;
   let secondaryColor = config.colors.secondary;

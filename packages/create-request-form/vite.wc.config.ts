@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import inject from "@rollup/plugin-inject";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -20,6 +21,8 @@ export default defineConfig({
       stream: "stream-browserify",
       assert: "assert",
       zlib: "browserify-zlib",
+      $src: path.resolve(__dirname, "src"),
+      $utils: path.resolve(__dirname, "src/utils"),
     },
   },
   build: {
@@ -32,7 +35,6 @@ export default defineConfig({
       fileName: "web-component",
     },
     rollupOptions: {
-      external: ["@web3-onboard/*"],
       plugins: [
         nodePolyfills({ include: ["crypto", "http"] }),
         inject({ Buffer: ["Buffer", "Buffer"] }),
@@ -44,13 +46,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ["@ethersproject/hash", "wrtc", "http"],
-    include: [
-      "@web3-onboard/core",
-      "@web3-onboard/gas",
-      "@web3-onboard/sequence",
-      "js-sha3",
-      "@ethersproject/bignumber",
-    ],
+    include: ["js-sha3", "@ethersproject/bignumber"],
     esbuildOptions: {
       define: {
         global: "globalThis",
