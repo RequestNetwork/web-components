@@ -10,7 +10,8 @@
   } from "$utils";
 
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  // import { Modal, Button, Status } from "./ui";
+  import { InvoiceForm, InvoiceView } from "./invoice";
+  import { Modal, Button, Status } from "./ui";
   import { APP_STATUS } from "$src/types/enums";
 
   let mainColor = config.colors.main;
@@ -40,7 +41,7 @@
     const hasItems =
       formData.items.length > 0 &&
       formData.items.every(
-        (item) => item.description && item.quantity > 0 && item.unitPrice > 0
+        (item) => item.description && item.quantity > 0 && item.unitPrice > 0,
       );
     canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
@@ -102,19 +103,19 @@
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
   <div class="flex gap-[20px] w-full">
-    <!-- <InvoiceForm bind:formData {handleCurrencyChange} /> -->
+    <InvoiceForm bind:formData {handleCurrencyChange} />
     <div class="h-fit flex flex-col gap-[12px] w-full">
-      <!-- <InvoiceView
+      <InvoiceView
         {config}
         {currency}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
-      /> -->
+      />
     </div>
   </div>
-  <!-- <Modal title="Creating the invoice" isOpen={appStatus?.length > 0}>
+  <Modal title="Creating the invoice" isOpen={appStatus?.length > 0}>
     <Status statuses={appStatus} />
     <div class="flex justify-between mt-[20px]">
       <Button
@@ -130,5 +131,5 @@
         disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
       />
     </div>
-  </Modal> -->
+  </Modal>
 </div>

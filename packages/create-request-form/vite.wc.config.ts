@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [
     nodePolyfills(),
     svelte({
-      include: ["./src/lib/*.svelte"],
       compilerOptions: {
         customElement: true,
       },
@@ -34,9 +33,7 @@ export default defineConfig({
       fileName: "web-component",
     },
     rollupOptions: {
-      plugins: [
-        nodePolyfills({ include: ["crypto", "http"] }),
-      ],
+      plugins: [nodePolyfills({ include: ["crypto", "http"] })],
     },
     commonjsOptions: {
       transformMixedEsModules: true,
