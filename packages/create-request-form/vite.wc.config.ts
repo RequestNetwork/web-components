@@ -1,5 +1,4 @@
 import { defineConfig } from "vite";
-import inject from "@rollup/plugin-inject";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import path from "path";
