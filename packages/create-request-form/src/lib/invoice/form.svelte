@@ -1,15 +1,17 @@
 <script lang="ts">
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
   import { inputDateFormat } from "$src/utils/formatDate";
-  import { Input, Button, Dropdown, Accordion } from "@requestnetwork/shared";
+  import {
+    Input,
+    Button,
+    Dropdown,
+    Accordion,
+    Labels,
+  } from "@requestnetwork/shared";
 
   export const invoiceNumber: number = 1;
   let creatorId = "";
   export let formData: CustomFormData;
-  export let currency = currencies.keys().next().value;
-  export let handleInput: (event: Event, index?: number) => void;
-  export let addInvoiceItem: () => void;
-  export let removeInvoiceItem: (index: number) => void;
   export let handleCurrencyChange: (value: string) => void;
 
   $: {
@@ -18,7 +20,7 @@
 
   const calculateInputWidth = (value: string) => {
     const baseWidth = 20;
-    const width = Math.max(value.length, baseWidth) * 7.6;
+    const width = Math.max(value?.length, baseWidth) * 7.6;
     return `${width}px;`;
   };
 
@@ -28,7 +30,37 @@
     const fieldType = id.split("-")[0];
     const fieldName = id.split("-")[1];
 
-    formData[fieldType][fieldName] = value;
+    (formData as any)[fieldType][fieldName] = value;
+  };
+
+  const handleInput = (event: Event, itemIndex?: number) => {
+    const target = event.target as HTMLInputElement;
+    const { id, value } = target;
+    const fieldName = id.split("-")[0];
+
+    if (typeof itemIndex === "number") {
+      (formData.items[itemIndex] as any)[fieldName] = value;
+    } else {
+      if (id in formData) {
+        (formData as any)[id] = value;
+      }
+    }
+  };
+
+  const addInvoiceItem = () => {
+    const newItem = {
+      description: "",
+      quantity: 1,
+      unitPrice: 0,
+      discount: 0,
+      tax: 0,
+      amount: "",
+    };
+    formData.items = [...formData.items, newItem];
+  };
+
+  const removeInvoiceItem = (index: number) => {
+    formData.items = formData.items.filter((_, i) => i !== index);
   };
 </script>
 
@@ -52,10 +84,6 @@
       <p>
         Payment due by {formData.dueDate && formatDate(formData.dueDate)}
       </p>
-      <span
-        class="w-fit inline-flex items-center rounded-md bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
-        >Draft</span
-      >
     </div>
   </div>
   <div class="flex gap-[20px]">
@@ -72,7 +100,7 @@
         id="payeeAddress"
         type="text"
         value={formData.payeeAddress}
-        placeholder="From"
+        placeholder="From (Required)"
         {handleInput}
       />
       <Accordion title="Add Seller Info" icon="fa-plus">
@@ -118,7 +146,7 @@
         id="payerAddress"
         type="text"
         value={formData.payerAddress}
-        placeholder="Recipient"
+        placeholder="Recipient (Required)"
         {handleInput}
       />
       <Accordion title="Add Buyer Info" icon="fa-plus">
@@ -127,14 +155,14 @@
             id="buyerInfo-firstName"
             type="text"
             value={formData.buyerInfo?.firstName}
-            placeholder="Seller First Name"
+            placeholder="Buyer First Name"
             handleInput={handleAdditionalInfo}
           />
           <Input
             id="buyerInfo-lastName"
             type="text"
             value={formData.buyerInfo?.lastName}
-            placeholder="Seller Last Name"
+            placeholder="Buyer Last Name"
             handleInput={handleAdditionalInfo}
           />
           <Input
@@ -167,7 +195,7 @@
       id="issuedOn"
       type="date"
       min={inputDateFormat(new Date())}
-      value={formData.issuedOn}
+      value={inputDateFormat(new Date())}
       className="w-full"
       label="Issued Date"
       {handleInput}
@@ -175,8 +203,8 @@
     <Input
       id="dueDate"
       type="date"
-      min={formData.issuedOn}
-      value={formData.dueDate}
+      min={inputDateFormat(formData.issuedOn)}
+      value={inputDateFormat(formData.dueDate)}
       className="w-full"
       label="Due Date"
       {handleInput}
@@ -193,7 +221,10 @@
   <div class="flex flex-col gap-[20px]">
     <div class="relative overflow-x-auto shadow rounded-lg">
       <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-        <thead class="text-xs text-white uppercase bg-green">
+        <thead
+          class="text-xs text-white uppercase"
+          style="background-color: var(--mainColor);"
+        >
           <tr class="text-left text-[14px]">
             <th scope="col" class="px-4 py-3 font-medium"> Description</th>
             <th scope="col" class="px-4 py-3 font-medium"> Qty</th>
@@ -260,7 +291,6 @@
               {#if index !== 0}
                 <td class="px-4 py-3">
                   <Button
-                    color="bg-dark-grey"
                     padding="px-[10px] py-[10px]"
                     className="hover:bg-gray-800"
                     type="button"
@@ -294,13 +324,17 @@
         }}
       />
     </div>
-    <Input
-      max={200}
-      id="note"
-      {handleInput}
-      type="textarea"
-      placeholder="Memo"
-      value={formData.note}
-    />
+    <div class="flex items-center gap-[16px]">
+      <Input
+        max={200}
+        id="note"
+        {handleInput}
+        type="textarea"
+        placeholder="Memo"
+        value={formData.note}
+        className="h-[107px]"
+      />
+      <Labels bind:formData />
+    </div>
   </div>
 </form>

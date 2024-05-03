@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Button } from "@requestnetwork/shared";
   import { calculateItemTotal, currencies, formatDate } from "$src/utils";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
-  export let config: any;
-  export let requestNetwork: RequestNetwork | null | undefined;
+  export let config: IConfig;
+  export let canSubmit = false;
   export let formData: CustomFormData;
   export let currency = currencies.keys().next().value;
   export let submitForm: (e: Event) => Promise<void>;
@@ -13,11 +12,49 @@
     totalTaxAmount: 0,
     totalAmount: 0,
   };
+  let labels: string[] = [];
+  let sellerInfo: any[] = [];
+  let buyerInfo: any[] = [];
 
   $: formData.items = formData.items.map((item) => ({
     ...item,
     amount: calculateItemTotal(item),
   }));
+
+  $: {
+    labels = formData.miscellaneous.labels;
+  }
+
+  const removeLabel = (index: number) => {
+    formData.miscellaneous.labels = formData.miscellaneous.labels.filter(
+      (_: any, i: number) => i !== index
+    );
+  };
+
+  const generateDetailParagraphs = (info: any) => {
+    const details = [];
+    if (info.firstName) {
+      details.push({ label: "First Name", value: info.firstName });
+    }
+    if (info.lastName) {
+      details.push({ label: "Last Name", value: info.lastName });
+    }
+    if (info.businessName) {
+      details.push({ label: "Company Name", value: info.businessName });
+    }
+    if (info.address) {
+      details.push({ label: "Address", value: info.address });
+    }
+    if (info.taxRegistration) {
+      details.push({ label: "Tax Registration", value: info.taxRegistration });
+    }
+    return details;
+  };
+
+  $: {
+    sellerInfo = generateDetailParagraphs(formData.sellerInfo);
+    buyerInfo = generateDetailParagraphs(formData.buyerInfo);
+  }
 </script>
 
 <div
@@ -29,26 +66,71 @@
       <h2 class="text-dark-blue font-bold text-[20px]">
         Invoice #{formData.invoiceNumber}
       </h2>
+      <div class="flex flex-wrap gap-2 max-w-[300px]">
+        {#each labels as label, index (index)}
+          <div
+            class={`flex items-center text-white rounded px-2 w-fit cursor-pointer label`}
+          >
+            {label}
+            <button class="ml-2" on:click={() => removeLabel(index)}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-4 h-4 text-white"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        {/each}
+      </div>
     </div>
     <div class="flex flex-col gap-[9px] ml-auto w-fit">
       <p>Issued on {formatDate(new Date().toString())}</p>
       <p>
         Payment due by {formData.dueDate && formatDate(formData.dueDate)}
       </p>
-      <span
-        class="w-fit inline-flex items-center rounded-md bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
-        >Draft</span
-      >
     </div>
   </div>
-  <p class="flex flex-col">
-    <span class="font-medium">From</span>
-    {formData.payeeAddress}
-  </p>
-  <p class="flex flex-col">
-    <span class="font-medium">Billed to</span>
-    {formData.payerAddress}
-  </p>
+  <div class="flex flex-col gap-[12px]">
+    <p class="flex flex-col">
+      <span class="font-medium">From</span>
+      {formData.payeeAddress}
+    </p>
+    <div
+      class={`flex flex-wrap gap-[18px] ${sellerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
+    >
+      {#each sellerInfo as paragraph}
+        <div class="flex flex-col">
+          <span class="font-medium text-zinc-500">{paragraph.label}</span>
+          {paragraph.value}
+        </div>
+      {/each}
+    </div>
+  </div>
+  <div class="flex flex-col gap-[12px]">
+    <p class="flex flex-col">
+      <span class="font-medium">Billed to</span>
+      {formData.payerAddress}
+    </p>
+    <div
+      class={`flex flex-wrap gap-[18px] ${buyerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
+    >
+      {#each buyerInfo as paragraph}
+        <div class="flex flex-col">
+          <span class="font-medium text-zinc-500">{paragraph.label}</span>
+          {paragraph.value}
+        </div>
+      {/each}
+    </div>
+  </div>
   <p class="flex flex-col">
     <span class="font-medium">Invoice Currency</span>
     {currencies.get(currency)?.symbol}
@@ -122,7 +204,17 @@
     className="mr-auto w-fit"
     text="Create Request"
     type="submit"
-    disabled={!requestNetwork}
+    disabled={!canSubmit}
     onClick={submitForm}
   />
 </div>
+
+<style>
+  .label {
+    background-color: var(--mainColor);
+  }
+
+  .label:hover {
+    background-color: var(--secondaryColor);
+  }
+</style>

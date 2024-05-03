@@ -9,11 +9,13 @@ interface InvoiceItem {
 interface CustomFormData {
   creatorId: string;
   note: string;
-  miscellaneous: unknown;
+  miscellaneous: {
+    // This is a placeholder for any additional data that the user wants to include in the invoice
+    labels: string[];
+  };
   invoiceNumber: number;
   payerAddress: string;
   payeeAddress: string;
-  paymentReason: string;
   dueDate: string;
   issuedOn: string;
   items: InvoiceItem[];
@@ -27,4 +29,13 @@ interface SellerBuyerInfo {
   businessName: string;
   taxRegistration: string;
   address: string;
+}
+
+interface IConfig {
+  dashboardLink: string;
+  logo: string;
+  colors: {
+    main: string;
+    secondary: string;
+  };
 }

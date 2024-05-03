@@ -55,7 +55,7 @@
           {statusDetails[status].message}
         </h3>
         <p class="text-sm font-normal text-gray-400">
-          {#if index === statuses.length - 1 && statuses.length < 3}
+          {#if index === statuses?.length - 1 && statuses?.length < 3}
             <div
               class="px-3 py-2 text-xs font-medium leading-none text-center rounded-full animate-pulse bg-green text-white w-fit"
             >
