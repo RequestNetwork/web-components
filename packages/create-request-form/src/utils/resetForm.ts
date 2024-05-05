@@ -25,6 +25,7 @@ export function getInitialFormData() {
       address: "",
       businessName: "",
       taxRegistration: "",
+      email: "",
     },
     buyerInfo: {
       firstName: "",
@@ -32,6 +33,7 @@ export function getInitialFormData() {
       address: "",
       businessName: "",
       taxRegistration: "",
+      email: "",
     },
   };
 }

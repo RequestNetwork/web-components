@@ -1,7 +1,17 @@
 <script lang="ts">
-  import { calculateItemTotal, currencies, formatDate } from "$src/utils";
-  import { inputDateFormat } from "$src/utils/formatDate";
-  import { Input, Button, Dropdown, Accordion, Labels } from "../ui";
+  import {
+    currencies,
+    formatDate,
+    inputDateFormat,
+    calculateItemTotal,
+  } from "$src/utils";
+  import {
+    Input,
+    Button,
+    Labels,
+    Dropdown,
+    Accordion,
+  } from "@requestnetwork/shared";
 
   export const invoiceNumber: number = 1;
   let creatorId = "";
@@ -97,7 +107,7 @@
         placeholder="From (Required)"
         {handleInput}
       />
-      <Accordion title="Add Seller Info" icon="fa-plus">
+      <Accordion title="Add Seller Info" icon="fa-plus" closeIcon="fa-minus">
         <div class="grid grid-cols-2 grid-rows-2 gap-4">
           <Input
             id="sellerInfo-firstName"
@@ -134,6 +144,13 @@
             placeholder="Address"
             handleInput={handleAdditionalInfo}
           />
+          <Input
+            id="sellerInfo-email"
+            type="email"
+            value={formData.sellerInfo?.email}
+            placeholder="Email"
+            handleInput={handleAdditionalInfo}
+          />
         </div>
       </Accordion>
       <Input
@@ -143,7 +160,7 @@
         placeholder="Recipient (Required)"
         {handleInput}
       />
-      <Accordion title="Add Buyer Info" icon="fa-plus">
+      <Accordion title="Add Buyer Info" icon="fa-plus" closeIcon="fa-minus">
         <div class="grid grid-cols-2 grid-rows-2 gap-4">
           <Input
             id="buyerInfo-firstName"
@@ -178,6 +195,13 @@
             type="text"
             value={formData.buyerInfo?.address}
             placeholder="Address"
+            handleInput={handleAdditionalInfo}
+          />
+          <Input
+            id="buyerInfo-email"
+            type="email"
+            value={formData.buyerInfo?.email}
+            placeholder="Email"
             handleInput={handleAdditionalInfo}
           />
         </div>

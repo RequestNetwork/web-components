@@ -29,6 +29,7 @@ interface SellerBuyerInfo {
   businessName: string;
   taxRegistration: string;
   address: string;
+  email: string;
 }
 
 interface IConfig {

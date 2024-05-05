@@ -8,11 +8,10 @@
     prepareRequestParams,
     calculateInvoiceTotals,
   } from "$utils";
-
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { InvoiceForm, InvoiceView } from "./invoice";
-  import { Modal, Button, Status } from "./ui";
   import { APP_STATUS } from "$src/types/enums";
+  import { InvoiceForm, InvoiceView } from "./invoice";
+  import { Modal, Button, Status } from "@requestnetwork/shared";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   let mainColor = config.colors.main;
   let secondaryColor = config.colors.secondary;
@@ -41,7 +40,7 @@
     const hasItems =
       formData.items.length > 0 &&
       formData.items.every(
-        (item) => item.description && item.quantity > 0 && item.unitPrice > 0,
+        (item) => item.description && item.quantity > 0 && item.unitPrice > 0
       );
     canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
