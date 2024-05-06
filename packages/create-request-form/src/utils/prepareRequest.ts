@@ -50,12 +50,8 @@ export const prepareRequestParams = ({
   },
   contentData: {
     meta: {
-      format: {
-        const: "rnf_invoice",
-      },
-      version: {
-        const: "0.0.3",
-      },
+      format: "rnf_invoice",
+      version: "0.0.3",
     },
     miscellaneous: formData.miscellaneous,
     creationDate: formData.issuedOn,
