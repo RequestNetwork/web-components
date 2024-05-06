@@ -1,11 +1,11 @@
 export const formatAddress = (
   address: string,
-  first: number = 6,
-  last: number = 4
+  firstChar: number = 6,
+  lastChar: number = 4
 ): string => {
-  if (address?.length < first + last) {
+  if (address?.length < firstChar + lastChar) {
     throw new Error("Address too short to format properly.");
   }
 
-  return `${address.slice(0, first)}...${address.slice(-last)}`;
+  return `${address.slice(0, firstChar)}...${address.slice(-lastChar)}`;
 };
