@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/shared",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "main": "./src/index.ts",
   "type": "module",
   "license": "MIT",

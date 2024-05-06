@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/create-request-form",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -31,8 +31,6 @@
     "svelte": "^4.0.0"
   },
   "devDependencies": {
-    "@requestnetwork/request-client.js": "0.45.0",
-    "@requestnetwork/web3-signature": "0.5.0",
     "@sveltejs/adapter-auto": "^2.0.0",
     "@sveltejs/kit": "^1.27.4",
     "@sveltejs/package": "^2.0.0",
@@ -64,6 +62,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@requestnetwork/shared": "0.1.1"
+    "@requestnetwork/request-client.js": "0.45.0",
+    "@requestnetwork/shared": "0.1.0",
+    "@requestnetwork/web3-signature": "0.5.0"
   }
 }

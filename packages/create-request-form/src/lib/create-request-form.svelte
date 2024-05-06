@@ -2,19 +2,22 @@
 
 <script lang="ts">
   import {
-    config,
     currencies,
     getInitialFormData,
     prepareRequestParams,
     calculateInvoiceTotals,
+    config as generalConfig,
   } from "$utils";
   import { APP_STATUS } from "$src/types/enums";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import { Modal, Button, Status } from "@requestnetwork/shared";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
-  let mainColor = config.colors.main;
-  let secondaryColor = config.colors.secondary;
+  export let config: IConfig;
+  let activeConfig = config || generalConfig;
+  let mainColor = activeConfig.colors.main;
+  let secondaryColor = activeConfig.colors.secondary;
+
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
 
@@ -105,11 +108,11 @@
     <InvoiceForm bind:formData {handleCurrencyChange} />
     <div class="h-fit flex flex-col gap-[12px] w-full">
       <InvoiceView
-        {config}
         {currency}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
+        config={activeConfig}
         {submitForm}
       />
     </div>
