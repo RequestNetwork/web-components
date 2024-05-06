@@ -6,7 +6,7 @@
     getInitialFormData,
     prepareRequestParams,
     calculateInvoiceTotals,
-    config as generalConfig,
+    config as defaultConfig,
   } from "$utils";
   import { APP_STATUS } from "$src/types/enums";
   import { InvoiceForm, InvoiceView } from "./invoice";
@@ -14,7 +14,7 @@
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
-  let activeConfig = config || generalConfig;
+  let activeConfig = config || defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
