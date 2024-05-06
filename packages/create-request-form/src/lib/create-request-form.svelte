@@ -8,9 +8,8 @@
     calculateInvoiceTotals,
     config as defaultConfig,
   } from "$utils";
-  import { APP_STATUS } from "$src/types/enums";
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import { Modal, Button, Status } from "@requestnetwork/shared";
+  import { APP_STATUS, Modal, Button, Status } from "@requestnetwork/shared";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
