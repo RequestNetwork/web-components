@@ -29,6 +29,7 @@
   ],
   "dependencies": {
     "viem": "^2.9.15",
+    "svelte": "^4.0.5",
     "browserify-zlib": "^0.2.0",
     "stream-browserify": "^3.0.0",
     "crypto-browserify": "^3.12.0",
@@ -46,7 +47,6 @@
     "postcss": "^8.4.38",
     "publint": "^0.2.7",
     "rollup-plugin-polyfill-node": "^0.13.0",
-    "svelte": "^4.0.5",
     "svelte-check": "^3.6.0",
     "tailwindcss": "^3.4.3",
     "tslib": "^2.4.1",

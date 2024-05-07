@@ -1,9 +1,7 @@
 <script>
-  import { Navbar } from "@requestnetwork/shared";
   import "../app.css";
 </script>
 
-<Navbar />
 <slot />
 
 <style>

@@ -1,7 +1,6 @@
 export { config } from "./config";
 export { debounce } from "./debounce";
 export { currencies } from "./currencies";
-export { connectWallet } from "./connectWallet";
 export { formatAddress } from "./formatAddress";
 export { getInitialFormData } from "./resetForm";
 export { prepareRequestParams } from "./prepareRequest";

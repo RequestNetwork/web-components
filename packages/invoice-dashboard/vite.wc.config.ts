@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import inject from "@rollup/plugin-inject";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,8 @@ export default defineConfig({
       stream: "stream-browserify",
       assert: "assert",
       zlib: "browserify-zlib",
+      $src: path.resolve(__dirname, "src"),
+      $utils: path.resolve(__dirname, "src/utils"),
     },
   },
   build: {

@@ -1,5 +1,5 @@
 import { Types, Utils } from "@requestnetwork/request-client.js";
-import { currencies } from "../utils copy/currencies";
+import { currencies } from "../utils/currencies";
 import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
