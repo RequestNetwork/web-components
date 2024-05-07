@@ -1,4 +1,5 @@
 <script lang="ts">
+  export let config;
   export let formData: any;
 
   let newLabel = "";
@@ -33,28 +34,19 @@
   };
 </script>
 
-<div class="flex flex-col w-[700px] justify-end gap-[10px] min-h-[104px]">
+<div
+  class="flex flex-col w-[700px] justify-end gap-[10px] min-h-[104px]"
+  style="
+  --mainColor: {config.mainColor};
+  --secondaryColor: {config.secondaryColor};
+"
+>
   <div class="flex flex-wrap gap-2">
     {#each formData.miscellaneous.labels as label, index}
-      <div
-        class="flex items-center bg-green text-white rounded px-2 hover:bg-light-green"
-      >
+      <div class="flex items-center bg-green text-white rounded px-2 label">
         {label}
         <button class="ml-2" on:click={() => removeLabel(index)}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-4 h-4 text-white"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <i class="fa fa-times" />
         </button>
       </div>
     {/each}
@@ -67,3 +59,13 @@
     on:keydown={handleKeydown}
   />
 </div>
+
+<style>
+  .label {
+    background-color: var(--mainColor);
+  }
+
+  .label:hover {
+    background-color: var(--secondaryColor);
+  }
+</style>

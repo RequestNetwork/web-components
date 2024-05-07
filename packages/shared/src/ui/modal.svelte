@@ -1,8 +1,10 @@
 <script lang="ts">
   export let isOpen = true;
   export let title = "";
+  export let onClose = () => {};
 
   function closeModal() {
+    onClose();
     isOpen = false;
   }
 </script>

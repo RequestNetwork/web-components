@@ -10,7 +10,7 @@ export const calculateInvoiceTotals = (data: InvoiceItem[]) => {
     amountWithoutTax += taxableAmount;
     totalDiscount += discountAmount * item.quantity;
 
-    const itemTaxAmount = taxableAmount * (item.tax / 100);
+    const itemTaxAmount = taxableAmount * (item.tax.amount / 100);
     totalTaxAmount += itemTaxAmount;
     totalAmount += taxableAmount + itemTaxAmount;
   }
@@ -28,7 +28,7 @@ export const calculateInvoiceTotals = (data: InvoiceItem[]) => {
 export const calculateItemTotal = (item: InvoiceItem): number => {
   const discountAmount = item.discount;
   const priceAfterDiscount = item.unitPrice - discountAmount;
-  const taxAmount = priceAfterDiscount * (item.tax / 100);
+  const taxAmount = priceAfterDiscount * (item.tax.amount / 100);
   const itemTotal = (priceAfterDiscount + taxAmount) * item.quantity;
   return itemTotal;
 };

@@ -6,7 +6,6 @@
     if (!textToCopy) return;
     try {
       await navigator.clipboard.writeText(textToCopy);
-      console.log("Copied to clipboard successfully!");
       showNotification = true;
       setTimeout(() => {
         showNotification = false;

@@ -2,7 +2,7 @@ export function getInitialFormData() {
   return {
     creatorId: "",
     note: "",
-    invoiceNumber: 1,
+    invoiceNumber: "1",
     payerAddress: "",
     payeeAddress: "",
     dueDate: "",
@@ -16,13 +16,22 @@ export function getInitialFormData() {
         quantity: 1,
         unitPrice: 0,
         discount: 0,
-        tax: 0,
+        tax: {
+          amount: 0,
+          type: "percentage",
+        },
       },
     ],
     sellerInfo: {
       firstName: "",
       lastName: "",
-      address: "",
+      address: {
+        "country-name": "",
+        locality: "",
+        "postal-code": "",
+        region: "",
+        "street-address": "",
+      },
       businessName: "",
       taxRegistration: "",
       email: "",
@@ -30,7 +39,13 @@ export function getInitialFormData() {
     buyerInfo: {
       firstName: "",
       lastName: "",
-      address: "",
+      address: {
+        "country-name": "",
+        locality: "",
+        "postal-code": "",
+        region: "",
+        "street-address": "",
+      },
       businessName: "",
       taxRegistration: "",
       email: "",

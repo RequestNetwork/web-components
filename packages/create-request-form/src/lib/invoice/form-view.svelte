@@ -36,17 +36,41 @@
     if (info.firstName) {
       details.push({ label: "First Name", value: info.firstName });
     }
+    if (info.email) {
+      details.push({ label: "Email", value: info.email });
+    }
     if (info.lastName) {
       details.push({ label: "Last Name", value: info.lastName });
     }
     if (info.businessName) {
       details.push({ label: "Company Name", value: info.businessName });
     }
-    if (info.address) {
-      details.push({ label: "Address", value: info.address });
-    }
     if (info.taxRegistration) {
-      details.push({ label: "Tax Registration", value: info.taxRegistration });
+      details.push({
+        label: "Tax Identification Number (TIN)",
+        value: info.taxRegistration,
+      });
+    }
+    if (info.address["country-name"]) {
+      details.push({ label: "Country", value: info.address["country-name"] });
+    }
+    if (info.address["street-address"]) {
+      details.push({
+        label: "Street Address",
+        value: info.address["street-address"],
+      });
+    }
+    if (info.address["postal-code"]) {
+      details.push({
+        label: "Postal Code",
+        value: info.address["postal-code"],
+      });
+    }
+    if (info.address["locality"]) {
+      details.push({ label: "City", value: info.address["locality"] });
+    }
+    if (info.address["region"]) {
+      details.push({ label: "Region", value: info.address["region"] });
     }
     return details;
   };
@@ -73,20 +97,7 @@
           >
             {label}
             <button class="ml-2" on:click={() => removeLabel(index)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-4 h-4 text-white"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <i class="fa fa-times" />
             </button>
           </div>
         {/each}
@@ -132,6 +143,10 @@
     </div>
   </div>
   <p class="flex flex-col">
+    <span class="font-medium">Payment Chain</span>
+    Sepolia
+  </p>
+  <p class="flex flex-col">
     <span class="font-medium">Invoice Currency</span>
     {currencies.get(currency)?.symbol}
     ({currencies.get(currency)?.network})
@@ -161,7 +176,7 @@
             <td class="px-0 py-2">{item.quantity}</td>
             <td class="px-0 py-2">{item.unitPrice}</td>
             <td class="px-0 py-2">{item.discount}</td>
-            <td class="px-0 py-2">{item.tax}</td>
+            <td class="px-0 py-2">{item.tax.amount}</td>
             <td class="px-0 py-2">{calculateItemTotal(item).toFixed(2)}</td>
           </tr>
         {/each}

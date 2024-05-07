@@ -13,10 +13,12 @@
     Accordion,
   } from "@requestnetwork/shared";
 
+  export let config: IConfig;
   export const invoiceNumber: number = 1;
-  let creatorId = "";
   export let formData: CustomFormData;
   export let handleCurrencyChange: (value: string) => void;
+
+  let creatorId = "";
 
   $: {
     creatorId = formData.creatorId;
@@ -34,7 +36,26 @@
     const fieldType = id.split("-")[0];
     const fieldName = id.split("-")[1];
 
-    (formData as any)[fieldType][fieldName] = value;
+    switch (fieldName) {
+      case "country":
+        (formData as any)[fieldType].address["country-name"] = value;
+        break;
+      case "postal":
+        (formData as any)[fieldType].address["postal-code"] = value;
+        break;
+      case "street":
+        (formData as any)[fieldType].address["street-address"] = value;
+        break;
+      case "locality":
+        (formData as any)[fieldType].address.locality = value;
+        break;
+      case "region":
+        (formData as any)[fieldType].address.region = value;
+        break;
+      default:
+        (formData as any)[fieldType][fieldName] = value;
+        break;
+    }
   };
 
   const handleInput = (event: Event, itemIndex?: number) => {
@@ -43,6 +64,11 @@
     const fieldName = id.split("-")[0];
 
     if (typeof itemIndex === "number") {
+      if (fieldName === "tax") {
+        (formData.items[itemIndex] as any)[fieldName].amount = value;
+        return;
+      }
+
       (formData.items[itemIndex] as any)[fieldName] = value;
     } else {
       if (id in formData) {
@@ -57,7 +83,10 @@
       quantity: 1,
       unitPrice: 0,
       discount: 0,
-      tax: 0,
+      tax: {
+        amount: 0,
+        type: "percentage",
+      },
       amount: "",
     };
     formData.items = [...formData.items, newItem];
@@ -71,7 +100,7 @@
 <form
   class="h-fit bg-white flex flex-col w-[120%] p-[20px] shadow-small gap-[20px]"
 >
-  <div class="flex items-start w-full">
+  <div class="flex items-start w-full relative">
     <div class="flex items-center gap-[12px]">
       <h2 class="text-dark-blue font-bold text-[20px] w-full">Invoice #</h2>
       <Input
@@ -83,159 +112,228 @@
         style={`width: ${calculateInputWidth(formData.invoiceNumber.toString())}`}
       />
     </div>
-    <div class="flex flex-col gap-[9px] ml-auto w-fit">
-      <p>Issued on {formData.issuedOn && formatDate(formData.issuedOn)}</p>
-      <p>
-        Payment due by {formData.dueDate && formatDate(formData.dueDate)}
-      </p>
+    <div class="flex flex-col gap-[9px] ml-auto w-[270px] absolute right-0">
+      <Input
+        id="issuedOn"
+        type="date"
+        min={inputDateFormat(new Date())}
+        value={inputDateFormat(new Date())}
+        className="w-full"
+        label="Issued Date"
+        {handleInput}
+      />
+      <Input
+        id="dueDate"
+        type="date"
+        min={inputDateFormat(formData.issuedOn)}
+        value={inputDateFormat(formData.dueDate)}
+        className="w-full"
+        label="Due Date"
+        {handleInput}
+      />
     </div>
   </div>
   <div class="flex gap-[20px]">
     <div class="flex flex-col w-full max-w-[500px] gap-[20px]">
+      <div
+        class="flex flex-col gap-[20px] border border-zinc-200 rounded-md p-[20px] pb-0"
+      >
+        <Input
+          disabled
+          id="creatorId"
+          type="text"
+          value={creatorId}
+          label="From"
+          placeholder="Connect wallet to populate"
+        />
+        <Accordion title="Add Your Info" icon="fa-plus" closeIcon="fa-minus">
+          <div class="grid grid-cols-2 grid-rows-2 gap-4">
+            <Input
+              id="sellerInfo-firstName"
+              type="text"
+              value={formData.sellerInfo?.firstName}
+              placeholder="Seller First Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-lastName"
+              type="text"
+              value={formData.sellerInfo?.lastName}
+              placeholder="Seller Last Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-businessName"
+              type="text"
+              value={formData.sellerInfo?.businessName}
+              placeholder="Company Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-taxRegistration"
+              type="text"
+              value={formData.sellerInfo?.taxRegistration}
+              placeholder="Tax Identification Number (TIN)"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-email"
+              type="email"
+              value={formData.sellerInfo?.email}
+              placeholder="Email"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-country"
+              type="text"
+              value={formData.sellerInfo?.address?.["country-name"]}
+              placeholder="Country"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-locality"
+              type="text"
+              value={formData.sellerInfo?.address?.locality}
+              placeholder="City"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-region"
+              type="text"
+              value={formData.sellerInfo?.address?.region}
+              placeholder="Region"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-postal"
+              type="text"
+              value={formData.sellerInfo?.address?.["postal-code"]}
+              placeholder="Postal Code"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="sellerInfo-street"
+              type="text"
+              value={formData.sellerInfo?.address?.["street-address"]}
+              placeholder="Street Address"
+              handleInput={handleAdditionalInfo}
+            />
+          </div>
+        </Accordion>
+      </div>
+
+      <div
+        class="flex flex-col gap-[20px] border border-zinc-200 rounded-md p-[20px] pb-0"
+      >
+        <Input
+          label="Client information"
+          id="payerAddress"
+          type="text"
+          value={formData.payerAddress}
+          placeholder="Client Wallet Address"
+          {handleInput}
+        />
+        <Accordion title="Add Client Info" icon="fa-plus" closeIcon="fa-minus">
+          <div class="grid grid-cols-2 grid-rows-2 gap-4">
+            <Input
+              id="buyerInfo-firstName"
+              type="text"
+              value={formData.buyerInfo?.firstName}
+              placeholder="Buyer First Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-lastName"
+              type="text"
+              value={formData.buyerInfo?.lastName}
+              placeholder="Buyer Last Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-businessName"
+              type="text"
+              value={formData.buyerInfo?.businessName}
+              placeholder="Company Name"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-taxRegistration"
+              type="text"
+              value={formData.buyerInfo?.taxRegistration}
+              placeholder="Tax Identification Number (TIN)"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-email"
+              type="email"
+              value={formData.buyerInfo?.email}
+              placeholder="Email"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-country"
+              type="text"
+              value={formData.buyerInfo?.address?.["country-name"]}
+              placeholder="Country"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-locality"
+              type="text"
+              value={formData.buyerInfo?.address?.locality}
+              placeholder="City"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-region"
+              type="text"
+              value={formData.buyerInfo?.address?.region}
+              placeholder="Region"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-postal"
+              type="text"
+              value={formData.buyerInfo?.address?.["postal-code"]}
+              placeholder="Postal Code"
+              handleInput={handleAdditionalInfo}
+            />
+            <Input
+              id="buyerInfo-street"
+              type="text"
+              value={formData.buyerInfo?.address?.["street-address"]}
+              placeholder="Street Address"
+              handleInput={handleAdditionalInfo}
+            />
+          </div>
+        </Accordion>
+      </div>
       <Input
-        disabled
-        id="creatorId"
+        label="Choose your payment chain"
+        id="currency"
         type="text"
-        value={creatorId}
-        label="Creator Identification"
-        placeholder="Connect wallet to populate"
+        value="Sepolia"
+        disabled
+      />
+      <Dropdown
+        placeholder="Select a currency"
+        options={Array.from(currencies.entries()).map(([key, value]) => ({
+          value: key,
+          label: `${value.symbol} (${value.network})`,
+        }))}
+        onchange={handleCurrencyChange}
       />
       <Input
+        label="Where do you want to receive your payment?"
         id="payeeAddress"
         type="text"
         value={formData.payeeAddress}
-        placeholder="From (Required)"
+        placeholder="0x..."
         {handleInput}
       />
-      <Accordion title="Add Seller Info" icon="fa-plus" closeIcon="fa-minus">
-        <div class="grid grid-cols-2 grid-rows-2 gap-4">
-          <Input
-            id="sellerInfo-firstName"
-            type="text"
-            value={formData.sellerInfo?.firstName}
-            placeholder="Seller First Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="sellerInfo-lastName"
-            type="text"
-            value={formData.sellerInfo?.lastName}
-            placeholder="Seller Last Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="sellerInfo-businessName"
-            type="text"
-            value={formData.sellerInfo?.businessName}
-            placeholder="Company Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="sellerInfo-taxRegistration"
-            type="text"
-            value={formData.sellerInfo?.taxRegistration}
-            placeholder="Tax Registration"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="sellerInfo-address"
-            type="text"
-            value={formData.sellerInfo?.address}
-            placeholder="Address"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="sellerInfo-email"
-            type="email"
-            value={formData.sellerInfo?.email}
-            placeholder="Email"
-            handleInput={handleAdditionalInfo}
-          />
-        </div>
-      </Accordion>
-      <Input
-        id="payerAddress"
-        type="text"
-        value={formData.payerAddress}
-        placeholder="Recipient (Required)"
-        {handleInput}
-      />
-      <Accordion title="Add Buyer Info" icon="fa-plus" closeIcon="fa-minus">
-        <div class="grid grid-cols-2 grid-rows-2 gap-4">
-          <Input
-            id="buyerInfo-firstName"
-            type="text"
-            value={formData.buyerInfo?.firstName}
-            placeholder="Buyer First Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="buyerInfo-lastName"
-            type="text"
-            value={formData.buyerInfo?.lastName}
-            placeholder="Buyer Last Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="buyerInfo-businessName"
-            type="text"
-            value={formData.buyerInfo?.businessName}
-            placeholder="Company Name"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="buyerInfo-taxRegistration"
-            type="text"
-            value={formData.buyerInfo?.taxRegistration}
-            placeholder="Tax Registration"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="buyerInfo-address"
-            type="text"
-            value={formData.buyerInfo?.address}
-            placeholder="Address"
-            handleInput={handleAdditionalInfo}
-          />
-          <Input
-            id="buyerInfo-email"
-            type="email"
-            value={formData.buyerInfo?.email}
-            placeholder="Email"
-            handleInput={handleAdditionalInfo}
-          />
-        </div>
-      </Accordion>
     </div>
   </div>
-  <div class="flex w-full gap-[20px] items-end">
-    <Input
-      id="issuedOn"
-      type="date"
-      min={inputDateFormat(new Date())}
-      value={inputDateFormat(new Date())}
-      className="w-full"
-      label="Issued Date"
-      {handleInput}
-    />
-    <Input
-      id="dueDate"
-      type="date"
-      min={inputDateFormat(formData.issuedOn)}
-      value={inputDateFormat(formData.dueDate)}
-      className="w-full"
-      label="Due Date"
-      {handleInput}
-    />
-    <Dropdown
-      placeholder="Select a currency"
-      options={Array.from(currencies.entries()).map(([key, value]) => ({
-        value: key,
-        label: `${value.symbol} (${value.network})`,
-      }))}
-      onchange={handleCurrencyChange}
-    />
-  </div>
+
   <div class="flex flex-col gap-[20px]">
     <div class="relative overflow-x-auto shadow rounded-lg">
       <table class="w-full text-sm text-left rtl:text-right text-gray-500">
@@ -298,7 +396,7 @@
                 <Input
                   id={`tax-${index}`}
                   type="number"
-                  value={item.tax}
+                  value={item.tax.amount}
                   handleInput={(event) => handleInput(event, index)}
                   className="w-[80px]"
                 />
@@ -352,7 +450,7 @@
         value={formData.note}
         className="h-[107px]"
       />
-      <Labels bind:formData />
+      <Labels {config} bind:formData />
     </div>
   </div>
 </form>

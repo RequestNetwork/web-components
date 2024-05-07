@@ -6,19 +6,21 @@
     getInitialFormData,
     prepareRequestParams,
     calculateInvoiceTotals,
-    config as defaultConfig,
+    config as generalConfig,
   } from "$utils";
+
+  import { APP_STATUS } from "@requestnetwork/shared";
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import { APP_STATUS, Modal, Button, Status } from "@requestnetwork/shared";
+  import { Modal, Button, Status } from "@requestnetwork/shared";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
-  let activeConfig = config || defaultConfig;
-  let mainColor = activeConfig.colors.main;
-  let secondaryColor = activeConfig.colors.secondary;
-
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
+
+  let activeConfig = config || generalConfig;
+  let mainColor = activeConfig.colors.main;
+  let secondaryColor = activeConfig.colors.secondary;
 
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
@@ -104,19 +106,23 @@
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
   <div class="flex gap-[20px] w-full">
-    <InvoiceForm bind:formData {handleCurrencyChange} />
+    <InvoiceForm bind:formData {handleCurrencyChange} config={activeConfig} />
     <div class="h-fit flex flex-col gap-[12px] w-full">
       <InvoiceView
+        config={activeConfig}
         {currency}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
-        config={activeConfig}
         {submitForm}
       />
     </div>
   </div>
-  <Modal title="Creating the invoice" isOpen={appStatus?.length > 0}>
+  <Modal
+    title="Creating the invoice"
+    isOpen={appStatus?.length > 0}
+    onClose={hanldeCreateNewRequest}
+  >
     <Status statuses={appStatus} />
     <div class="flex justify-between mt-[20px]">
       <Button

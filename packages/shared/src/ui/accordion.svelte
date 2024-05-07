@@ -9,7 +9,7 @@
   };
 </script>
 
-<div class="border-b border-gray-200 dark:border-gray-700">
+<div>
   <button
     on:click={toggle}
     class="text-[14px] flex items-center justify-between w-full pt-[10px] pb-[20px] font-medium text-gray-500 hover:text-gray-900 gap-3 transition-all duration-200 ease-in-out"

@@ -3,7 +3,10 @@ interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   discount: number;
-  tax: number;
+  tax: {
+    amount: number;
+    type: string;
+  };
 }
 
 interface CustomFormData {
@@ -13,7 +16,7 @@ interface CustomFormData {
     // This is a placeholder for any additional data that the user wants to include in the invoice
     labels: string[];
   };
-  invoiceNumber: number;
+  invoiceNumber: string;
   payerAddress: string;
   payeeAddress: string;
   dueDate: string;
@@ -24,12 +27,20 @@ interface CustomFormData {
 }
 
 interface SellerBuyerInfo {
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  taxRegistration: string;
-  address: string;
-  email: string;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  businessName: string | undefined;
+  taxRegistration: string | undefined;
+  address: Address | undefined;
+  email: string | undefined;
+}
+
+interface Address {
+  "country-name"?: string;
+  locality?: string;
+  "postal-code"?: string;
+  region?: string;
+  "street-address"?: string;
 }
 
 interface IConfig {
