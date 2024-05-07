@@ -127,7 +127,7 @@
     <div class="flex justify-between mt-[20px]">
       <Button
         type="button"
-        onClick={() => handleGoToDashboard(config.dashboardLink)}
+        onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
         text="Go to dashboard"
         disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
       />
