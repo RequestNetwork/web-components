@@ -9,7 +9,7 @@
     getSymbol,
     getDecimals,
     formatAddress,
-    config as generalConfig,
+    config as defaultConfig,
   } from "$src/utils";
   import { onMount } from "svelte";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
@@ -22,7 +22,7 @@
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
 
-  let activeConfig = config || generalConfig;
+  let activeConfig = config || defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
