@@ -112,7 +112,7 @@
         style={`width: ${calculateInputWidth(formData.invoiceNumber.toString())}`}
       />
     </div>
-    <div class="flex flex-col gap-[9px] ml-auto w-[270px] absolute right-0">
+    <div class="flex flex-col gap-[9px] ml-auto w-[260px] absolute right-0">
       <Input
         id="issuedOn"
         type="date"
@@ -134,7 +134,7 @@
     </div>
   </div>
   <div class="flex gap-[20px]">
-    <div class="flex flex-col w-full max-w-[500px] gap-[20px]">
+    <div class="flex flex-col w-full max-w-[520px] gap-[20px]">
       <div
         class="flex flex-col gap-[20px] border border-zinc-200 rounded-md p-[20px] pb-0"
       >
