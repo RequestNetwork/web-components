@@ -1,16 +1,15 @@
 <script lang="ts">
   import {
-    currencies,
-    formatDate,
-    inputDateFormat,
-    calculateItemTotal,
-  } from "$src/utils";
-  import {
     Input,
     Button,
     Labels,
     Dropdown,
     Accordion,
+    currencies,
+    inputDateFormat,
+    calculateItemTotal,
+    type IConfig,
+    type CustomFormData,
   } from "@requestnetwork/shared";
 
   export let config: IConfig;

@@ -1,18 +1,18 @@
-# Request Network Create Request Form Component 📚
+# Request Network Invoice Dashboard 📚
 
 ## Introduction
 
-This package offers a Web Component for integrating the Request Network's Create Request Form into web applications. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework
+This package offers a Web Component for integrating the Request Network's Invoice Dashboard into web applications. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework
 
 ## Installation
 
 To install the component, use npm:
 
 ```console
-npm install @requestnetwork/create-request-form
+npm install @requestnetwork/invoice-dashboard
 ```
 
-This command adds the create request form component to your project, allowing for easy integration into any web application.
+This command adds the Invoice Dashboard component to your project, allowing for easy integration into any web application.
 
 ## Usage
 
@@ -20,12 +20,12 @@ This command adds the create request form component to your project, allowing fo
 
 Import the component into your JavaScript or TypeScript file:
 
-`import '@requestnetwork/create-request-form'`
+`import '@requestnetwork/invoice-dashboard'`
 
 Then, you can use the component directly in your HTML:
 
 ```console
-<create-request-form requestNetwork={requestNetworkInstance} signer={walletAccount} />
+<invoice-dashboard config={config} wallet={wallet} requestNetwork={requestNetworkInstance}  />
 ```
 
 ### In Svelte Projects
@@ -34,23 +34,23 @@ After installing, import and use the component directly in your Svelte files:
 
 ```console
 <script>
-    import CreateRequestForm from '@requestnetwork/create-request-form';
+    import InvoiceDashboard from '@requestnetwork/invoice-dashboard';
 </script>
 
-<CreateRequestForm />
+<InvoiceDashboard />
 ```
 
 ### In React Projects
 
 To use in a React application, ensure the component is included in your project:
 
-`import '@requestnetwork/create-request-form'`
+`import '@requestnetwork/invoice-dashboard'`
 
 Then use it like any other React component:
 
 ```console
 export default function App() {
-    return <create-request-form></create-request-form>;
+    return <invoice-dashboard></invoice-dashboard>;
 }
 ```
 
@@ -59,11 +59,11 @@ export default function App() {
 For use in projects without a build process, include the component via script tag, either locally or from a CDN:
 
 ```console
-<script src="./node_modules/@requestnetwork/create-request-form/dist/index.js" defer></script>
+<script src="./node_modules/@requestnetwork/invoice-dashboard/dist/index.js" defer></script>
 <!-- or from a CDN -->
-<script src="https://unpkg.com/@requestnetwork/create-request-form" defer></script>
+<script src="https://unpkg.com/@requestnetwork/invoice-dashboard" defer></script>
 
-<create-request-form></create-request-form>
+<invoice-dashboard></invoice-dashboard>
 ```
 
 ## Additional Information

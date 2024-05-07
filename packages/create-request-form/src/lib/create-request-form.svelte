@@ -2,16 +2,15 @@
 
 <script lang="ts">
   import {
+    APP_STATUS,
     currencies,
-    getInitialFormData,
-    prepareRequestParams,
     calculateInvoiceTotals,
     config as defaultConfig,
-  } from "$utils";
-
-  import { APP_STATUS } from "@requestnetwork/shared";
+    type IConfig,
+  } from "@requestnetwork/shared";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import { Modal, Button, Status } from "@requestnetwork/shared";
+  import { getInitialFormData, prepareRequestParams } from "$utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;

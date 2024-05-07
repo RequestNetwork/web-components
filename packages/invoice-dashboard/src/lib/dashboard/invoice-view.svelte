@@ -1,11 +1,5 @@
 <script lang="ts">
   import {
-    getSymbol,
-    currencies,
-    formatDate,
-    calculateItemTotal,
-  } from "$src/utils";
-  import {
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
@@ -15,9 +9,15 @@
     hasErc20Approval,
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
-  import { Accordion, Button } from "@requestnetwork/shared";
+  import {
+    Button,
+    Accordion,
+    currencies,
+    formatDate,
+    calculateItemTotal,
+  } from "@requestnetwork/shared";
   import type { WalletState } from "@web3-onboard/core";
-  import { walletClientToSigner } from "$src/utils";
+  import { walletClientToSigner, getSymbol } from "$src/utils";
 
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;

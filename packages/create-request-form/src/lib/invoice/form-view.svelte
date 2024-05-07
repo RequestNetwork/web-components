@@ -1,6 +1,12 @@
 <script lang="ts">
-  import { Button } from "@requestnetwork/shared";
-  import { calculateItemTotal, currencies, formatDate } from "$src/utils";
+  import {
+    Button,
+    currencies,
+    formatDate,
+    calculateItemTotal,
+    type IConfig,
+    type CustomFormData,
+  } from "@requestnetwork/shared";
 
   export let config: IConfig;
   export let canSubmit = false;

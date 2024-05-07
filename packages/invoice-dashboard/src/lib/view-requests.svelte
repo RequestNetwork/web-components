@@ -4,20 +4,20 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
   import {
-    debounce,
-    getSymbol,
-    getDecimals,
-    formatAddress,
+    Copy,
+    Input,
+    Dropdown,
+    Skeleton,
+    type IConfig,
     config as generalConfig,
-  } from "$src/utils";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { Types } from "@requestnetwork/request-client.js";
-  import { formatUnits } from "viem";
-  import { Copy, Input, Dropdown, Skeleton } from "@requestnetwork/shared";
+  } from "@requestnetwork/shared";
   import { onMount } from "svelte";
-  import Drawer from "./dashboard/drawer.svelte";
-  import InvoiceView from "./dashboard/invoice-view.svelte";
+  import { formatUnits } from "viem";
+  import { Drawer, InvoiceView } from "./dashboard";
   import type { WalletState } from "@web3-onboard/core";
+  import { Types } from "@requestnetwork/request-client.js";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { debounce, getSymbol, getDecimals, formatAddress } from "$src/utils";
 
   export let config: IConfig;
   export let wallet: WalletState;
