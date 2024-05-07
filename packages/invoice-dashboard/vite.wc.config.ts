@@ -34,10 +34,7 @@ export default defineConfig({
       fileName: "web-component",
     },
     rollupOptions: {
-      plugins: [
-        nodePolyfills({ include: ["crypto", "http"] }),
-        inject({ Buffer: ["Buffer", "Buffer"] }),
-      ],
+      plugins: [nodePolyfills({ include: ["crypto", "http"] })],
     },
     commonjsOptions: {
       transformMixedEsModules: true,

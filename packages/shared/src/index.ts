@@ -1,10 +1,10 @@
 // Types
 export {
-  IConfig,
-  Address,
-  InvoiceItem,
-  CustomFormData,
-  SellerBuyerInfo,
+  type IConfig,
+  type Address,
+  type InvoiceItem,
+  type CustomFormData,
+  type SellerBuyerInfo,
 } from "./types";
 
 export { APP_STATUS } from "./types/enums";
