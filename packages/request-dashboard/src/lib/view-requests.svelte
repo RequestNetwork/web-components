@@ -1,20 +1,37 @@
+<svelte:options customElement="request-dashboard" />
+
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+
 <script lang="ts">
-  import { currencies, debounce, formatAddress } from "$src/utils";
+  import {
+    debounce,
+    getSymbol,
+    getDecimals,
+    formatAddress,
+    config as generalConfig,
+  } from "$src/utils";
+  import { onMount } from "svelte";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
   import { formatUnits } from "viem";
-  import { Copy, Input, Dropdown } from "@requestnetwork/shared";
-  import { onMount } from "svelte";
+  import { Copy, Input, Dropdown, Skeleton } from "@requestnetwork/shared";
+  import { Drawer, InvoiceView } from "./dashboard";
 
+  export let config: IConfig;
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
 
+  let activeConfig = config || generalConfig;
+  let mainColor = activeConfig.colors.main;
+  let secondaryColor = activeConfig.colors.secondary;
+
+  let loading = false;
   let searchQuery = "";
   let debouncedUpdate: any;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
+  let activeRequest: Types.IRequestDataWithEvents | undefined;
 
   let columns = {
     issuedAt: false,
@@ -25,11 +42,12 @@
     { value: "issuedAt", label: "Issued Date" },
   ];
 
-  let sortColumn = "timestamp";
   let sortOrder = "asc";
+  let sortColumn = "timestamp";
 
   const getRequests = async () => {
     try {
+      loading = true;
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: signer,
@@ -37,17 +55,11 @@
       requests = requestsData
         ?.map((request) => request.getData())
         .sort((a, b) => a.timestamp - b.timestamp);
+      loading = false;
     } catch (error) {
+      loading = false;
       console.error("Failed to fetch requests:", error);
     }
-  };
-
-  const getSymbol = (network: string, value: string) => {
-    return currencies.get(`11155111_${value}`)?.symbol || "";
-  };
-
-  const getDecimals = (network: string, value: string) => {
-    return currencies.get(`11155111_${value}`)?.decimals || 18;
   };
 
   const itemsPerPage = 10;
@@ -62,25 +74,21 @@
 
   $: {
     if (sortColumn && sortOrder) {
-      requests = [...requests].sort((a, b) => {
-        // Accessing nested properties
+      requests = [...(requests ?? [])].sort((a, b) => {
         let valueA = sortColumn.includes(".")
           ? getNestedValue(a, sortColumn)
-          : a[sortColumn];
+          : ((a as any)[sortColumn] as any);
         let valueB = sortColumn.includes(".")
           ? getNestedValue(b, sortColumn)
-          : b[sortColumn];
+          : ((b as any)[sortColumn] as any);
 
-        // Handle undefined values
         if (valueA === undefined && valueB === undefined) return 0;
         if (valueA === undefined) return sortOrder === "asc" ? 1 : -1;
         if (valueB === undefined) return sortOrder === "asc" ? -1 : 1;
 
-        // Convert to lowercase if they are strings
         if (typeof valueA === "string") valueA = valueA.toLowerCase();
         if (typeof valueB === "string") valueB = valueB.toLowerCase();
 
-        // Comparison logic
         if (valueA < valueB) return sortOrder === "asc" ? -1 : 1;
         if (valueA > valueB) return sortOrder === "asc" ? 1 : -1;
         return 0;
@@ -101,14 +109,18 @@
           .toString()
           .toLowerCase()
           .includes(terms)) ||
-        formatAddress(request.payee?.value)?.toLowerCase().includes(terms) ||
-        formatAddress(request.payer?.value)?.toLowerCase().includes(terms))
+        formatAddress(request.payee?.value ?? "")
+          ?.toLowerCase()
+          .includes(terms) ||
+        formatAddress(request.payer?.value ?? "")
+          ?.toLowerCase()
+          .includes(terms))
     );
   });
 
   $: totalPages = Math.ceil(filteredRequests?.length! / itemsPerPage);
 
-  $: paginatedRequests = filteredRequests.slice(
+  $: paginatedRequests = (filteredRequests ?? []).slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -126,7 +138,7 @@
   const handleColumnChange = (selectedOption: any) => {
     columns = {
       ...columns,
-      [selectedOption]: !columns[selectedOption],
+      [selectedOption]: !(columns as Record<string, boolean>)[selectedOption],
     };
   };
 
@@ -141,17 +153,35 @@
     searchQuery = value;
   };
 
-  function handleSort(column: string) {
+  const handleSort = (column: string) => {
     sortOrder = column === sortColumn && sortOrder === "asc" ? "desc" : "asc";
     sortColumn = column;
-  }
+  };
 
-  function getNestedValue(obj: object, path: string) {
-    return path.split(".").reduce((acc, part) => acc && acc[part], obj);
-  }
+  const getNestedValue = (obj: object, path: string) => {
+    return path
+      .split(".")
+      .reduce((acc, part) => acc && acc[part], obj as Record<string, any>);
+  };
+
+  const handleRequestSelect = (
+    e: Event,
+    request: Types.IRequestDataWithEvents
+  ) => {
+    const element = e.srcElement as HTMLElement;
+    if (element.className.includes("fa-copy")) return;
+    activeRequest = request;
+  };
+
+  const handleRemoveSelectedRequest = () => {
+    activeRequest = undefined;
+  };
 </script>
 
-<div class="flex flex-col gap-[20px]">
+<div
+  class="flex flex-col gap-[20px] relative"
+  style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
+>
   <div class="border-b border-gray-200 dark:border-gray-300 w-fit">
     <ul class="flex flex-wrap text-md font-medium text-center text-gray-500">
       <li
@@ -190,7 +220,9 @@
     />
   </div>
   <div class="relative overflow-x-auto shadow rounded-lg">
-    <table class="w-full text-sm text-left text-gray-500 table-auto">
+    <table
+      class="w-full text-sm text-left text-gray-500 table-auto overflow-hidden"
+    >
       <thead class="text-xs text-gray-700 uppercase bg-white">
         <tr>
           {#if columns.issuedAt}
@@ -243,13 +275,13 @@
           {:else}
             <th
               scope="col"
-              class="px-6 py-5"
+              class="px-6 py-5 cursor-pointer"
               on:click={() =>
                 handleSort(
                   currentTab === "Pay" ? "payee.value" : "payer.value"
                 )}
               >{currentTab === "Pay" ? "Payee" : "Payer"}<i
-                class={`ml-[6px] fa-solid fa-caret-${(sortOrder === "asc" && sortColumn === "payee.value") || "payer.value" ? "up" : "down"}`}
+                class={`ml-[6px] fa-solid fa-caret-${((currentTab === "Pay" && sortColumn === "payee.value") || sortColumn === "payer.value") && sortOrder === "asc" ? "up" : "down"}`}
               ></i></th
             >
           {/if}
@@ -272,7 +304,10 @@
       <tbody>
         {#if paginatedRequests}
           {#each paginatedRequests as request}
-            <tr class="bg-white border-b border-t border-gray-300">
+            <tr
+              class="bg-white border-b border-t border-gray-300 hover:shadow-sm hover:translate-y-1 transition-all hover:cursor-pointer"
+              on:click={(e) => handleRequestSelect(e, request)}
+            >
               {#if columns.issuedAt}
                 <td class="px-6 py-4"
                   >{new Date(
@@ -297,43 +332,49 @@
               >
               {#if currentTab === "All"}
                 <td class="px-6 py-4"
-                  ><span class="mr-[10px]"
-                    >{formatAddress(request.payee?.value)}</span
-                  >
-                  <Copy textToCopy={request.payee?.value} /></td
+                  ><div class="flex items-center">
+                    <span class="mr-[10px]"
+                      >{formatAddress(request.payee?.value ?? "")}</span
+                    >
+                    <Copy textToCopy={request.payee?.value} />
+                  </div></td
                 >
                 <td class="px-6 py-4"
-                  ><span class="mr-[10px]"
-                    >{formatAddress(request.payer?.value)}</span
-                  >
-                  <Copy textToCopy={request.payer?.value} /></td
+                  ><div class="flex items-center">
+                    <span class="mr-[10px]"
+                      >{formatAddress(request.payer?.value ?? "")}</span
+                    >
+                    <Copy textToCopy={request.payer?.value} />
+                  </div></td
                 >
               {:else}
-                <td class="px-6 py-4"
-                  ><span class="mr-[10px]"
-                    >{formatAddress(
-                      currentTab === "Pay"
+                <td class="px-6 py-4">
+                  <div class="flex items-center">
+                    <span class="mr-[10px]"
+                      >{formatAddress(
+                        currentTab === "Pay"
+                          ? request.payee?.value ?? ""
+                          : request.payer?.value ?? ""
+                      )}</span
+                    >
+                    <Copy
+                      textToCopy={currentTab === "Pay"
                         ? request.payee?.value
-                        : request.payer?.value
-                    )}</span
-                  >
-                  <Copy
-                    textToCopy={currentTab === "Pay"
-                      ? request.payee?.value
-                      : request.payer.value || ""}
-                  />
+                        : request.payer?.value || ""}
+                    />
+                  </div>
                 </td>
               {/if}
               <td class="px-6 py-4">
                 {formatUnits(
-                  request.expectedAmount,
+                  BigInt(request.expectedAmount),
                   getDecimals(
-                    request.currencyInfo.network,
+                    request.currencyInfo.network ?? "",
                     request.currencyInfo.value
                   )
                 )}
                 {getSymbol(
-                  request.currencyInfo.network,
+                  request.currencyInfo.network ?? "",
                   request.currencyInfo.value
                 )}
               </td>
@@ -377,11 +418,26 @@
       </button>
     </div>
   {/if}
-  <!-- <div class="mt-[12px]">
-    <Skeleton
-      widths={["w-full", "w-full", "w-full"]}
-      heights={["h-[53px]", "h-[53px]", "h-[53px]"]}
-      lineCount={3}
-    />
-  </div> -->
+  {#if loading}
+    <div class="mt-[12px]">
+      <Skeleton
+        config={activeConfig}
+        widths={["w-full", "w-full", "w-full"]}
+        heights={["h-[53px]", "h-[53px]", "h-[53px]"]}
+        lineCount={3}
+      />
+    </div>
+  {/if}
+  {#if !loading && paginatedRequests.length === 0}
+    <div class="text-center text-gray-500 mt-[20px]">
+      <p class="text-black text-[20px]">No requests found</p>
+      <span>(Please connect a wallet or create a request)</span>
+    </div>
+  {/if}
+  <Drawer
+    active={activeRequest !== undefined}
+    onClose={handleRemoveSelectedRequest}
+  >
+    <InvoiceView {requestNetwork} request={activeRequest} />
+  </Drawer>
 </div>

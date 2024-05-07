@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [
     nodePolyfills(),
     svelte({
-      include: ["./src/lib/*.svelte"],
       compilerOptions: {
         customElement: true,
       },
@@ -32,7 +31,6 @@ export default defineConfig({
       fileName: "web-component",
     },
     rollupOptions: {
-      external: ["@web3-onboard/*"],
       plugins: [
         nodePolyfills({ include: ["crypto", "http"] }),
         inject({ Buffer: ["Buffer", "Buffer"] }),
@@ -44,13 +42,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ["@ethersproject/hash", "wrtc", "http"],
-    include: [
-      "@web3-onboard/core",
-      "@web3-onboard/gas",
-      "@web3-onboard/sequence",
-      "js-sha3",
-      "@ethersproject/bignumber",
-    ],
+    include: ["js-sha3", "@ethersproject/bignumber"],
     esbuildOptions: {
       define: {
         global: "globalThis",
