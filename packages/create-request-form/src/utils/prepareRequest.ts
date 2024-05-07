@@ -1,5 +1,5 @@
 import { Types, Utils } from "@requestnetwork/request-client.js";
-import { currencies, CustomFormData } from "@requestnetwork/shared";
+import { currencies, type CustomFormData } from "@requestnetwork/shared";
 import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
