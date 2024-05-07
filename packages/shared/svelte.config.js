@@ -7,6 +7,9 @@ const config = {
   kit: {
     adapter: adapter(),
   },
+  compilerOptions: {
+    customElement: true,
+  },
 };
 
 export default config;
