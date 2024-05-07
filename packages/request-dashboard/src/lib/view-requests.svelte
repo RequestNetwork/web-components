@@ -2,27 +2,29 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-
 <script lang="ts">
   import {
     debounce,
     getSymbol,
     getDecimals,
     formatAddress,
-    config as defaultConfig,
+    config as generalConfig,
   } from "$src/utils";
-  import { onMount } from "svelte";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
   import { formatUnits } from "viem";
   import { Copy, Input, Dropdown, Skeleton } from "@requestnetwork/shared";
-  import { Drawer, InvoiceView } from "./dashboard";
+  import { onMount } from "svelte";
+  import Drawer from "./dashboard/drawer.svelte";
+  import InvoiceView from "./dashboard/invoice-view.svelte";
+  import type { WalletState } from "@web3-onboard/core";
 
   export let config: IConfig;
-  export let signer: string = "";
+  export let wallet: WalletState;
   export let requestNetwork: RequestNetwork | null | undefined;
 
-  let activeConfig = config || defaultConfig;
+  let signer = "";
+  let activeConfig = config || generalConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
@@ -44,6 +46,10 @@
 
   let sortOrder = "asc";
   let sortColumn = "timestamp";
+
+  $: {
+    signer = wallet?.accounts[0]?.address;
+  }
 
   const getRequests = async () => {
     try {
@@ -175,6 +181,15 @@
 
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
+  };
+
+  const checkStatus = (request: any) => {
+    switch (request.balance.balance >= request.expectedAmount) {
+      case true:
+        return "Paid";
+      default:
+        return "Created";
+    }
   };
 </script>
 
@@ -312,7 +327,7 @@
                 <td class="px-6 py-4"
                   >{new Date(
                     request.contentData.creationDate
-                  ).toLocaleDateString() || "#"}</td
+                  ).toLocaleDateString() || "-"}</td
                 >
               {/if}
               {#if columns.dueDate}
@@ -321,14 +336,14 @@
                     ? new Date(
                         request?.contentData?.paymentTerms?.dueDate
                       ).toLocaleDateString()
-                    : "#"}</td
+                    : "-"}</td
                 >
               {/if}
               <td class="px-6 py-4"
                 >{new Date(request.timestamp * 1000).toLocaleDateString()}</td
               >
               <td class="px-6 py-4"
-                >{request.contentData.invoiceNumber || "#"}</td
+                >{request.contentData.invoiceNumber || "-"}</td
               >
               {#if currentTab === "All"}
                 <td class="px-6 py-4"
@@ -378,9 +393,7 @@
                   request.currencyInfo.value
                 )}
               </td>
-              <td class="px-6 py-4">
-                {request.state}
-              </td>
+              <td class="px-6 py-4"> {checkStatus(request)}</td>
             </tr>
           {/each}
         {/if}
@@ -438,6 +451,8 @@
     active={activeRequest !== undefined}
     onClose={handleRemoveSelectedRequest}
   >
-    <InvoiceView {requestNetwork} request={activeRequest} />
+    {#if activeRequest !== undefined}
+      <InvoiceView {wallet} {requestNetwork} request={activeRequest} />
+    {/if}
   </Drawer>
 </div>

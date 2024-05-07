@@ -2,10 +2,10 @@
   import { ViewRequests } from "$lib/index";
 
   export let config;
-  export let signer = "";
+  export let wallet;
   export let requestNetwork = null;
 </script>
 
 <div class="container m-auto w-full">
-  <ViewRequests {config} {signer} {requestNetwork} />
+  <ViewRequests {config} {wallet} {requestNetwork} />
 </div>

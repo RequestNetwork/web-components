@@ -8,3 +8,4 @@ export { prepareRequestParams } from "./prepareRequest";
 export { getSymbol, getDecimals } from "./chain-utils";
 export { formatDate, inputDateFormat } from "./formatDate";
 export { calculateItemTotal, calculateInvoiceTotals } from "./invoiceTotals";
+export { publicClientToProvider, walletClientToSigner } from "./wallet-utils";

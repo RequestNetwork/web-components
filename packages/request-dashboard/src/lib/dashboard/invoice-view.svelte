@@ -3,27 +3,36 @@
     getSymbol,
     currencies,
     formatDate,
-    calculateInvoiceTotals,
     calculateItemTotal,
   } from "$src/utils";
-  import type {
+  import {
     Types,
-    RequestNetwork,
+    type RequestNetwork,
   } from "@requestnetwork/request-client.js";
   import {
     payRequest,
     approveErc20,
     hasErc20Approval,
-    hasSufficientFunds,
   } from "@requestnetwork/payment-processor";
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { Accordion, Button } from "@requestnetwork/shared";
+  import type { WalletState } from "@web3-onboard/core";
+  import { walletClientToSigner } from "$src/utils";
 
+  export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
   export let currency =
     currencies.get(request?.currencyInfo.network ?? "") ||
     currencies.keys().next().value;
 
+  let statuses: any = [];
+  let isPaid = false;
+  let loading = false;
+  let requestData: any = null;
+  let signer: any = null;
+  let approved = false;
+  let address = wallet?.accounts?.[0]?.address;
   let firstItems: any;
   let otherItems: any;
   let sellerInfo: { label: string; value: string }[] = [];
@@ -41,12 +50,16 @@
       { label: "Postal Code", value: info?.address?.["postal-code"] },
       { label: "Street Address", value: info?.address?.["street-address"] },
       { label: "Email", value: info?.email },
-    ].filter((detail) => detail.value); // Only include if value exists
+    ].filter((detail) => detail.value);
   };
 
   $: {
-    firstItems = request?.contentData.invoiceItems.slice(0, 3);
-    otherItems = request?.contentData.invoiceItems.slice(3);
+    firstItems = request?.contentData
+      ? request?.contentData?.invoiceItems?.slice(0, 3)
+      : [];
+    otherItems = request?.contentData
+      ? request?.contentData?.invoiceItems?.slice(3)
+      : [];
   }
 
   $: {
@@ -54,68 +67,73 @@
     buyerInfo = generateDetailParagraphs(request?.contentData.buyerInfo);
   }
 
-  console.log(request);
+  $: request, checkInvoice();
 
-  // const payTheRequest = async () => {
-  //   try {
-  //     const _request = await requestN.fromRequestId(requestData!.requestId);
-  //     let _requestData = _request.getData();
-  //     const paymentTx = await payRequest(_requestData, signer);
-  //     await paymentTx.wait(2);
+  const checkInvoice = async () => {
+    loading = true;
+    const singleRequest = await requestNetwork?.fromRequestId(
+      request!.requestId
+    );
+    signer = walletClientToSigner(wallet);
+    requestData = singleRequest?.getData();
+    approved = await checkApproval(requestData, signer);
+    isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
+    loading = false;
+  };
 
-  //     while (_requestData.balance?.balance! < _requestData.expectedAmount) {
-  //       _requestData = await _request.refresh();
-  //       alert(`balance = ${_requestData.balance?.balance}`);
-  //       await new Promise((resolve) => setTimeout(resolve, 1000));
-  //     }
-  //     alert(`payment detected!`);
-  //     setRequestData(_requestData);
-  //     setStatus(APP_STATUS.REQUEST_PAID);
-  //   } catch (err) {
-  //     setStatus(APP_STATUS.APPROVED);
-  //     alert(err);
-  //   }
-  // };
+  const payTheRequest = async () => {
+    try {
+      loading = true;
+      const _request = await requestNetwork?.fromRequestId(
+        requestData?.requestId!
+      );
 
-  // async function approve() {
-  //   try {
-  //     const singleRequest = await requestNetwork?.fromRequestId(
-  //       request!.requestId
-  //     );
-  //     const requestData = singleRequest?.getData();
+      statuses = [...statuses, "Waiting for payment"];
+      const paymentTx = await payRequest(requestData, signer);
+      await paymentTx.wait(2);
 
-  //     const _hasSufficientFunds = await hasSufficientFunds(
-  //       requestData,
-  //       address as string,
-  //       { provider: provider }
-  //     );
-  //     alert(`_hasSufficientFunds = ${_hasSufficientFunds}`);
-  //     if (!_hasSufficientFunds) {
-  //       setStatus(APP_STATUS.REQUEST_CONFIRMED);
-  //       return;
-  //     }
-  //     if (
-  //       getPaym(_requestData)?.id ===
-  //       Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
-  //     ) {
-  //       alert(`ERC20 Request detected. Checking approval...`);
-  //       const _hasErc20Approval = await hasErc20Approval(
-  //         _requestData,
-  //         address as string,
-  //         provider
-  //       );
-  //       alert(`_hasErc20Approval = ${_hasErc20Approval}`);
-  //       if (!_hasErc20Approval) {
-  //         const approvalTx = await approveErc20(_requestData, signer);
-  //         await approvalTx.wait(2);
-  //       }
-  //     }
-  //     setStatus(APP_STATUS.APPROVED);
-  //   } catch (err) {
-  //     setStatus(APP_STATUS.REQUEST_CONFIRMED);
-  //     alert(JSON.stringify(err));
-  //   }
-  // }
+      statuses = [...statuses, "Payment detected"];
+      while (requestData.balance?.balance! < requestData.expectedAmount) {
+        requestData = await _request?.refresh();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      statuses = [...statuses, "Payment confirmed"];
+      isPaid = true;
+      loading = false;
+      statuses = [];
+    } catch (err) {
+      console.log(err);
+      loading = false;
+      statuses = [];
+    }
+  };
+
+  const checkApproval = async (requestData: any, signer: any) => {
+    return await hasErc20Approval(requestData!, address!, signer);
+  };
+
+  async function approve() {
+    try {
+      loading = true;
+      if (
+        getPaymentNetworkExtension(requestData!)?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        approved = await checkApproval(requestData!, signer);
+
+        if (!approved) {
+          const approvalTx = await approveErc20(requestData!, signer);
+          await approvalTx.wait(2);
+          approved = true;
+        }
+      }
+      loading = false;
+    } catch (err) {
+      console.log(err);
+      loading = false;
+    }
+  }
 </script>
 
 <div class="flex flex-col gap-[20px] bg-white p-2 h-fit w-full">
@@ -123,20 +141,16 @@
     <p>Issued on: {formatDate(request?.contentData?.creationDate)}</p>
     <p>Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate)}</p>
   </div>
-  <h2 class="text-xl font-bold">
+  <h2 class="text-xl font-bold flex gap-[12px]">
     Invoice #{request?.contentData?.invoiceNumber}
+    <p
+      class={`px-2 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] text-white w-fit ${
+        isPaid ? "bg-green" : "bg-zinc-400"
+      }`}
+    >
+      {isPaid ? "Paid" : "Created"}
+    </p>
   </h2>
-  <div class="flex flex-wrap gap-2 max-w-[300px]">
-    {#if request?.contentData?.miscellaneous?.labels}
-      {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
-        <div
-          class={`flex items-center text-white rounded px-2 w-fit cursor-pointer label`}
-        >
-          {label}
-        </div>
-      {/each}
-    {/if}
-  </div>
   <div>
     <h2 class="font-medium">From:</h2>
     <p>{request?.payee?.value}</p>
@@ -249,9 +263,53 @@
       </p>
     </div>
   {/if}
-  <div class="flex mt-4 items-center gap-[10px] justify-end">
-    <Button type="button" text="Approve" padding="px-[12px] py-[6px]" />
-    <Button type="button" text="Pay" padding="px-[12px] py-[6px]" disabled />
+  <div class="flex flex-wrap gap-2 max-w-[300px]">
+    {#if request?.contentData?.miscellaneous?.labels}
+      {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
+        <div
+          class={`flex items-center text-white rounded px-2 w-fit cursor-pointer label`}
+        >
+          {label}
+        </div>
+      {/each}
+    {/if}
+  </div>
+  <div class="flex mt-4 items-center gap-[10px] justify-between">
+    <div class="flex flex-col gap-[10px]">
+      {#if statuses.length > 0 && loading}
+        {#each statuses as status, index (index)}
+          <div
+            class="px-3 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] bg-green text-white w-fit"
+          >
+            {status}
+            {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
+              <i class="fa-solid fa-check"></i>
+            {/if}
+          </div>
+        {/each}
+      {/if}
+    </div>
+    {#if loading}
+      <div
+        class="px-3 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] animate-pulse bg-green text-white w-fit"
+      >
+        Loading...
+      </div>
+    {:else if approved && !isPaid}
+      <Button
+        type="button"
+        text="Pay"
+        padding="px-[12px] py-[6px]"
+        onClick={payTheRequest}
+      />
+    {:else if !approved && !isPaid}
+      <Button
+        type="button"
+        text="Approve"
+        padding="px-[12px] py-[6px]"
+        onClick={approve}
+      />
+    {/if}
   </div>
 </div>
 
