@@ -6,7 +6,7 @@
     getInitialFormData,
     prepareRequestParams,
     calculateInvoiceTotals,
-    config as generalConfig,
+    config as defaultConfig,
   } from "$utils";
 
   import { APP_STATUS } from "@requestnetwork/shared";
@@ -18,7 +18,7 @@
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
 
-  let activeConfig = config || generalConfig;
+  let activeConfig = config || defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
