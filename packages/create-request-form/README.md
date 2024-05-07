@@ -25,7 +25,7 @@ Import the component into your JavaScript or TypeScript file:
 Then, you can use the component directly in your HTML:
 
 ```console
-<create-request-form requestNetwork={requestNetworkInstance} signer={walletAccount} />
+<create-request-form config={config} requestNetwork={requestNetworkInstance} signer={walletAccount} />
 ```
 
 ### In Svelte Projects

@@ -1,4 +1,4 @@
-interface InvoiceItem {
+export interface InvoiceItem {
   description: string;
   quantity: number;
   unitPrice: number;
@@ -9,7 +9,7 @@ interface InvoiceItem {
   };
 }
 
-interface CustomFormData {
+export interface CustomFormData {
   creatorId: string;
   note: string;
   miscellaneous: {
@@ -26,7 +26,7 @@ interface CustomFormData {
   sellerInfo?: SellerBuyerInfo;
 }
 
-interface SellerBuyerInfo {
+export interface SellerBuyerInfo {
   firstName: string | undefined;
   lastName: string | undefined;
   businessName: string | undefined;
@@ -35,7 +35,7 @@ interface SellerBuyerInfo {
   email: string | undefined;
 }
 
-interface Address {
+export interface Address {
   "country-name"?: string;
   locality?: string;
   "postal-code"?: string;
@@ -43,7 +43,7 @@ interface Address {
   "street-address"?: string;
 }
 
-interface IConfig {
+export interface IConfig {
   dashboardLink: string;
   logo: string;
   colors: {

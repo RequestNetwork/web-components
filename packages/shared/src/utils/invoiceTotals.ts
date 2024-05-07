@@ -1,3 +1,5 @@
+import { InvoiceItem } from "../types";
+
 export const calculateInvoiceTotals = (data: InvoiceItem[]) => {
   let amountWithoutTax = 0;
   let totalDiscount = 0;

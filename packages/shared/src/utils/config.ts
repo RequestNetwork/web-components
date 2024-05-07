@@ -1,3 +1,5 @@
+import { IConfig } from "../types";
+
 export const config: IConfig = {
   dashboardLink: "/",
   logo: "assets/logo-sm.svg",
