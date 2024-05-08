@@ -20,7 +20,7 @@ export default defineConfig({
       assert: "assert",
       zlib: "browserify-zlib",
       $src: path.resolve(__dirname, "src"),
-      $utils: path.resolve(__dirname, "src/utils"),
+      $utils: path.resolve(__dirname, "src/lib/utils"),
     },
   },
   build: {
@@ -49,6 +49,8 @@ export default defineConfig({
     },
   },
   define: {
-    global: "window",
+    "process.platform": null,
+    "process.version": null,
+    global: {},
   },
 });
