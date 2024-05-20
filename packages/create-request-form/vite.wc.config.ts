@@ -10,7 +10,7 @@ export default defineConfig({
       compilerOptions: {
         customElement: true,
       },
-      emitCss: false,
+      emitCss: true,
     }),
   ],
   resolve: {
@@ -51,6 +51,5 @@ export default defineConfig({
   define: {
     "process.platform": null,
     "process.version": null,
-    global: {},
   },
 });
