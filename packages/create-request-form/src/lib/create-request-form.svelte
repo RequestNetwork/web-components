@@ -101,12 +101,12 @@
 </script>
 
 <div
-  class="flex flex-col gap-[20px]"
+  class="create-request-form-wrapper"
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
-  <div class="flex gap-[20px] w-full">
+  <div class="create-request-form-content">
     <InvoiceForm bind:formData {handleCurrencyChange} config={activeConfig} />
-    <div class="h-fit flex flex-col gap-[12px] w-full">
+    <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
         {currency}
@@ -123,7 +123,7 @@
     onClose={hanldeCreateNewRequest}
   >
     <Status statuses={appStatus} />
-    <div class="flex justify-between mt-[20px]">
+    <div class="modal-footer">
       <Button
         type="button"
         onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
@@ -139,3 +139,31 @@
     </div>
   </Modal>
 </div>
+
+<style>
+  .create-request-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .create-request-form-content {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .invoice-view-wrapper {
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+</style>
