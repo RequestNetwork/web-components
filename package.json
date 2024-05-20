@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;"
+    "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;",
+    "link:all": "for d in packages/*; do pushd $d; npm link; popd; done",
+    "unlink:all": "for d in packages/*; do pushd $d; npm unlink; popd; done"
   },
   "author": "",
   "license": "MIT",
