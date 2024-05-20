@@ -87,123 +87,123 @@
   }
 </script>
 
-<div
-  class="h-fit bg-white flex flex-col w-full p-[20px] shadow-small gap-[20px]"
->
-  <div class="flex justify-between w-full">
-    <div class="flex flex-col gap-3">
-      <img src={config.logo} alt="Logo" class="w-[40px] h-fit" />
-      <h2 class="text-dark-blue font-bold text-[20px]">
+<div class="invoice-form-wrapper">
+  <div class="invoice-header">
+    <div class="invoice-header-left">
+      <img src={config.logo} alt="Logo" class="invoice-logo" />
+      <h2 class="invoice-title">
         Invoice #{formData.invoiceNumber}
       </h2>
-      <div class="flex flex-wrap gap-2 max-w-[300px]">
+      <div class="invoice-labels">
         {#each labels as label, index (index)}
-          <div
-            class={`flex items-center text-white rounded px-2 w-fit cursor-pointer label`}
-          >
+          <div class={`invoice-label`}>
             {label}
-            <button class="ml-2" on:click={() => removeLabel(index)}>
+            <button
+              type="button"
+              class="invoice-label-remove"
+              on:click={() => removeLabel(index)}
+            >
               <i class="fa fa-times" />
             </button>
           </div>
         {/each}
       </div>
     </div>
-    <div class="flex flex-col gap-[9px] ml-auto w-fit">
+    <div class="invoice-header-right">
       <p>Issued on {formatDate(new Date().toString())}</p>
       <p>
         Payment due by {formData.dueDate && formatDate(formData.dueDate)}
       </p>
     </div>
   </div>
-  <div class="flex flex-col gap-[12px]">
-    <p class="flex flex-col">
-      <span class="font-medium">From</span>
+  <div class="invoice-section">
+    <p class="invoice-section-title">
+      <span>From</span>
       {formData.payeeAddress}
     </p>
     <div
-      class={`flex flex-wrap gap-[18px] ${sellerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
+      class={`invoice-details ${sellerInfo.length > 0 && "invoice-details-active"} `}
     >
       {#each sellerInfo as paragraph}
-        <div class="flex flex-col">
-          <span class="font-medium text-zinc-500">{paragraph.label}</span>
+        <div class="invoice-details-info">
+          <span>{paragraph.label}</span>
           {paragraph.value}
         </div>
       {/each}
     </div>
   </div>
-  <div class="flex flex-col gap-[12px]">
+  <div class="invoice-section">
     <p class="flex flex-col">
-      <span class="font-medium">Billed to</span>
+      <span>Billed to</span>
       {formData.payerAddress}
     </p>
     <div
-      class={`flex flex-wrap gap-[18px] ${buyerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
+      class={`invoice-details ${buyerInfo.length > 0 && "invoice-details-active"} `}
     >
       {#each buyerInfo as paragraph}
-        <div class="flex flex-col">
-          <span class="font-medium text-zinc-500">{paragraph.label}</span>
+        <div class="invoice-details-info">
+          <span>{paragraph.label}</span>
           {paragraph.value}
         </div>
       {/each}
     </div>
   </div>
-  <p class="flex flex-col">
-    <span class="font-medium">Payment Chain</span>
+  <p class="invoice-section-title">
+    <span>Payment Chain</span>
     Sepolia
   </p>
-  <p class="flex flex-col">
-    <span class="font-medium">Invoice Currency</span>
+  <p class="invoice-section-title">
+    <span>Invoice Currency</span>
     {currencies.get(currency)?.symbol}
     ({currencies.get(currency)?.network})
   </p>
-  <p class="flex flex-col">
-    <span class="font-medium">Invoice Type</span>
+  <p class="invoice-section-title">
+    <span>Invoice Type</span>
     Regular Invoice
   </p>
-  <div class="relative overflow-x-auto">
-    <table class="w-full text-sm text-left">
-      <thead class="text-xs uppercase bg-zinc-200">
-        <tr class="text-left">
-          <th scope="col" class="pl-2 py-3"> Description </th>
-          <th scope="col" class="px-0 py-3"> Qty </th>
-          <th scope="col" class="px-0 py-3"> Unit Price </th>
-          <th scope="col" class="px-0 py-3"> Discount </th>
-          <th scope="col" class="px-0 py-3"> Tax </th>
-          <th scope="col" class="px-0 py-3"> Amount </th>
+  <div class="invoice-table-wrapper">
+    <table class="invoice-table">
+      <thead class="invoice-table-header">
+        <tr>
+          <th scope="col"> Description </th>
+          <th scope="col"> Qty </th>
+          <th scope="col"> Unit Price </th>
+          <th scope="col"> Discount </th>
+          <th scope="col"> Tax </th>
+          <th scope="col"> Amount </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="invoice-table-body">
         {#each formData.items as item, index (index)}
-          <tr class="bg-green-400 border-b-[1px] border-black">
-            <th scope="row" class="pl-2 py-2 font-medium whitespace-nowrap">
-              <p class="truncate w-[150px]">{item.description}</p>
+          <tr class="invoice-table-body-row">
+            <th scope="row">
+              <p>{item.description}</p>
             </th>
-            <td class="px-0 py-2">{item.quantity}</td>
-            <td class="px-0 py-2">{item.unitPrice}</td>
-            <td class="px-0 py-2">{item.discount}</td>
-            <td class="px-0 py-2">{item.tax.amount}</td>
-            <td class="px-0 py-2">{calculateItemTotal(item).toFixed(2)}</td>
+            <td>{item.quantity}</td>
+            <td>{item.unitPrice}</td>
+            <td>{item.discount}</td>
+            <td>{item.tax.amount}</td>
+            <td>{calculateItemTotal(item).toFixed(2)}</td>
           </tr>
         {/each}
       </tbody>
     </table>
   </div>
-  <div class="flex justify-between flex-col ml-auto gap-[5px]">
-    <div class="flex gap-[20px] border-b-[1px] border-black">
+  <div class="invoice-summary">
+    <div class="invoice-summary-item">
       <span>Amount without tax: </span>
       <span>{invoiceTotals.amountWithoutTax.toFixed(2)}</span>
     </div>
-    <div class="flex justify-between gap-[20px] border-b-[1px] border-black">
+    <div class="invoice-summary-item invoice-summary-item-spaced">
       <span>Total Tax amount: </span>
       <span>{invoiceTotals.totalTaxAmount.toFixed(2)}</span>
     </div>
-    <div class="flex justify-between gap-[20px] border-b-[1px] border-black">
+    <div class="invoice-summary-item invoice-summary-item-spaced">
       <span>Total amount: </span>
       <span>{invoiceTotals.totalAmount.toFixed(2)}</span>
     </div>
     <div
-      class="flex justify-between gap-[20px] border-b-[1px] border-black font-semibold"
+      class="invoice-summary-item invoice-summary-item-spaced invoice-summary-item-bold"
     >
       <span>Due: </span>
       <span
@@ -214,15 +214,15 @@
     </div>
   </div>
   {#if formData.note}
-    <div class="w-full bg-zinc-100 p-[10px]">
-      <p class="w-[620px] break-all">
-        <span class="font-semibold">Memo:</span> <br />
+    <div class="invoice-note">
+      <p class="invoice-note-content">
+        <span>Memo:</span> <br />
         {formData.note}
       </p>
     </div>
   {/if}
   <Button
-    className="mr-auto w-fit"
+    className="create-request-button"
     text="Create Request"
     type="submit"
     disabled={!canSubmit}
@@ -231,11 +231,202 @@
 </div>
 
 <style>
-  .label {
+  .invoice-form-wrapper {
+    height: fit-content;
+    width: 100%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    gap: 20px;
+  }
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .invoice-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .invoice-logo {
+    width: 40px;
+    height: fit-content;
+  }
+
+  .invoice-title {
+    font-weight: bold;
+    font-size: 20px;
+    color: #050b20;
+  }
+
+  .invoice-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 300px;
+  }
+
+  .invoice-label {
+    display: flex;
+    align-items: center;
+    color: white;
+    border-radius: 4px;
+    padding: 0 8px;
+    width: fit-content;
+    cursor: pointer;
     background-color: var(--mainColor);
   }
 
-  .label:hover {
+  .invoice-label:hover {
     background-color: var(--secondaryColor);
+  }
+
+  .invoice-label-remove {
+    margin-left: 8px;
+  }
+
+  .invoice-header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-left: auto;
+    width: fit-content;
+  }
+
+  .invoice-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .invoice-section-title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .invoice-section-title span {
+    font-weight: 500;
+  }
+
+  .invoice-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 12px;
+    width: fit-content;
+  }
+
+  .invoice-details-active {
+    background-color: #f4f4f5;
+  }
+
+  .invoice-details-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .invoice-details-info span {
+    font-weight: 500;
+    color: #71717a;
+  }
+
+  .invoice-table-wrapper {
+    position: relative;
+    overflow-x: scroll;
+  }
+
+  .invoice-table {
+    width: 100%;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+  }
+
+  .invoice-table-header {
+    font-size: 14px;
+    line-height: 20px;
+    text-transform: uppercase;
+    background-color: #e4e4e7;
+  }
+
+  .invoice-table-header tr {
+    text-align: left;
+  }
+
+  .invoice-table-header tr th {
+    padding: 12px 0px;
+  }
+
+  .invoice-table-header-tr:first-child {
+    padding: 12px 0px 12px 8px;
+  }
+
+  .invoice-table-body-row {
+    background-color: #4ade80;
+    border-bottom: 1px solid black;
+  }
+
+  .invoice-table-body-row th {
+    padding: 8px 0px 8px 8px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .invoice-table-body-row th p {
+    width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .invoice-table-body td {
+    padding: 8px 0px;
+  }
+
+  .invoice-summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: auto;
+    gap: 5px;
+  }
+
+  .invoice-summary-item {
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid black;
+  }
+
+  .invoice-summary-item-spaced {
+    justify-content: space-between;
+  }
+
+  .invoice-summary-item-bold {
+    font-weight: 600;
+  }
+
+  .invoice-note {
+    width: 100%;
+    padding: 10px;
+    background-color: #f4f4f5;
+  }
+
+  .invoice-note-content {
+    width: 620px;
+    word-break: break-all;
+  }
+
+  .invoice-note-content span {
+    font-weight: 600;
+  }
+
+  .create-request-button {
+    margin-right: auto;
+    width: fit-content;
   }
 </style>
