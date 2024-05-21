@@ -141,10 +141,16 @@
 </div>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
   .create-request-form-wrapper {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    box-sizing: border-box;
   }
 
   .create-request-form-content {

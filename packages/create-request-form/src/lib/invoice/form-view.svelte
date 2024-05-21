@@ -231,6 +231,15 @@
 </div>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
   .invoice-form-wrapper {
     height: fit-content;
     width: 100%;
@@ -240,6 +249,7 @@
     padding: 20px;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     gap: 20px;
+    box-sizing: border-box;
   }
 
   .invoice-header {
@@ -338,7 +348,7 @@
 
   .invoice-table-wrapper {
     position: relative;
-    overflow-x: scroll;
+    overflow-x: auto;
   }
 
   .invoice-table {
@@ -368,7 +378,6 @@
   }
 
   .invoice-table-body-row {
-    background-color: #4ade80;
     border-bottom: 1px solid black;
   }
 

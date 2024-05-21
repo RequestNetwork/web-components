@@ -344,58 +344,66 @@
         <tbody>
           {#each formData.items as item, index (index)}
             <tr>
-              <th scope="row" class="invoice-form-table-body-header">
+              <th
+                scope="row"
+                class="invoice-form-table-body-header invoice-form-table-body-description"
+              >
                 <Input
                   id={`description-${index}`}
                   type="text"
                   value={item.description}
                   placeholder="Enter description"
                   handleInput={(event) => handleInput(event, index)}
-                  className="invoice-form-table-body-description"
                 />
               </th>
-              <td class="invoice-form-table-body-cell">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-quantity"
+              >
                 <Input
                   id={`quantity-${index}`}
                   type="number"
                   value={item.quantity}
                   handleInput={(event) => handleInput(event, index)}
-                  className="invoice-form-table-body-quantity "
                 />
               </td>
-              <td class="invoice-form-table-body-cell">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-amount"
+              >
                 <Input
                   id={`unitPrice-${index}`}
                   type="number"
                   value={item.unitPrice}
                   handleInput={(event) => handleInput(event, index)}
-                  className="invoice-form-table-body-amount"
                 />
               </td>
-              <td class="invoice-form-table-body-cell">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-amount"
+              >
                 <Input
                   id={`discount-${index}`}
                   type="number"
                   value={item.discount}
                   handleInput={(event) => handleInput(event, index)}
-                  className="invoice-form-table-body-amount"
                 />
               </td>
-              <td class="flex items-center gap-[8px] px-4 py-3">
+              <td
+                class="invoice-form-table-body-tax-cell invoice-form-table-body-amount"
+              >
                 %
                 <Input
                   id={`tax-${index}`}
                   type="number"
                   value={item.tax.amount}
                   handleInput={(event) => handleInput(event, index)}
-                  className="invoice-form-table-body-amount"
                 />
               </td>
               <td class="invoice-form-table-body-total">
                 {calculateItemTotal(item).toFixed(2)}
               </td>
               {#if index !== 0}
-                <td class="invoice-form-table-body-cell">
+                <td
+                  class="invoice-form-table-body-cell invoice-form-table-body-amount"
+                >
                   <Button
                     type="button"
                     className="invoice-form-body-remove-item"
@@ -414,9 +422,8 @@
         </tbody>
       </table>
     </div>
-    <div class="flex justify-between">
+    <div class="flex justify-between invoice-form-table-body-add-item">
       <Button
-        className="invoice-form-table-body-add-item"
         text="Add Item"
         type="button"
         icon={{
@@ -443,6 +450,16 @@
 </form>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
   .invoice-form {
     height: fit-content;
     width: 120%;
@@ -452,6 +469,7 @@
     padding: 20px;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     gap: 20px;
+    box-sizing: border-box;
   }
 
   .invoice-form-header {
@@ -517,7 +535,7 @@
   .invoice-form-info {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -529,7 +547,7 @@
 
   .invoice-form-table-wrapper {
     position: relative;
-    overflow-y: scroll;
+    overflow-x: auto;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     border-radius: 8px;
   }
@@ -546,6 +564,7 @@
     font-size: 14px;
     line-height: 20px;
     text-transform: uppercase;
+    color: white;
   }
 
   .invoice-form-table-header tr {
@@ -568,16 +587,23 @@
     padding: 12px 16px;
   }
 
-  .invoice-form-table-body-description {
-    width: 135px;
+  .invoice-form-table-body-tax-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
   }
 
-  .invoice-form-table-body-quantity {
-    width: 40px;
+  .invoice-form-table-body-description input {
+    width: 135px !important;
   }
 
-  .invoice-form-table-body-amount {
-    width: 80px;
+  .invoice-form-table-body-quantity input {
+    width: 40px !important;
+  }
+
+  .invoice-form-table-body-amount input {
+    width: 80px !important;
   }
 
   .invoice-form-table-body-total {
@@ -596,10 +622,10 @@
     padding: 12px 32px;
   }
 
-  .invoice-form-table-body-add-item {
-    padding: 6px 14px;
-    width: fit-content;
-    height: fit-content;
+  .invoice-form-table-body-add-item button {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
   }
 
   .invoice-form-label-wrapper {
