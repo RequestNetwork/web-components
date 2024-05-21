@@ -20,13 +20,14 @@
   };
 </script>
 
-<div class="relative">
+<div class="dropdown-wrapper">
   <button
+    type="button"
     on:click={() => (isOpen = !isOpen)}
-    class="text-black justify-between bg-white border border-gray-300 p-2 rounded-md focus:ring-1 focus:outline-none focus:ring-light-green font-medium text-sm px-5 py-2.5 text-center inline-flex items-center w-full min-w-[190px]"
+    class="dropdown-button"
   >
     {type === "default" ? selectedValue || placeholder : placeholder}
-    <svg class="ml-2 w-4 h-4" fill="none" viewBox="0 0 20 20">
+    <svg class="dropdown-button-icon" fill="none" viewBox="0 0 20 20">
       <path
         stroke="currentColor"
         stroke-linecap="round"
@@ -38,23 +39,21 @@
   </button>
 
   {#if isOpen}
-    <div
-      class="z-10 absolute w-full top-[55px] bg-white rounded-lg shadow divide-y divide-gray-100"
-    >
-      <ul class="text-gray-200 flex flex-col gap-[4px]">
+    <div class="dropdown-menu">
+      <ul class="dropdown-list">
         {#if type === "checkbox"}
           {#each options as option}
-            <li class="flex items-center p-3">
+            <li class="dropdown-checbox-list">
               <input
                 id={`checkbox-${option.value}`}
                 type="checkbox"
                 bind:checked={option.checked}
-                class="w-4 h-4 bg-dark-green border-gray-300 rounded focus:ring-light-green ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2"
+                class="dropdown-checkbox-item:focus"
                 on:change={() => selectOption(option.value, option.checked)}
               />
               <label
                 for={`checkbox-${option.value}`}
-                class={`ml-2 text-sm font-medium cursor-pointer ${option.checked ? "text-black" : "text-gray-300"} w-full`}
+                class={`dropdown-checkbox-item-label ${option.checked ? "dropdown-checkbox-item-label-checked" : ""}`}
               >
                 {option.label}
               </label>
@@ -65,7 +64,7 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <li
-              class="text-black cursor-pointer hover:bg-gray-100 bg-white p-3 w-full"
+              class="dropdown-checkbox-option"
               on:click={() => selectOption(option.value)}
             >
               {option.label}
@@ -76,3 +75,120 @@
     </div>
   {/if}
 </div>
+
+<style>
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .dropdown-wrapper {
+    position: relative;
+  }
+
+  .dropdown-button {
+    color: black;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    width: 100%;
+    min-width: 190px;
+  }
+
+  .dropdown-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #57e1a5;
+  }
+
+  .dropdown-button-icon {
+    margin-left: 8px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .dropdown-menu {
+    z-index: 10;
+    position: absolute;
+    width: 100%;
+    top: 55px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .dropdown-menu > * + * {
+    border-top-width: 1px;
+    border-bottom-width: 0px;
+    border-color: #f3f4f6;
+  }
+
+  .dropdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #e5e7eb;
+    list-style: none;
+  }
+
+  .dropdown-checbox-list {
+    display: flex;
+    align-items: center;
+  }
+
+  .dropdown-checkbox-item {
+    width: 16px;
+    height: 16px;
+    background-color: #328965;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+  }
+
+  .dropdown-checkbox-item:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 2px #57e1a5,
+      0 0 0 1px #374151;
+  }
+
+  .dropdown-checkbox-item-label {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #d1d5db;
+    width: 100%;
+  }
+  .dropdown-checkbox-item-label-checked {
+    color: black;
+  }
+
+  .dropdown-checkbox-option {
+    color: black;
+    cursor: pointer;
+    background-color: white;
+    padding: 12px;
+    width: 100%;
+  }
+
+  .dropdown-checkbox-option {
+    background-color: #f3f4f6;
+  }
+</style>

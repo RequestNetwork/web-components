@@ -16,13 +16,13 @@
   export let icon = "";
 </script>
 
-<div class="flex flex-col w-full gap-[8px]">
+<div class="input-wrapper">
   {#if label}
-    <label for={id} class="text-[14px] text-gray-600">{label}</label>
+    <label for={id} class="input-label">{label}</label>
   {/if}
-  <div class={`relative ${width}`}>
+  <div class={`input-container ${width}`}>
     {#if icon}
-      <i class={`absolute top-[25%] left-[3%] ${icon}`}></i>
+      <i class={`input-icon ${icon}`}></i>
     {/if}
     {#if type === "textarea"}
       <textarea
@@ -32,7 +32,7 @@
         {placeholder}
         maxlength={max}
         on:input={handleInput}
-        class={`border p-2 rounded-md outline-none text-[14px] resize-none w-full ${className}`}
+        class={`textarea-input ${className}`}
       />
     {:else}
       <input
@@ -44,8 +44,75 @@
         {...{ type }}
         {placeholder}
         on:input={handleInput}
-        class={`border p-2 rounded-md outline-none text-[14px] w-full ${className} ${icon && "pl-8"}`}
+        class={`text-input ${className} ${icon && "text-input-icon"}`}
       />
     {/if}
   </div>
 </div>
+
+<style>
+  .input-wrapper input,
+  .input-wrapper textarea {
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    appearance: none;
+    box-sizing: border-box;
+  }
+
+  .input-wrapper input:disabled,
+  .input-wrapper textarea:disabled {
+    background-color: #fafafa;
+  }
+
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    gap: 8px;
+  }
+
+  .input-wrapper .input-label {
+    font-size: 14px;
+    color: #4b5563;
+  }
+
+  .input-wrapper .input-container {
+    position: relative;
+  }
+
+  .input-wrapper .input-icon {
+    position: absolute;
+    top: 25%;
+    left: 3%;
+  }
+
+  .input-wrapper .textarea-input {
+    border: 1px solid #dfe4ea;
+    padding: 8px;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .input-wrapper .text-input {
+    border: 1px solid #dfe4ea;
+    padding: 8px;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .input-wrapper .text-input-icon {
+    padding-left: 32px;
+  }
+</style>

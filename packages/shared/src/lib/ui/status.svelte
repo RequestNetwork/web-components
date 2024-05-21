@@ -40,36 +40,108 @@
   };
 </script>
 
-<ol class="relative mb-[32px]">
+<ol class="status-wrapper">
   {#each statuses as status, index}
-    <li class="mb-10 ms-5">
-      <span
-        class="flex absolute -start-1 justify-center items-center w-[29px] h-6 bg-blue-100 rounded-full ring-8 ring-white p-[20px]"
-      >
+    <li class="status-list">
+      <span class="status-icon-wrapper">
         <i
           class={`fas ${statusDetails[status].icon} ${statusDetails[status].color}`}
         ></i>
       </span>
-      <div class="ml-[40px] text-left">
-        <h3 class="mb-1 text-lg font-semibold text-gray-900">
+      <div class="status-details">
+        <h3 class="status-message">
           {statusDetails[status].message}
         </h3>
-        <p class="text-sm font-normal text-gray-400">
+        <p class="status-description">
           {#if index === statuses?.length - 1 && statuses?.length < 3}
-            <div
-              class="px-3 py-2 text-xs font-medium leading-none text-center rounded-full animate-pulse bg-green text-white w-fit"
-            >
-              Loading...
-            </div>
+            <div class="status-action status-pulsing">Loading...</div>
           {:else}
-            <div
-              class="px-3 py-2 text-xs font-medium leading-none text-center rounded-full bg-green text-white w-fit"
-            >
-              Completed
-            </div>
+            <div class="status-action">Completed</div>
           {/if}
         </p>
       </div>
     </li>
   {/each}
 </ol>
+
+<style>
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  ol,
+  li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .status-wrapper {
+    position: relative;
+    margin-bottom: 32px;
+  }
+
+  .status-list {
+    margin-bottom: 10px;
+    margin-inline-start: 1.25rem;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    position: absolute;
+    inset-inline-start: 4px;
+    justify-content: center;
+    align-items: center;
+    width: 29px;
+    height: 24px;
+    background-color: #dbeafe;
+    border-radius: 9999px;
+    padding: 20px;
+    box-shadow: 0 0 0 8px white;
+  }
+
+  .status-details {
+    margin-left: 40px;
+    text-align: left;
+  }
+
+  .status-message {
+    margin-bottom: 4px;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .status-description {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: #9ca3af;
+  }
+
+  .status-action {
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1px;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 9999px;
+    background-color: #0bb489;
+    color: white;
+    width: fit-content;
+  }
+
+  .status-pulsing {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>
