@@ -21,10 +21,10 @@ export { default as Dropdown } from "./ui/dropdown.svelte";
 export { default as Accordion } from "./ui/accordion.svelte";
 
 // Utils
-export { config } from "./utils/config";
-export { currencies } from "./utils/currencies";
-export { formatDate, inputDateFormat } from "./utils/formatDate";
 export {
   calculateItemTotal,
   calculateInvoiceTotals,
 } from "./utils/invoiceTotals";
+export { config } from "./utils/config";
+export { currencies } from "./utils/currencies";
+export { formatDate, inputDateFormat } from "./utils/formatDate";

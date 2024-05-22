@@ -11,7 +11,6 @@ export default defineConfig({
       compilerOptions: {
         customElement: true,
       },
-      emitCss: false,
     }),
   ],
   resolve: {
@@ -48,8 +47,5 @@ export default defineConfig({
         global: "globalThis",
       },
     },
-  },
-  define: {
-    global: "window",
   },
 });

@@ -136,57 +136,53 @@
   }
 </script>
 
-<div class="flex flex-col gap-[20px] bg-white p-2 h-fit w-full">
-  <div class="absolute right-14">
+<div class="invoice-view">
+  <div class="dates">
     <p>Issued on: {formatDate(request?.contentData?.creationDate)}</p>
     <p>Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate)}</p>
   </div>
-  <h2 class="text-xl font-bold flex gap-[12px]">
+  <h2 class="invoice-number">
     Invoice #{request?.contentData?.invoiceNumber}
-    <p
-      class={`px-2 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] text-white w-fit ${
-        isPaid ? "bg-green" : "bg-zinc-400"
-      }`}
-    >
+    <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
   </h2>
-  <div>
-    <h2 class="font-medium">From:</h2>
+  <div class="invoice-address">
+    <h2>From:</h2>
     <p>{request?.payee?.value}</p>
   </div>
-  <div
-    class={`flex flex-wrap gap-[18px] ${sellerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
-  >
-    {#each sellerInfo as { label, value }}
-      <p class="flex flex-col">
-        <span class="font-medium text-zinc-500">{label}:</span>
-        {value}
-      </p>
-    {/each}
-  </div>
-  <div class="border-b border-green pb-[10px] mb-[10px]"></div>
-  <div>
-    <h2 class="font-medium">Billed to:</h2>
+  {#if sellerInfo.length > 0}
+    <div class={`invoice-info bg-zinc-light`}>
+      {#each sellerInfo as { label, value }}
+        <p>
+          <span>{label}:</span>
+          {value}
+        </p>
+      {/each}
+    </div>
+  {/if}
+  <div class="invoice-border"></div>
+  <div class="invoice-address">
+    <h2>Billed to:</h2>
     <p>{request?.payer?.value}</p>
   </div>
-  <div
-    class={`flex flex-wrap gap-[18px] ${sellerInfo.length > 0 && "bg-zinc-100"} p-3 w-fit`}
-  >
-    {#each buyerInfo as { label, value }}
-      <p class="flex flex-col">
-        <span class="font-medium text-zinc-500">{label}:</span>
-        {value}
-      </p>
-    {/each}
-  </div>
+  {#if buyerInfo.length > 0}
+    <div class={`invoice-info bg-zinc-light`}>
+      {#each buyerInfo as { label, value }}
+        <p>
+          <span>{label}:</span>
+          {value}
+        </p>
+      {/each}
+    </div>
+  {/if}
 
-  <h3 class="capitalize flex flex-col">
-    <span class="font-medium">Payment Chain:</span>
+  <h3 class="invoice-info-payment">
+    <span style="font-weight: 500;">Payment Chain:</span>
     {currencies.get(currency)?.network}
   </h3>
-  <h3 class="capitalize flex flex-col">
-    <span class="font-medium">Invoice Currency:</span>
+  <h3 class="invoice-info-payment">
+    <span style="font-weight: 500;">Invoice Currency:</span>
     {getSymbol(
       request?.currencyInfo.network ?? "",
       request?.currencyInfo.value ?? ""
@@ -194,29 +190,31 @@
   </h3>
 
   {#if request?.contentData?.invoiceItems}
-    <div class="relative overflow-x-auto">
-      <table class="w-full text-sm text-left">
-        <thead class="text-xs uppercase bg-zinc-200">
-          <tr class="text-left">
-            <th scope="col" class="pl-2 py-3"> Description </th>
-            <th scope="col" class="px-0 py-3"> Qty </th>
-            <th scope="col" class="px-0 py-3"> Unit Price </th>
-            <th scope="col" class="px-0 py-3"> Discount </th>
-            <th scope="col" class="px-0 py-3"> Tax </th>
-            <th scope="col" class="px-0 py-3"> Amount </th>
+    <div class="table-container">
+      <table class="invoice-table">
+        <thead class="table-header">
+          <tr class="table-row">
+            <th scope="col" class="table-header-cell description"
+              >Description</th
+            >
+            <th scope="col" class="table-header-cell">Qty</th>
+            <th scope="col" class="table-header-cell">Unit Price</th>
+            <th scope="col" class="table-header-cell">Discount</th>
+            <th scope="col" class="table-header-cell">Tax</th>
+            <th scope="col" class="table-header-cell">Amount</th>
           </tr>
         </thead>
         <tbody>
           {#each firstItems as item, index (index)}
-            <tr class="bg-green-400 border-b-[1px] border-black">
-              <th scope="row" class="pl-2 py-2 font-medium whitespace-nowrap">
-                <p class="truncate w-[150px]">{item.name}</p>
+            <tr class="table-row item-row">
+              <th scope="row" class="item-description">
+                <p class="truncate description-text">{item.name}</p>
               </th>
-              <td class="px-0 py-2">{item.quantity}</td>
-              <td class="px-0 py-2">{item.unitPrice}</td>
-              <td class="px-0 py-2">{item.discount}</td>
-              <td class="px-0 py-2">{Number(item.tax.amount)}</td>
-              <td class="px-0 py-2">{calculateItemTotal(item).toFixed(2)}</td>
+              <td>{item.quantity}</td>
+              <td>{item.unitPrice}</td>
+              <td>{item.discount}</td>
+              <td>{Number(item.tax.amount)}</td>
+              <td>{calculateItemTotal(item).toFixed(2)}</td>
             </tr>
           {/each}
         </tbody>
@@ -224,30 +222,28 @@
     </div>
     {#if otherItems.length > 0}
       <Accordion title="View All">
-        <table class="w-full text-sm text-left">
-          <thead class="text-xs uppercase bg-zinc-200 opacity-0">
-            <tr class="text-left">
-              <th scope="col"> Description </th>
-              <th scope="col"> Qty </th>
-              <th scope="col"> Unit Price </th>
-              <th scope="col"> Discount </th>
-              <th scope="col"> Tax </th>
-              <th scope="col"> Amount </th>
+        <table class="invoice-table">
+          <thead class="table-header hidden-header">
+            <tr class="table-row">
+              <th scope="col" class="table-header-cell">Description</th>
+              <th scope="col" class="table-header-cell">Qty</th>
+              <th scope="col" class="table-header-cell">Unit Price</th>
+              <th scope="col" class="table-header-cell">Discount</th>
+              <th scope="col" class="table-header-cell">Tax</th>
+              <th scope="col" class="table-header-cell">Amount</th>
             </tr>
           </thead>
           <tbody>
             {#each otherItems as item, index (index)}
-              <tr
-                class="bg-green-400 border-b-[1px] border-t-[1px] border-black"
-              >
-                <th scope="row" class="pl-2 py-2 font-medium whitespace-nowrap">
-                  <p class="truncate w-[150px]">{item.name}</p>
+              <tr class="table-row item-row">
+                <th scope="row" class="item-description">
+                  <p class="truncate description-text">{item.name}</p>
                 </th>
-                <td class="px-0 py-2">{item.quantity}</td>
-                <td class="px-0 py-2">{item.unitPrice}</td>
-                <td class="px-0 py-2">{item.discount}</td>
-                <td class="px-0 py-2">{Number(item.tax.amount)}</td>
-                <td class="px-0 py-2">{calculateItemTotal(item).toFixed(2)}</td>
+                <td>{item.quantity}</td>
+                <td>{item.unitPrice}</td>
+                <td>{item.discount}</td>
+                <td>{Number(item.tax.amount)}</td>
+                <td>{calculateItemTotal(item).toFixed(2)}</td>
               </tr>
             {/each}</tbody
           >
@@ -256,31 +252,27 @@
     {/if}
   {/if}
   {#if request?.contentData.note}
-    <div class="w-full bg-zinc-100 p-[10px]">
-      <p class="w-[620px] break-all">
-        <span class="font-semibold">Memo:</span> <br />
+    <div class="note-container">
+      <p class="note-content">
+        <span class="note-title">Memo:</span> <br />
         {request.contentData.note}
       </p>
     </div>
   {/if}
-  <div class="flex flex-wrap gap-2 max-w-[300px]">
+  <div class="labels-container">
     {#if request?.contentData?.miscellaneous?.labels}
       {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
-        <div
-          class={`flex items-center text-white rounded px-2 w-fit cursor-pointer label`}
-        >
+        <div class="label">
           {label}
         </div>
       {/each}
     {/if}
   </div>
-  <div class="flex mt-4 items-center gap-[10px] justify-between">
-    <div class="flex flex-col gap-[10px]">
+  <div class="status-container">
+    <div class="statuses">
       {#if statuses.length > 0 && loading}
         {#each statuses as status, index (index)}
-          <div
-            class="px-3 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] bg-green text-white w-fit"
-          >
+          <div class="status">
             {status}
             {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
               <i class="fa-solid fa-check"></i>
@@ -290,11 +282,7 @@
       {/if}
     </div>
     {#if loading}
-      <div
-        class="px-3 py-2 text-[14px] font-medium leading-none text-center rounded-[8px] animate-pulse bg-green text-white w-fit"
-      >
-        Loading...
-      </div>
+      <div class="loading">Loading...</div>
     {:else if approved && !isPaid}
       <Button
         type="button"
@@ -314,11 +302,248 @@
 </div>
 
 <style>
+  .invoice-view {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: white;
+    width: 100%;
+    height: fit-content;
+  }
+
+  .dates {
+    position: absolute;
+    right: 3.5rem;
+  }
+
+  .invoice-number {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    display: flex;
+    gap: 12px;
+  }
+
+  .invoice-status {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    border-radius: 8px;
+    color: #ffffff;
+    width: fit-content;
+    margin: 0;
+  }
+
+  .invoice-address {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .invoice-address h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .invoice-address p {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .invoice-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 0.75rem;
+    width: fit-content;
+  }
+
+  .invoice-info p {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .invoice-info p span {
+    font-weight: 500;
+    color: #71717a;
+  }
+
+  .invoice-border {
+    border-bottom: 1px solid #0bb489;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .invoice-info-payment {
+    display: flex;
+    flex-direction: column;
+    text-transform: capitalize;
+    margin: 0;
+  }
+
+  .invoice-info-payment {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #71717a;
+  }
+
+  .invoice-info-payment span {
+    color: black;
+  }
+
+  .table-container {
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .invoice-table {
+    width: 100%;
+    text-align: left;
+    font-size: 0.875rem;
+  }
+
+  .table-header {
+    text-transform: uppercase;
+    background-color: #e0e0e0;
+  }
+
+  .table-row {
+    text-align: left;
+  }
+
+  .table-header-cell {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .table-header-cell.description {
+    padding-left: 0.5rem;
+  }
+
+  .item-row {
+    border-bottom: 1px solid black;
+  }
+
+  .item-description {
+    padding-left: 0.5rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .truncate {
+    display: block;
+    width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hidden-header {
+    opacity: 0;
+  }
+
+  .note-container {
+    background-color: #f5f5f5;
+    padding: 10px;
+  }
+
+  .note-content {
+    width: fit-content;
+    word-break: break-all;
+  }
+
+  .note-title {
+    font-weight: 600;
+  }
+
+  .labels-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 300px;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    color: white;
+    background-color: black;
+    border-radius: 0.25rem;
+    padding: 0.25rem;
+    cursor: pointer;
+  }
+
+  .status-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 0.5rem;
+    background-color: var(--mainColor);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .loading {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 0.5rem;
+    background-color: var(--mainColor);
+    color: white;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
   .label {
     background-color: var(--mainColor);
   }
 
   .label:hover {
     background-color: var(--secondaryColor);
+  }
+
+  .bg-green {
+    background-color: #0bb489;
+  }
+
+  .bg-zinc {
+    background-color: #a1a1aa;
+  }
+
+  .bg-zinc-light {
+    background-color: #f4f4f5;
   }
 </style>
