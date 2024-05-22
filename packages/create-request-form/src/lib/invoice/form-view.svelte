@@ -438,4 +438,10 @@
     margin-right: auto;
     width: fit-content;
   }
+
+  :global(.invoice-form-wrapper .create-request-button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
 </style>
