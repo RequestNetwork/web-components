@@ -632,9 +632,26 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    height: fit-content;
+    width: 100%;
   }
 
-  .invoice-form-label-wrapper input {
+  :global(.invoice-form-label-wrapper .input-wrapper) {
+    flex: 1;
+  }
+
+  :global(.invoice-form-label-wrapper .input-wrapper .textarea-input) {
+    width: 100%;
     height: 107px;
+  }
+
+  :global(.invoice-form-label-wrapper .labels-wrapper) {
+    flex: 1;
+  }
+
+  :global(.invoice-form-table-body-add-item button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
   }
 </style>

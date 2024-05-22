@@ -26,6 +26,13 @@
 </button>
 
 <style>
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
   .button {
     display: flex;
     align-items: center;

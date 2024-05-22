@@ -45,7 +45,7 @@
     {#each formData.miscellaneous.labels as label, index}
       <div class="label-item">
         {label}
-        <button on:click={() => removeLabel(index)}>
+        <button type="button" on:click={() => removeLabel(index)}>
           <i class="fa fa-times" />
         </button>
       </div>
