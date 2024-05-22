@@ -9,6 +9,7 @@ export function getInitialFormData() {
     issuedOn: new Date().toISOString(),
     miscellaneous: {
       labels: [],
+      builderId: "",
     },
     items: [
       {

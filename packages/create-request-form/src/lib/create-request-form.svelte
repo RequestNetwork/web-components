@@ -73,6 +73,8 @@
   const submitForm = async (e: Event) => {
     e.preventDefault();
 
+    formData.miscellaneous.builderId = config?.builderId || "request-team";
+
     const requestCreateParameters = prepareRequestParams({
       formData,
       currency,

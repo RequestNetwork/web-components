@@ -19,6 +19,7 @@ export { default as Status } from "./ui/status.svelte";
 export { default as Skeleton } from "./ui/skeleton.svelte";
 export { default as Dropdown } from "./ui/dropdown.svelte";
 export { default as Accordion } from "./ui/accordion.svelte";
+export { default as PoweredBy } from "./ui/powered-by.svelte";
 
 // Utils
 export {

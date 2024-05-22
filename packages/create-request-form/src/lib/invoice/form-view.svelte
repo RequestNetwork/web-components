@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     Button,
+    PoweredBy,
     currencies,
     formatDate,
     calculateItemTotal,
@@ -87,147 +88,150 @@
   }
 </script>
 
-<div class="invoice-form-wrapper">
-  <div class="invoice-header">
-    <div class="invoice-header-left">
-      <img src={config.logo} alt="Logo" class="invoice-logo" />
-      <h2 class="invoice-title">
-        Invoice #{formData.invoiceNumber}
-      </h2>
-      <div class="invoice-labels">
-        {#each labels as label, index (index)}
-          <div class={`invoice-label`}>
-            {label}
-            <button
-              type="button"
-              class="invoice-label-remove"
-              on:click={() => removeLabel(index)}
-            >
-              <i class="fa fa-times" />
-            </button>
+<div style="display: flex; flex-direction: column; gap: 30px;">
+  <div class="invoice-form-wrapper">
+    <div class="invoice-header">
+      <div class="invoice-header-left">
+        <img src={config.logo} alt="Logo" class="invoice-logo" />
+        <h2 class="invoice-title">
+          Invoice #{formData.invoiceNumber}
+        </h2>
+        <div class="invoice-labels">
+          {#each labels as label, index (index)}
+            <div class={`invoice-label`}>
+              {label}
+              <button
+                type="button"
+                class="invoice-label-remove"
+                on:click={() => removeLabel(index)}
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+          {/each}
+        </div>
+      </div>
+      <div class="invoice-header-right">
+        <p>Issued on {formatDate(new Date().toString())}</p>
+        <p>
+          Payment due by {formData.dueDate && formatDate(formData.dueDate)}
+        </p>
+      </div>
+    </div>
+    <div class="invoice-section">
+      <p class="invoice-section-title">
+        <span>From</span>
+        {formData.payeeAddress}
+      </p>
+      <div
+        class={`invoice-details ${sellerInfo.length > 0 && "invoice-details-active"} `}
+      >
+        {#each sellerInfo as paragraph}
+          <div class="invoice-details-info">
+            <span>{paragraph.label}</span>
+            {paragraph.value}
           </div>
         {/each}
       </div>
     </div>
-    <div class="invoice-header-right">
-      <p>Issued on {formatDate(new Date().toString())}</p>
-      <p>
-        Payment due by {formData.dueDate && formatDate(formData.dueDate)}
+    <div class="invoice-section">
+      <p class="flex flex-col">
+        <span>Billed to</span>
+        {formData.payerAddress}
       </p>
-    </div>
-  </div>
-  <div class="invoice-section">
-    <p class="invoice-section-title">
-      <span>From</span>
-      {formData.payeeAddress}
-    </p>
-    <div
-      class={`invoice-details ${sellerInfo.length > 0 && "invoice-details-active"} `}
-    >
-      {#each sellerInfo as paragraph}
-        <div class="invoice-details-info">
-          <span>{paragraph.label}</span>
-          {paragraph.value}
-        </div>
-      {/each}
-    </div>
-  </div>
-  <div class="invoice-section">
-    <p class="flex flex-col">
-      <span>Billed to</span>
-      {formData.payerAddress}
-    </p>
-    <div
-      class={`invoice-details ${buyerInfo.length > 0 && "invoice-details-active"} `}
-    >
-      {#each buyerInfo as paragraph}
-        <div class="invoice-details-info">
-          <span>{paragraph.label}</span>
-          {paragraph.value}
-        </div>
-      {/each}
-    </div>
-  </div>
-  <p class="invoice-section-title">
-    <span>Payment Chain</span>
-    Sepolia
-  </p>
-  <p class="invoice-section-title">
-    <span>Invoice Currency</span>
-    {currencies.get(currency)?.symbol}
-    ({currencies.get(currency)?.network})
-  </p>
-  <p class="invoice-section-title">
-    <span>Invoice Type</span>
-    Regular Invoice
-  </p>
-  <div class="invoice-table-wrapper">
-    <table class="invoice-table">
-      <thead class="invoice-table-header">
-        <tr>
-          <th scope="col"> Description </th>
-          <th scope="col"> Qty </th>
-          <th scope="col"> Unit Price </th>
-          <th scope="col"> Discount </th>
-          <th scope="col"> Tax </th>
-          <th scope="col"> Amount </th>
-        </tr>
-      </thead>
-      <tbody class="invoice-table-body">
-        {#each formData.items as item, index (index)}
-          <tr class="invoice-table-body-row">
-            <th scope="row">
-              <p>{item.description}</p>
-            </th>
-            <td>{item.quantity}</td>
-            <td>{item.unitPrice}</td>
-            <td>{item.discount}</td>
-            <td>{item.tax.amount}</td>
-            <td>{calculateItemTotal(item).toFixed(2)}</td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  </div>
-  <div class="invoice-summary">
-    <div class="invoice-summary-item">
-      <span>Amount without tax: </span>
-      <span>{invoiceTotals.amountWithoutTax.toFixed(2)}</span>
-    </div>
-    <div class="invoice-summary-item invoice-summary-item-spaced">
-      <span>Total Tax amount: </span>
-      <span>{invoiceTotals.totalTaxAmount.toFixed(2)}</span>
-    </div>
-    <div class="invoice-summary-item invoice-summary-item-spaced">
-      <span>Total amount: </span>
-      <span>{invoiceTotals.totalAmount.toFixed(2)}</span>
-    </div>
-    <div
-      class="invoice-summary-item invoice-summary-item-spaced invoice-summary-item-bold"
-    >
-      <span>Due: </span>
-      <span
-        >{currencies.get(currency)?.symbol}
-        {" "}
-        {invoiceTotals.totalAmount.toFixed(2)}</span
+      <div
+        class={`invoice-details ${buyerInfo.length > 0 && "invoice-details-active"} `}
       >
+        {#each buyerInfo as paragraph}
+          <div class="invoice-details-info">
+            <span>{paragraph.label}</span>
+            {paragraph.value}
+          </div>
+        {/each}
+      </div>
     </div>
+    <p class="invoice-section-title">
+      <span>Payment Chain</span>
+      Sepolia
+    </p>
+    <p class="invoice-section-title">
+      <span>Invoice Currency</span>
+      {currencies.get(currency)?.symbol}
+      ({currencies.get(currency)?.network})
+    </p>
+    <p class="invoice-section-title">
+      <span>Invoice Type</span>
+      Regular Invoice
+    </p>
+    <div class="invoice-table-wrapper">
+      <table class="invoice-table">
+        <thead class="invoice-table-header">
+          <tr>
+            <th scope="col"> Description </th>
+            <th scope="col"> Qty </th>
+            <th scope="col"> Unit Price </th>
+            <th scope="col"> Discount </th>
+            <th scope="col"> Tax </th>
+            <th scope="col"> Amount </th>
+          </tr>
+        </thead>
+        <tbody class="invoice-table-body">
+          {#each formData.items as item, index (index)}
+            <tr class="invoice-table-body-row">
+              <th scope="row">
+                <p>{item.description}</p>
+              </th>
+              <td>{item.quantity}</td>
+              <td>{item.unitPrice}</td>
+              <td>{item.discount}</td>
+              <td>{item.tax.amount}</td>
+              <td>{calculateItemTotal(item).toFixed(2)}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+    <div class="invoice-summary">
+      <div class="invoice-summary-item">
+        <span>Amount without tax: </span>
+        <span>{invoiceTotals.amountWithoutTax.toFixed(2)}</span>
+      </div>
+      <div class="invoice-summary-item invoice-summary-item-spaced">
+        <span>Total Tax amount: </span>
+        <span>{invoiceTotals.totalTaxAmount.toFixed(2)}</span>
+      </div>
+      <div class="invoice-summary-item invoice-summary-item-spaced">
+        <span>Total amount: </span>
+        <span>{invoiceTotals.totalAmount.toFixed(2)}</span>
+      </div>
+      <div
+        class="invoice-summary-item invoice-summary-item-spaced invoice-summary-item-bold"
+      >
+        <span>Due: </span>
+        <span
+          >{currencies.get(currency)?.symbol}
+          {" "}
+          {invoiceTotals.totalAmount.toFixed(2)}</span
+        >
+      </div>
+    </div>
+    {#if formData.note}
+      <div class="invoice-note">
+        <p class="invoice-note-content">
+          <span>Memo:</span> <br />
+          {formData.note}
+        </p>
+      </div>
+    {/if}
+    <Button
+      className="create-request-button"
+      text="Create Request"
+      type="submit"
+      disabled={!canSubmit}
+      onClick={submitForm}
+    />
   </div>
-  {#if formData.note}
-    <div class="invoice-note">
-      <p class="invoice-note-content">
-        <span>Memo:</span> <br />
-        {formData.note}
-      </p>
-    </div>
-  {/if}
-  <Button
-    className="create-request-button"
-    text="Create Request"
-    type="submit"
-    disabled={!canSubmit}
-    onClick={submitForm}
-  />
+  <PoweredBy />
 </div>
 
 <style>

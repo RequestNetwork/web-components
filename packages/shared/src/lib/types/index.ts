@@ -44,6 +44,7 @@ export interface Address {
 }
 
 export interface IConfig {
+  builderId?: string;
   dashboardLink: string;
   logo: string;
   colors: {

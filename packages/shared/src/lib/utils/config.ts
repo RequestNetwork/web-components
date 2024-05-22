@@ -1,6 +1,7 @@
 import { IConfig } from "../types";
 
 export const config: IConfig = {
+  builderId: "request-team",
   dashboardLink: "/",
   logo: "assets/logo-sm.svg",
   colors: {

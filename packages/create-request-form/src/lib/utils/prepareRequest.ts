@@ -14,10 +14,10 @@ interface IRequestParams {
 }
 
 export const prepareRequestParams = ({
+  signer,
   currency,
   formData,
   invoiceTotals,
-  signer,
 }: IRequestParams): Types.ICreateRequestParameters => ({
   requestInfo: {
     currency: {

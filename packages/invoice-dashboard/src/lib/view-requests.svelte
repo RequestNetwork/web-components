@@ -8,6 +8,7 @@
     Input,
     Dropdown,
     Skeleton,
+    PoweredBy,
     type IConfig,
     config as generalConfig,
   } from "@requestnetwork/shared";
@@ -423,6 +424,7 @@
       <span>(Please connect a wallet or create a request)</span>
     </div>
   {/if}
+  <PoweredBy />
 </div>
 
 <style>
@@ -431,6 +433,7 @@
     flex-direction: column;
     gap: 20px;
     position: relative;
+    color: black;
   }
 
   .tabs {
