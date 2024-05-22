@@ -19,12 +19,12 @@
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { debounce, getSymbol, getDecimals, formatAddress } from "$src/utils";
 
-  export let config: string;
+  export let config: IConfig;
   export let wallet: WalletState;
   export let requestNetwork: RequestNetwork | null | undefined;
 
   let signer = "";
-  let activeConfig = JSON.parse(config) || generalConfig;
+  let activeConfig = config || generalConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
@@ -201,7 +201,7 @@
 
 <div
   class="main-table"
-  style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
+  style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}; "
 >
   <div class="tabs">
     <ul>

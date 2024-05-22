@@ -151,6 +151,7 @@
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
+    color: black;
   }
 
   .create-request-form-content {
