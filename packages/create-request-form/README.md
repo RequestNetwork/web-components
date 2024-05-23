@@ -16,54 +16,61 @@ This command adds the create request form component to your project, allowing fo
 
 ## Usage
 
-### As a Web Component
-
-Import the component into your JavaScript or TypeScript file:
-
-`import '@requestnetwork/create-request-form'`
-
-Then, you can use the component directly in your HTML:
-
-```console
-<create-request-form config={config} requestNetwork={requestNetworkInstance} signer={walletAccount} />
-```
-
-### In Svelte Projects
-
-After installing, import and use the component directly in your Svelte files:
-
-```console
-<script>
-    import CreateRequestForm from '@requestnetwork/create-request-form';
-</script>
-
-<CreateRequestForm />
-```
-
 ### In React Projects
 
-To use in a React application, ensure the component is included in your project:
+To use in a React application, import `@requestnetwork/create-request-form` and
+use the component in your JSX. Configure the create-request-form web component
+by creating a reference to it and setting its properties. Unfortunately, it's
+not possible to pass objects into a web component as props. See for details
+https://stackoverflow.com/a/55480022
 
-`import '@requestnetwork/create-request-form'`
+This usage example uses [Web3 Onboard](https://onboard.blocknative.com/) to
+connect a wallet but you can use any wallet connection method you prefer.
 
-Then use it like any other React component:
+```tsx
+import("@requestnetwork/create-request-form");
+import { useEffect, useRef } from "react";
+import { config } from "@/utils/config";
+import { useAppContext } from "@/utils/context";
+import { CreateRequestFormProps } from "@/types";
 
-```console
-export default function App() {
-    return <create-request-form></create-request-form>;
+export default function CreateRequestForm() {
+  const [{ wallet }] = useConnectWallet() // Web3 Onboard
+  const formRef = useRef<CreateRequestFormProps>(null);
+
+  useEffect(() => {
+    if (wallet) {
+      const { provider } = wallet;
+      initRequestNetwork(provider)
+    }
+  }, [wallet]);
+
+  const requestNetwork = new RequestNetwork({
+    nodeConnectionConfig: {
+      baseURL: "https://gnosis.gateway.request.network",
+    },
+    signatureProvider: new Web3SignatureProvider(provider),
+    }
+  }
+
+  
+  useEffect(() => {
+    if (formRef.current) {
+      formRef.current.config = config;
+
+      if (wallet && requestNetwork) {
+        formRef.current.signer = wallet.accounts[0].address;
+        formRef.current.requestNetwork = requestNetwork;
+      }
+    }
+  }, [wallet, requestNetwork]);
+
+  return (
+    <div className="container m-auto  w-[100%]">
+      <create-request-form ref={formRef} />
+    </div>
+  );
 }
-```
-
-### In Vanilla JavaScript
-
-For use in projects without a build process, include the component via script tag, either locally or from a CDN:
-
-```console
-<script src="./node_modules/@requestnetwork/create-request-form/dist/index.js" defer></script>
-<!-- or from a CDN -->
-<script src="https://unpkg.com/@requestnetwork/create-request-form" defer></script>
-
-<create-request-form></create-request-form>
 ```
 
 ## Additional Information
