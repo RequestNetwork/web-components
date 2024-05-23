@@ -5,7 +5,6 @@
     Labels,
     Dropdown,
     Accordion,
-    currencies,
     inputDateFormat,
     calculateItemTotal,
     type IConfig,
@@ -14,6 +13,7 @@
     Plus,
   } from "@requestnetwork/shared";
 
+  export let currencies;
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;

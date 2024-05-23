@@ -5,8 +5,8 @@
 
 <style>
   @font-face {
-    font-family: "Rooftop";
-    src: url("../fonts/Rooftop-Book-Web.ttf") format("truetype");
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
   }
@@ -20,7 +20,7 @@
   }
 
   .powered-by h2 {
-    font-family: "Rooftop", sans-serif;
+    font-family: "Montserrat", sans-serif;
     font-size: 18px;
     font-weight: 500;
     color: #71717a;

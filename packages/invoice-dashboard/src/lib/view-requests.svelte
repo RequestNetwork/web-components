@@ -6,16 +6,16 @@
   import {
     Copy,
     Input,
+    Search,
     Dropdown,
     Skeleton,
     PoweredBy,
-    type IConfig,
-    config as generalConfig,
-    Search,
     ChevronUp,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    type IConfig,
+    config as generalConfig,
   } from "@requestnetwork/shared";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
@@ -55,10 +55,6 @@
 
   $: {
     signer = wallet?.accounts[0]?.address;
-  }
-
-  $: {
-    console.log(wallet);
   }
 
   const getRequests = async () => {
@@ -194,7 +190,7 @@
   };
 
   const checkStatus = (request: any) => {
-    switch (request.balance.balance >= request.expectedAmount) {
+    switch (request?.balance?.balance >= request?.expectedAmount) {
       case true:
         return "Paid";
       default:
@@ -249,7 +245,7 @@
   <div class="table-wrapper">
     <table>
       <thead class="table-head">
-        <tr>
+        <tr style="width: 100%;">
           {#if columns.issuedAt}
             <th on:click={() => handleSort("contentData.creationDate")}>
               <div>
@@ -490,6 +486,20 @@
 </div>
 
 <style>
+  @font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
+  }
+
   .main-table {
     display: flex;
     flex-direction: column;
@@ -584,6 +594,11 @@
 
   .caret {
     margin-left: 6px;
+  }
+
+  .caret svg {
+    margin-bottom: -2px;
+    width: 12px;
   }
 
   .row {

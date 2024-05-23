@@ -3,7 +3,7 @@
 <script lang="ts">
   import {
     APP_STATUS,
-    currencies,
+    getCurrenciesByNetwork,
     calculateInvoiceTotals,
     config as defaultConfig,
     type IConfig,
@@ -21,9 +21,14 @@
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
+  let network = {
+    name: "mainnet",
+    chainId: "1",
+  };
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
+  let currencies = getCurrenciesByNetwork(network.chainId);
   let currency = currencies.keys().next().value;
 
   let invoiceTotals = {
@@ -33,6 +38,7 @@
   };
 
   $: {
+    console.log(requestNetwork);
     formData.creatorId = signer;
     invoiceTotals = calculateInvoiceTotals(formData.items);
   }
@@ -73,13 +79,14 @@
   const submitForm = async (e: Event) => {
     e.preventDefault();
 
-    formData.miscellaneous.builderId = config?.builderId || "request-team";
+    formData.miscellaneous.builderId = config?.builderId || "";
 
     const requestCreateParameters = prepareRequestParams({
+      signer,
       formData,
       currency,
+      currencies,
       invoiceTotals,
-      signer,
     });
 
     if (requestNetwork) {
@@ -107,7 +114,12 @@
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
   <div class="create-request-form-content">
-    <InvoiceForm bind:formData {handleCurrencyChange} config={activeConfig} />
+    <InvoiceForm
+      bind:formData
+      {handleCurrencyChange}
+      config={activeConfig}
+      {currencies}
+    />
     <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
@@ -116,6 +128,7 @@
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
+        {currencies}
       />
     </div>
   </div>
@@ -143,11 +156,20 @@
 </div>
 
 <style>
+  @font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
   }
+
   .create-request-form-wrapper {
     display: flex;
     flex-direction: column;

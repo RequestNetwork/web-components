@@ -2,7 +2,6 @@
   import {
     Button,
     PoweredBy,
-    currencies,
     formatDate,
     calculateItemTotal,
     type IConfig,
@@ -10,6 +9,7 @@
     Close,
   } from "@requestnetwork/shared";
 
+  export let currencies;
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;

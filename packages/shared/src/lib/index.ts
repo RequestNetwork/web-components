@@ -43,5 +43,5 @@ export {
   calculateInvoiceTotals,
 } from "./utils/invoiceTotals";
 export { config } from "./utils/config";
-export { currencies } from "./utils/currencies";
+export { getCurrenciesByNetwork } from "./utils/currencies";
 export { formatDate, inputDateFormat } from "./utils/formatDate";

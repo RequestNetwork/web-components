@@ -10,22 +10,25 @@
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import {
+    Check,
     Button,
     Accordion,
-    currencies,
     formatDate,
     calculateItemTotal,
-    Check,
+    getCurrenciesByNetwork,
   } from "@requestnetwork/shared";
   import type { WalletState } from "@web3-onboard/core";
-  import { walletClientToSigner, getSymbol } from "$src/utils";
+  import { walletClientToSigner, getSymbol, checkNetwork } from "$src/utils";
 
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
-  export let currency =
-    currencies.get(request?.currencyInfo.network ?? "") ||
-    currencies.keys().next().value;
+
+  let network = request?.currencyInfo?.network || "mainnet";
+  let currencies = getCurrenciesByNetwork(network);
+  let currency = currencies.get(
+    `${checkNetwork(network)}_${request?.currencyInfo?.value}`
+  );
 
   let statuses: any = [];
   let isPaid = false;
@@ -38,6 +41,10 @@
   let otherItems: any;
   let sellerInfo: { label: string; value: string }[] = [];
   let buyerInfo: { label: string; value: string }[] = [];
+  let isPayee = request?.payee?.value === address;
+  let unsupportedNetwork = false;
+  let correctChain =
+    wallet?.chains[0].id === String(getNetworkIdFromNetworkName(network));
 
   const generateDetailParagraphs = (info: any) => {
     return [
@@ -70,16 +77,35 @@
 
   $: request, checkInvoice();
 
-  const checkInvoice = async () => {
-    loading = true;
-    const singleRequest = await requestNetwork?.fromRequestId(
-      request!.requestId
+  $: {
+    wallet = wallet;
+    network = request?.currencyInfo?.network || "mainnet";
+    console.log(request?.currencyInfo);
+    currencies = getCurrenciesByNetwork(network);
+    currency = currencies.get(
+      `${checkNetwork(network)}_${request?.currencyInfo?.value}`
     );
-    signer = walletClientToSigner(wallet);
-    requestData = singleRequest?.getData();
-    approved = await checkApproval(requestData, signer);
-    isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
-    loading = false;
+  }
+
+  const checkInvoice = async () => {
+    try {
+      unsupportedNetwork = false;
+      loading = true;
+      const singleRequest = await requestNetwork?.fromRequestId(
+        request!.requestId
+      );
+      signer = walletClientToSigner(wallet);
+      requestData = singleRequest?.getData();
+      approved = await checkApproval(requestData, signer);
+      isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
+      loading = false;
+    } catch (err: any) {
+      loading = false;
+      if (String(err).includes("Unsupported payment")) {
+        unsupportedNetwork = true;
+        return;
+      }
+    }
   };
 
   const payTheRequest = async () => {
@@ -117,23 +143,45 @@
   async function approve() {
     try {
       loading = true;
+
       if (
         getPaymentNetworkExtension(requestData!)?.id ===
         Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
       ) {
-        approved = await checkApproval(requestData!, signer);
-
-        if (!approved) {
-          const approvalTx = await approveErc20(requestData!, signer);
-          await approvalTx.wait(2);
-          approved = true;
-        }
+        const approvalTx = await approveErc20(requestData!, signer);
+        await approvalTx.wait(2);
+        approved = true;
       }
       loading = false;
     } catch (err) {
       console.log(err);
       loading = false;
     }
+  }
+
+  async function switchNetworkIfNeeded(network: string) {
+    try {
+      const targetNetworkId = String(getNetworkIdFromNetworkName(network));
+      console.log("First", signer);
+      await wallet?.provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: targetNetworkId }],
+      });
+      signer = walletClientToSigner(wallet);
+      console.log("Second", signer);
+      correctChain = true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  function getNetworkIdFromNetworkName(network: string): string {
+    const networkIds: { [key: string]: string } = {
+      mainnet: "0x1",
+      sepolia: "0xaa36a7",
+      polygon: "0x89",
+    };
+    return networkIds[network] || "1";
   }
 </script>
 
@@ -180,7 +228,7 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {currencies.get(currency)?.network}
+    {currency?.network}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
@@ -288,23 +336,35 @@
     <div class="invoice-view-actions">
       {#if loading}
         <div class="loading">Loading...</div>
-      {:else if approved && !isPaid}
+      {:else if !correctChain}
         <Button
           type="button"
-          text="Pay"
+          text="Switch Network"
           padding="px-[12px] py-[6px]"
-          onClick={payTheRequest}
+          onClick={() => switchNetworkIfNeeded(network)}
         />
-      {:else if !approved && !isPaid}
+      {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
         <Button
           type="button"
           text="Approve"
           padding="px-[12px] py-[6px]"
           onClick={approve}
         />
+      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork}
+        <Button
+          type="button"
+          text="Pay"
+          padding="px-[12px] py-[6px]"
+          onClick={payTheRequest}
+        />
       {/if}
     </div>
   </div>
+  {#if unsupportedNetwork}
+    <div class="unsupported-network">
+      Unsupported payment network: pn-eth-fee-proxy-contract
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -537,6 +597,11 @@
     background-color: var(--mainColor);
     color: white;
     animation: pulse 1s infinite;
+  }
+
+  .unsupported-network {
+    font-size: 12px;
+    color: rgba(232, 158, 20, 0.935);
   }
 
   @keyframes pulse {

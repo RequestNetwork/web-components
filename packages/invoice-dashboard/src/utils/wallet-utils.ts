@@ -13,6 +13,7 @@ export const publicClientToProvider = (publicClient: any) => {
 export const walletClientToSigner = (walletClient: any): any => {
   if (walletClient) {
     const { accounts, chains, provider } = walletClient;
+    console.log("walletClient", chains);
     const network = {
       chainId: parseInt(chains[0].id, 16),
       name: chains[0].name,
