@@ -35,6 +35,7 @@ export { default as Upload } from "./icons/upload.svelte";
 export { default as Trash } from "./icons/trash.svelte";
 export { default as Plus } from "./icons/plus.svelte";
 export { default as Search } from "./icons/search.svelte";
+export { default as CopyIcon } from "./icons/copy-icon.svelte";
 
 // Utils
 export {

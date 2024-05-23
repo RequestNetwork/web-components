@@ -50,9 +50,7 @@
   {#each statuses as status, index}
     <li class="status-list">
       <span class={`status-icon-wrapper ${statusDetails[status].color}`}>
-        <i>
-          <svelte:component this={statusDetails[status].icon} />
-        </i>
+        <svelte:component this={statusDetails[status].icon} />
       </span>
       <div class="status-details">
         <h3 class="status-message">
@@ -108,10 +106,10 @@
     justify-content: center;
     align-items: center;
     width: 29px;
-    height: 24px;
+    height: 29px;
     background-color: #dbeafe;
     border-radius: 9999px;
-    padding: 20px;
+    padding: 4px;
     box-shadow: 0 0 0 8px white;
   }
 

@@ -175,4 +175,10 @@
     justify-content: space-between;
     margin-top: 20px;
   }
+
+  :global(.modal-footer button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
 </style>

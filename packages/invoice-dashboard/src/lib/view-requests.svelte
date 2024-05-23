@@ -186,8 +186,6 @@
     e: Event,
     request: Types.IRequestDataWithEvents
   ) => {
-    const element = e.srcElement as HTMLElement;
-    if (element.className.includes("fa-copy")) return;
     activeRequest = request;
   };
 
@@ -435,7 +433,7 @@
         disabled={currentPage === 1}
         on:click={() => goToPage(currentPage - 1)}
       >
-        <i></i> 
+        <i>
           <ChevronLeft />
         </i>
       </button>
@@ -455,7 +453,7 @@
         disabled={currentPage === totalPages}
         on:click={() => goToPage(currentPage + 1)}
       >
-        <i >
+        <i>
           <ChevronRight />
         </i>
       </button>

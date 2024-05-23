@@ -20,7 +20,9 @@
     <label for={id} class="input-label">{label}</label>
   {/if}
   <div class={`input-container ${width}`}>
-    <slot name="icon" />
+    <div class="text-input-icon">
+      <slot name="icon" />
+    </div>
 
     {#if type === "textarea"}
       <textarea
@@ -42,7 +44,7 @@
         {...{ type }}
         {placeholder}
         on:input={handleInput}
-        class={`text-input ${className} ${icon && "text-input-icon"}`}
+        class={`text-input ${className} `}
       />
     {/if}
   </div>
@@ -83,6 +85,11 @@
     position: relative;
   }
 
+  .input-container {
+    display: flex;
+    align-items: center;
+  }
+
   .input-wrapper .input-icon {
     position: absolute;
     top: 25%;
@@ -111,6 +118,6 @@
   }
 
   .input-wrapper .text-input-icon {
-    padding-left: 32px;
+    margin-right: 32px;
   }
 </style>

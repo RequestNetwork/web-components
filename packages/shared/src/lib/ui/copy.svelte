@@ -1,8 +1,11 @@
 <script lang="ts">
+  import CopyIcon from "../icons/copy-icon.svelte";
+
   export let textToCopy = "";
   let showNotification = false;
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (e: Event) => {
+    e.stopPropagation();
     if (!textToCopy) return;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -19,13 +22,15 @@
 <div class="copy-wrapper">
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <i
-    class="copy-icon"
+    class="copy-icon fa-copy"
     on:click={copyToClipboard}
     role="button"
     tabindex="0"
     aria-label={`Copy text: ${textToCopy}`}
     title="Copy to clipboard"
-  ></i>
+  >
+    <CopyIcon />
+  </i>
   {#if showNotification}
     <!-- center -->
     <div class="copy-notification">Copied!</div>
@@ -38,6 +43,9 @@
   }
 
   .copy-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     border: 1px solid #9ca3af;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);

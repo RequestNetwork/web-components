@@ -284,23 +284,26 @@
         {/each}
       {/if}
     </div>
-    {#if loading}
-      <div class="loading">Loading...</div>
-    {:else if approved && !isPaid}
-      <Button
-        type="button"
-        text="Pay"
-        padding="px-[12px] py-[6px]"
-        onClick={payTheRequest}
-      />
-    {:else if !approved && !isPaid}
-      <Button
-        type="button"
-        text="Approve"
-        padding="px-[12px] py-[6px]"
-        onClick={approve}
-      />
-    {/if}
+
+    <div class="invoice-view-actions">
+      {#if loading}
+        <div class="loading">Loading...</div>
+      {:else if approved && !isPaid}
+        <Button
+          type="button"
+          text="Pay"
+          padding="px-[12px] py-[6px]"
+          onClick={payTheRequest}
+        />
+      {:else if !approved && !isPaid}
+        <Button
+          type="button"
+          text="Approve"
+          padding="px-[12px] py-[6px]"
+          onClick={approve}
+        />
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -507,6 +510,22 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  .invoice-view-actions {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  :global(.invoice-view-actions button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
   }
 
   .loading {

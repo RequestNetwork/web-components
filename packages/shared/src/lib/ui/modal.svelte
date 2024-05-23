@@ -31,6 +31,16 @@
 {/if}
 
 <style>
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    width: fit-content;
+    height: fit-content;
+    cursor: pointer;
+  }
   .modal-overlay {
     position: fixed;
     inset: 0;
