@@ -20,7 +20,7 @@
     <label for={id} class="input-label">{label}</label>
   {/if}
   <div class={`input-container ${width}`}>
-    <div class="text-input-icon">
+    <div class={`${$$slots.icon ? "text-input-icon" : ""}`}>
       <slot name="icon" />
     </div>
 

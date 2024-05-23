@@ -604,16 +604,16 @@
     padding: 12px 16px;
   }
 
-  .invoice-form-table-body-description input {
-    width: 350px !important;
+  .invoice-form-table-body-description {
+    width: 250px !important;
   }
 
-  .invoice-form-table-body-quantity input {
-    width: 40px !important;
-  }
-
-  .invoice-form-table-body-amount input {
+  .invoice-form-table-body-quantity {
     width: 80px !important;
+  }
+
+  .invoice-form-table-body-amount {
+    width: 120px !important;
   }
 
   .invoice-form-table-body-total {
@@ -662,6 +662,7 @@
 
   :global(.invoice-form-label-wrapper .labels-wrapper) {
     flex: 1;
+    margin-right: 8px;
   }
 
   :global(.invoice-form-table-body-add-item button) {

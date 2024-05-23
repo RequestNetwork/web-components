@@ -383,11 +383,11 @@
   }
 
   .invoice-table-header tr th {
-    padding: 12px 0px;
+    padding: 12px 8px;
   }
 
   .invoice-table-header-tr:first-child {
-    padding: 12px 0px 12px 8px;
+    padding: 12px 8px 12px 8px;
   }
 
   .invoice-table-body-row {

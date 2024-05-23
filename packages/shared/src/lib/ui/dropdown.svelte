@@ -143,7 +143,8 @@
   .dropdown-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
+    padding: 4px;
     color: #e5e7eb;
     list-style: none;
   }
