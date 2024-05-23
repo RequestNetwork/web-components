@@ -80,7 +80,6 @@
   $: {
     wallet = wallet;
     network = request?.currencyInfo?.network || "mainnet";
-    console.log(request?.currencyInfo);
     currencies = getCurrenciesByNetwork(network);
     currency = currencies.get(
       `${checkNetwork(network)}_${request?.currencyInfo?.value}`
@@ -130,7 +129,7 @@
       loading = false;
       statuses = [];
     } catch (err) {
-      console.log(err);
+      console.error("Something went wrong while paying : ", err);
       loading = false;
       statuses = [];
     }
@@ -154,7 +153,7 @@
       }
       loading = false;
     } catch (err) {
-      console.log(err);
+      console.error("Something went wrong while approving ERC20 : ", err);
       loading = false;
     }
   }
@@ -162,16 +161,14 @@
   async function switchNetworkIfNeeded(network: string) {
     try {
       const targetNetworkId = String(getNetworkIdFromNetworkName(network));
-      console.log("First", signer);
       await wallet?.provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: targetNetworkId }],
       });
       signer = walletClientToSigner(wallet);
-      console.log("Second", signer);
       correctChain = true;
     } catch (err) {
-      console.log(err);
+      console.error("Something went wrong while switching networks: ", err);
     }
   }
 

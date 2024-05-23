@@ -38,7 +38,6 @@
   };
 
   $: {
-    console.log(requestNetwork);
     formData.creatorId = signer;
     invoiceTotals = calculateInvoiceTotals(formData.items);
   }
@@ -103,7 +102,7 @@
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error) {
         addToStatus(APP_STATUS.ERROR_OCCURRED);
-        console.log("Failed to create request:", error);
+        console.error("Failed to create request:", error);
       }
     }
   };
