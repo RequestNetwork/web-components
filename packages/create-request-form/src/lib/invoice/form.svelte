@@ -595,7 +595,7 @@
   }
 
   .invoice-form-table-body-description input {
-    width: 135px !important;
+    width: 350px !important;
   }
 
   .invoice-form-table-body-quantity input {

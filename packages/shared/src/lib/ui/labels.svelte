@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Close from "../icons/close.svelte";
+
   export let config;
   export let formData: any;
 
@@ -46,7 +48,9 @@
       <div class="label-item">
         {label}
         <button type="button" on:click={() => removeLabel(index)}>
-          <i class="fa fa-times" />
+          <i>
+            <Close />
+          </i>
         </button>
       </div>
     {/each}

@@ -1,8 +1,9 @@
 <script lang="ts">
+  import ChevronDown from "../icons/chevron-down.svelte";
+  import ChevronUp from "../icons/chevron-up.svelte";
+
   export let title: string;
   export let isOpen: boolean = false;
-  export let icon: string = "fa-chevron-down";
-  export let closeIcon: string = "fa-chevron-up";
 
   const toggle = () => {
     isOpen = !isOpen;
@@ -13,9 +14,13 @@
   <button type="button" on:click={toggle} class="accordion-wrapper">
     <span>{title}</span>
     {#if !isOpen}
-      <i class={`fas ${icon}`}></i>
+      <i>
+        <ChevronDown />
+      </i>
     {:else}
-      <i class={`fas ${closeIcon} accordion-close-icon`}></i>
+      <i>
+        <ChevronUp />
+      </i>
     {/if}
   </button>
   {#if isOpen}

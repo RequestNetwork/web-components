@@ -1,4 +1,10 @@
 <script lang="ts">
+  import Upload from "../icons/upload.svelte";
+  import Persist from "../icons/persist.svelte";
+  import Sync from "../icons/sync.svelte";
+  import Shield from "../icons/shield.svelte";
+  import Close from "../icons/close.svelte";
+  import Check from "../icons/check.svelte";
   import { APP_STATUS } from "../types/enums";
 
   export let statuses: APP_STATUS[] = [];
@@ -6,36 +12,36 @@
   const statusDetails = {
     [APP_STATUS.AWAITING_INPUT]: {
       message: "Waiting for input",
-      icon: "fas fa-upload",
+      icon: Upload,
       color: "text-green-500",
     },
     [APP_STATUS.SUBMITTING]: {
       message: "Submitting your data",
-      icon: "fas fa-file-export",
+      icon: Persist,
       color: "text-green-500",
     },
     [APP_STATUS.PERSISTING_TO_IPFS]: {
       message: "Persisting data to IPFS",
-      icon: "fas fa-sync",
+      icon: Sync,
       color: "text-blue-500",
       time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
     },
     [APP_STATUS.PERSISTING_ON_CHAIN]: {
       message: "Persisting data on chain",
-      icon: "fas fa-shield-alt",
+      icon: Shield,
       color: "text-yellow-600",
       time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
     },
     [APP_STATUS.REQUEST_CONFIRMED]: {
       message: "Your transaction is confirmed",
-      icon: "fas fa-check-double",
+      icon: Check,
       color: "text-green-500",
       time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
     },
     [APP_STATUS.ERROR_OCCURRED]: {
       message: "An error occurred",
-      icon: "fas fa-times-circle",
-      color: "text-red-500",
+      icon: Close,
+      color: "status-error",
     },
   };
 </script>
@@ -43,10 +49,10 @@
 <ol class="status-wrapper">
   {#each statuses as status, index}
     <li class="status-list">
-      <span class="status-icon-wrapper">
-        <i
-          class={`fas ${statusDetails[status].icon} ${statusDetails[status].color}`}
-        ></i>
+      <span class={`status-icon-wrapper ${statusDetails[status].color}`}>
+        <i>
+          <svelte:component this={statusDetails[status].icon} />
+        </i>
       </span>
       <div class="status-details">
         <h3 class="status-message">
@@ -143,5 +149,10 @@
 
   .status-pulsing {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .status-error {
+    fill: #ef4444;
+    color: #ef4444;
   }
 </style>

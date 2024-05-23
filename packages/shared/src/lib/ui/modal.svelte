@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Close from "../icons/close.svelte";
+
   export let isOpen = true;
   export let title = "";
   export let onClose = () => {};
@@ -15,7 +17,9 @@
       <div class="modal-header">
         <h2 class="modal-title">{title}</h2>
         <button class="modal-close-button" on:click={closeModal}>
-          <span class="fa fa-times"></span>
+          <span>
+            <Close />
+          </span>
           <span class="sr-only">Close</span>
         </button>
       </div>
