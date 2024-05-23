@@ -11,13 +11,17 @@
     type CustomFormData,
     Trash,
     Plus,
+    getCurrenciesByNetwork,
   } from "@requestnetwork/shared";
 
-  export let currencies;
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;
   export let handleCurrencyChange: (value: string) => void;
+
+  export let handleNetworkChange: (chainId: string) => void;
+  export let networks;
+  export let currencies = new Map();
 
   let creatorId = "";
 
@@ -300,13 +304,17 @@
           </div>
         </Accordion>
       </div>
-      <Input
-        label="Choose your payment chain"
-        id="currency"
-        type="text"
-        value="Sepolia"
-        disabled
+      <Dropdown
+        placeholder="Select payment chain"
+        options={networks.map((network) => {
+          return {
+            value: network.chainId,
+            label: network.name,
+          };
+        })}
+        onchange={handleNetworkChange}
       />
+
       <Dropdown
         placeholder="Select a currency"
         options={Array.from(currencies.entries()).map(([key, value]) => ({

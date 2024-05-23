@@ -127,14 +127,23 @@ const polygonCurrencies = new Map<string, ICurrency>([
 export const getCurrenciesByNetwork = (
   network: string
 ): Map<string, ICurrency> => {
+  let currencies = new Map();
+
   switch (network.toLowerCase()) {
-    case "sepolia" || "11155111":
-      return currenciesTestnet;
-    case "mainnet" || "1":
-      return mainnetCurrencies;
-    case "polygon" || "137":
-      return polygonCurrencies;
+    case "sepolia":
+    case "11155111":
+      currencies = currenciesTestnet;
+      break;
+    case "mainnet":
+    case "1":
+      currencies = mainnetCurrencies;
+      break;
+    case "polygon":
+    case "137":
+      currencies = polygonCurrencies;
+      break;
     default:
-      return mainnetCurrencies;
+      currencies = mainnetCurrencies;
   }
+  return currencies;
 };

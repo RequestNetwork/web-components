@@ -12,6 +12,10 @@
   export let currencies;
   export let config: IConfig;
   export let canSubmit = false;
+  export let network: {
+    name: string;
+    chainId: string;
+  };
   export let formData: CustomFormData;
   export let currency = currencies.keys().next().value;
   export let submitForm: (e: Event) => Promise<void>;
@@ -153,7 +157,7 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      Sepolia
+      {network.name}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>

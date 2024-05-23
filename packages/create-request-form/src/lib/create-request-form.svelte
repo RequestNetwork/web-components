@@ -20,16 +20,52 @@
   let activeConfig = config || defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
+  let networks = [
+    {
+      name: "Ethereum",
+      chainId: "1",
+    },
+    {
+      name: "Polygon",
+      chainId: "137",
+    },
+    {
+      name: "Sepolia",
+      chainId: "11155111",
+    },
+  ];
 
-  let network = {
-    name: "mainnet",
-    chainId: "1",
+  let network = networks[0];
+  const handleNetworkChange = (chainId: string) => {
+    const selectedNetwork = networks.find(
+      (network) => network.chainId === chainId
+    );
+
+    if (selectedNetwork) {
+      network = selectedNetwork;
+
+      const newCurrencies = getCurrenciesByNetwork(selectedNetwork.chainId);
+
+      currencies = newCurrencies;
+
+      currency = newCurrencies.keys().next().value;
+    }
   };
+
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let currencies = getCurrenciesByNetwork(network.chainId);
+  let currencies = getCurrenciesByNetwork(network.chainId) || new Map();
+
+  $: {
+    currencies = getCurrenciesByNetwork(network.chainId);
+    currency = currencies.keys().next().value;
+  }
   let currency = currencies.keys().next().value;
+
+  const handleCurrencyChange = (value: string) => {
+    currency = value;
+  };
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -52,10 +88,6 @@
       );
     canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
-
-  const handleCurrencyChange = (value: string) => {
-    currency = value;
-  };
 
   const addToStatus = (newStatus: APP_STATUS) => {
     appStatus = [...appStatus, newStatus];
@@ -115,19 +147,22 @@
   <div class="create-request-form-content">
     <InvoiceForm
       bind:formData
-      {handleCurrencyChange}
       config={activeConfig}
-      {currencies}
+      bind:currencies
+      {handleCurrencyChange}
+      {handleNetworkChange}
+      {networks}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
         {currency}
+        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
-        {currencies}
+        bind:currencies
       />
     </div>
   </div>
