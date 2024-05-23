@@ -21,6 +21,16 @@ export { default as Dropdown } from "./ui/dropdown.svelte";
 export { default as Accordion } from "./ui/accordion.svelte";
 export { default as PoweredBy } from "./ui/powered-by.svelte";
 
+// Icons
+export { default as Check } from "./icons/check.svelte";
+export { default as ChevronDown } from "./icons/chevron-down.svelte";
+export { default as ChevronUp } from "./icons/chevron-up.svelte";
+export { default as Close } from "./icons/close.svelte";
+export { default as Persist } from "./icons/persist.svelte";
+export { default as Shield } from "./icons/shield.svelte";
+export { default as Sync } from "./icons/sync.svelte";
+export { default as Upload } from "./icons/upload.svelte";
+
 // Utils
 export {
   calculateItemTotal,
