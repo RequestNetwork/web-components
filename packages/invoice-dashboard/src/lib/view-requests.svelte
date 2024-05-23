@@ -559,6 +559,8 @@
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
     cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
   }
 
   .caret {
