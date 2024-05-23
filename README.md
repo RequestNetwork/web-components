@@ -23,7 +23,7 @@ cd web-components
 npm install
 
 # Build all packages locally
-npm run build:all
+npm run build
 
 # Link packages to be used locally
 npm run link:all

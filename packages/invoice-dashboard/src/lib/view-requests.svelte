@@ -251,64 +251,76 @@
       <thead class="table-head">
         <tr>
           {#if columns.issuedAt}
-            <th on:click={() => handleSort("contentData.creationDate")}
-              >Issued Date<i class="caret">
-                {#if sortOrder === "asc" && sortColumn === "contentData.creationDate"}
+            <th on:click={() => handleSort("contentData.creationDate")}>
+              <div>
+                Issued Date<i class="caret">
+                  {#if sortOrder === "asc" && sortColumn === "contentData.creationDate"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
+          {/if}
+          {#if columns.dueDate}
+            <th on:click={() => handleSort("contentData.dueDate")}>
+              <div>
+                Due Date<i class="caret">
+                  {#if sortOrder === "asc" && sortColumn === "contentData.dueDate"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
+          {/if}
+          <th on:click={() => handleSort("timestamp")}>
+            <div>
+              Created<i class="caret">
+                {#if sortOrder === "asc" && sortColumn === "timestamp"}
                   <ChevronUp />
                 {:else}
                   <ChevronDown />
                 {/if}
               </i>
-            </th>
-          {/if}
-          {#if columns.dueDate}
-            <th on:click={() => handleSort("contentData.dueDate")}
-              >Due Date<i class="caret">
-                {#if sortOrder === "asc" && sortColumn === "contentData.dueDate"}
+            </div></th
+          >
+          <th on:click={() => handleSort("contentData.invoiceNumber")}>
+            <div>
+              Invoice #<i class="caret">
+                {#if sortOrder === "asc" && sortColumn === "contentData.invoiceNumber"}
                   <ChevronUp />
                 {:else}
                   <ChevronDown />
                 {/if}
-              </i></th
-            >
-          {/if}
-          <th on:click={() => handleSort("timestamp")}
-            >Created<i class="caret">
-              {#if sortOrder === "asc" && sortColumn === "timestamp"}
-                <ChevronUp />
-              {:else}
-                <ChevronDown />
-              {/if}
-            </i></th
-          >
-          <th on:click={() => handleSort("contentData.invoiceNumber")}
-            >Invoice #<i class="caret">
-              {#if sortOrder === "asc" && sortColumn === "contentData.invoiceNumber"}
-                <ChevronUp />
-              {:else}
-                <ChevronDown />
-              {/if}
-            </i></th
+              </i>
+            </div></th
           >
           {#if currentTab === "All"}
-            <th on:click={() => handleSort("payee.value")}
-              >Payee<i class="caret">
-                {#if sortOrder === "asc" && sortColumn === "payee.value"}
-                  <ChevronUp />
-                {:else}
-                  <ChevronDown />
-                {/if}
-              </i></th
-            >
-            <th on:click={() => handleSort("payer.value")}
-              >Payer<i class={`caret `}>
-                {#if sortOrder === "asc" && sortColumn === "payer.value"}
-                  <ChevronUp />
-                {:else}
-                  <ChevronDown />
-                {/if}
-              </i></th
-            >
+            <th on:click={() => handleSort("payee.value")}>
+              <div>
+                Payee<i class="caret">
+                  {#if sortOrder === "asc" && sortColumn === "payee.value"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
+            <th on:click={() => handleSort("payer.value")}>
+              <div>
+                Payer<i class={`caret `}>
+                  {#if sortOrder === "asc" && sortColumn === "payer.value"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
           {:else}
             <th
               scope="col"
@@ -325,24 +337,28 @@
               ></th
             >
           {/if}
-          <th on:click={() => handleSort("expectedAmount")}
-            >Expected Amount<i class={`caret `}>
-              {#if sortOrder === "asc" && sortColumn === "expectedAmount"}
-                <ChevronUp />
-              {:else}
-                <ChevronDown />
-              {/if}
-            </i></th
-          >
-          <th on:click={() => handleSort("state")}
-            >Status<i class={`caret `}>
-              {#if sortOrder === "asc" && sortColumn === "state"}
-                <ChevronUp />
-              {:else}
-                <ChevronDown />
-              {/if}
-            </i></th
-          >
+          <th on:click={() => handleSort("expectedAmount")}>
+            <div>
+              Expected Amount<i class={`caret `}>
+                {#if sortOrder === "asc" && sortColumn === "expectedAmount"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i>
+            </div>
+          </th>
+          <th on:click={() => handleSort("state")}>
+            <div>
+              Status<i class={`caret `}>
+                {#if sortOrder === "asc" && sortColumn === "state"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i>
+            </div>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -559,8 +575,11 @@
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
     cursor: pointer;
-    display: inline-flex;
-    justify-content: center;
+  }
+
+  .table-head th div {
+    display: flex;
+    align-items: center;
   }
 
   .caret {

@@ -13,7 +13,8 @@
     "build:shared": "pushd packages/shared && npm run build && popd",
     "build:form": "pushd packages/create-request-form && npm run build && popd",
     "build:dashboard": "pushd packages/invoice-dashboard && npm run build && popd",
-    "build:all": "npm run build:shared && npm run build:form && npm run build:dashboard",
+    "build:stakeholder": "pushd packages/add-stakeholder && npm run build && popd",
+    "build": "npm run build:shared && npm run build:form && npm run build:dashboard && npm run build:stakeholder",
     "link:all": "for d in packages/*; do pushd $d; npm link; popd; done",
     "unlink:all": "for d in packages/*; do pushd $d; npm unlink; popd; done"
   },
