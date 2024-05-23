@@ -10,6 +10,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;",
+    "build:shared": "pushd packages/shared && npm run build && popd",
+    "build:form": "pushd packages/create-request-form && npm run build && popd",
+    "build:dashboard": "pushd packages/invoice-dashboard && npm run build && popd",
+    "build:all": "npm run build:shared && npm run build:form && npm run build:dashboard",
     "link:all": "for d in packages/*; do pushd $d; npm link; popd; done",
     "unlink:all": "for d in packages/*; do pushd $d; npm unlink; popd; done"
   },
