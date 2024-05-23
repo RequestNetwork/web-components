@@ -13,7 +13,6 @@
   export let max = 0;
   export let style = "";
   export let width = "";
-  export let icon = "";
 </script>
 
 <div class="input-wrapper">
@@ -21,9 +20,8 @@
     <label for={id} class="input-label">{label}</label>
   {/if}
   <div class={`input-container ${width}`}>
-    {#if icon}
-      <i class={`input-icon ${icon}`}></i>
-    {/if}
+    <slot name="icon" />
+
     {#if type === "textarea"}
       <textarea
         {id}

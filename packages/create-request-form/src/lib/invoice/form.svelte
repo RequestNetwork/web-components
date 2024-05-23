@@ -10,6 +10,8 @@
     calculateItemTotal,
     type IConfig,
     type CustomFormData,
+    Trash,
+    Plus,
   } from "@requestnetwork/shared";
 
   export let config: IConfig;
@@ -138,7 +140,7 @@
           label="From"
           placeholder="Connect wallet to populate"
         />
-        <Accordion title="Add Your Info" icon="fa-plus" closeIcon="fa-minus">
+        <Accordion title="Add Your Info">
           <div class="invoice-form-info">
             <Input
               id="sellerInfo-firstName"
@@ -223,7 +225,7 @@
           placeholder="Client Wallet Address"
           {handleInput}
         />
-        <Accordion title="Add Client Info" icon="fa-plus" closeIcon="fa-minus">
+        <Accordion title="Add Client Info">
           <div class="invoice-form-info">
             <Input
               id="buyerInfo-firstName"
@@ -407,12 +409,12 @@
                   <Button
                     type="button"
                     className="invoice-form-body-remove-item"
-                    icon={{
-                      class: "fa-solid fa-trash",
-                      style: "color: #fff;",
-                    }}
                     onClick={() => removeInvoiceItem(index)}
-                  />
+                  >
+                    <div slot="icon">
+                      <Trash />
+                    </div>
+                  </Button>
                 </td>
               {:else}
                 <td class="invoice-form-table-body-total-empty"></td>
@@ -426,14 +428,14 @@
       <Button
         text="Add Item"
         type="button"
-        icon={{
-          class: "fa-solid fa-plus",
-          style: "color: #fff;",
-        }}
         onClick={() => {
           addInvoiceItem();
         }}
-      />
+      >
+        <div slot="icon">
+          <Plus />
+        </div>
+      </Button>
     </div>
     <div class="invoice-form-label-wrapper">
       <Input
@@ -455,6 +457,14 @@
     padding: 0;
     box-sizing: border-box;
   }
+
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
   table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -640,6 +650,11 @@
     flex: 1;
   }
 
+  :global(.invoice-form-label-wrapper svg, .invoice-form-label-wrapper path) {
+    color: white;
+    fill: white;
+  }
+
   :global(.invoice-form-label-wrapper .input-wrapper .textarea-input) {
     width: 100%;
     height: 107px;
@@ -653,5 +668,29 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
+  }
+
+  :global(
+      .invoice-form-table-body-add-item button svg,
+      .invoice-form-table-body-add-item button path
+    ) {
+    fill: white;
+    color: white;
+    width: 14px;
+    height: 14px;
+  }
+
+  :global(.invoice-form-body-remove-item) {
+    padding: 6px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+
+  :global(
+      .invoice-form-body-remove-item svg,
+      .invoice-form-body-remove-item path
+    ) {
+    width: 12px;
+    height: 12px;
   }
 </style>

@@ -25,11 +25,16 @@ export { default as PoweredBy } from "./ui/powered-by.svelte";
 export { default as Check } from "./icons/check.svelte";
 export { default as ChevronDown } from "./icons/chevron-down.svelte";
 export { default as ChevronUp } from "./icons/chevron-up.svelte";
+export { default as ChevronRight } from "./icons/chevron-right.svelte";
+export { default as ChevronLeft } from "./icons/chevron-left.svelte";
 export { default as Close } from "./icons/close.svelte";
 export { default as Persist } from "./icons/persist.svelte";
 export { default as Shield } from "./icons/shield.svelte";
 export { default as Sync } from "./icons/sync.svelte";
 export { default as Upload } from "./icons/upload.svelte";
+export { default as Trash } from "./icons/trash.svelte";
+export { default as Plus } from "./icons/plus.svelte";
+export { default as Search } from "./icons/search.svelte";
 
 // Utils
 export {

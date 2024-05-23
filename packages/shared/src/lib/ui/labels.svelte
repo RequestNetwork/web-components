@@ -65,6 +65,13 @@
 </div>
 
 <style>
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
   .labels-wrapper {
     display: flex;
     flex-direction: column;

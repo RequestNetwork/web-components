@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Close } from "@requestnetwork/shared";
+
   export let active = false;
   export let onClose: () => void;
 </script>
@@ -6,7 +8,7 @@
 <div class={`drawer ${active ? "active" : "hidden"} `}>
   <div class="innerDrawer">
     <button class="close" on:click={onClose} aria-label="Close drawer">
-      <span class="fa fa-times"></span>
+      <Close />
       <span class="sr-only">Close menu</span>
     </button>
     <slot></slot>

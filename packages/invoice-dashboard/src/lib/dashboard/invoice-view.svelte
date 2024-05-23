@@ -15,6 +15,7 @@
     currencies,
     formatDate,
     calculateItemTotal,
+    Check,
   } from "@requestnetwork/shared";
   import type { WalletState } from "@web3-onboard/core";
   import { walletClientToSigner, getSymbol } from "$src/utils";
@@ -275,7 +276,9 @@
           <div class="status">
             {status}
             {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
-              <i class="fa-solid fa-check"></i>
+              <i>
+                <Check />
+              </i>
             {/if}
           </div>
         {/each}

@@ -7,6 +7,7 @@
     calculateItemTotal,
     type IConfig,
     type CustomFormData,
+    Close,
   } from "@requestnetwork/shared";
 
   export let config: IConfig;
@@ -105,7 +106,7 @@
                 class="invoice-label-remove"
                 on:click={() => removeLabel(index)}
               >
-                <i class="fa fa-times" />
+                <Close />
               </button>
             </div>
           {/each}
@@ -235,11 +236,19 @@
 </div>
 
 <style>
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
+
   table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -447,5 +456,10 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
+  }
+
+  :global(.invoice-label-remove svg, .invoice-label-remove path) {
+    fill: white;
+    color: white;
   }
 </style>

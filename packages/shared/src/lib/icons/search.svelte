@@ -5,5 +5,6 @@
   viewBox="0 0 24 24"
   fill="none"
   stroke="currentColor"
-  stroke-width="1.25"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg
+  stroke-width="2"
+  ><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg
 >

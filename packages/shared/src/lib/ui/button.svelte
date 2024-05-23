@@ -22,6 +22,7 @@
   {#if icon}
     <i class={icon.class} style={icon.style}></i>
   {/if}
+  <slot name="icon" />
   {text}
 </button>
 

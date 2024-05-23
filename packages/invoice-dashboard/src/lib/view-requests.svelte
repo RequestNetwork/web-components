@@ -11,6 +11,11 @@
     PoweredBy,
     type IConfig,
     config as generalConfig,
+    Search,
+    ChevronUp,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
   } from "@requestnetwork/shared";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
@@ -228,11 +233,14 @@
   </div>
   <div class="search-wrapper">
     <Input
-      icon="fa-solid fa-magnifying-glass"
       placeholder="Search..."
       width="w-[300px]"
       handleInput={handleSearchChange}
-    />
+    >
+      <div slot="icon">
+        <Search />
+      </div>
+    </Input>
     <Dropdown
       type="checkbox"
       options={columnOptions}
@@ -246,38 +254,62 @@
         <tr>
           {#if columns.issuedAt}
             <th on:click={() => handleSort("contentData.creationDate")}
-              >Issued Date<i
-                class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "contentData.creationDate" ? "up" : "down"}`}
-              ></i>
+              >Issued Date<i class="caret">
+                {#if sortOrder === "asc" && sortColumn === "contentData.creationDate"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i>
             </th>
           {/if}
           {#if columns.dueDate}
             <th on:click={() => handleSort("contentData.dueDate")}
-              >Due Date<i
-                class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "contentData.dueDate" ? "up" : "down"}`}
-              ></i></th
+              >Due Date<i class="caret">
+                {#if sortOrder === "asc" && sortColumn === "contentData.dueDate"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i></th
             >
           {/if}
           <th on:click={() => handleSort("timestamp")}
-            >Created<i
-              class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "timestamp" ? "up" : "down"}`}
-            ></i></th
+            >Created<i class="caret">
+              {#if sortOrder === "asc" && sortColumn === "timestamp"}
+                <ChevronUp />
+              {:else}
+                <ChevronDown />
+              {/if}
+            </i></th
           >
           <th on:click={() => handleSort("contentData.invoiceNumber")}
-            >Invoice #<i
-              class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "contentData.invoiceNumber" ? "up" : "down"}`}
-            ></i></th
+            >Invoice #<i class="caret">
+              {#if sortOrder === "asc" && sortColumn === "contentData.invoiceNumber"}
+                <ChevronUp />
+              {:else}
+                <ChevronDown />
+              {/if}
+            </i></th
           >
           {#if currentTab === "All"}
             <th on:click={() => handleSort("payee.value")}
-              >Payee<i
-                class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "payee.value" ? "up" : "down"}`}
-              ></i></th
+              >Payee<i class="caret">
+                {#if sortOrder === "asc" && sortColumn === "payee.value"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i></th
             >
             <th on:click={() => handleSort("payer.value")}
-              >Payer<i
-                class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "payer.value" ? "up" : "down"}`}
-              ></i></th
+              >Payer<i class={`caret `}>
+                {#if sortOrder === "asc" && sortColumn === "payer.value"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}
+              </i></th
             >
           {:else}
             <th
@@ -286,20 +318,32 @@
                 handleSort(
                   currentTab === "Pay" ? "payee.value" : "payer.value"
                 )}
-              >{currentTab === "Pay" ? "Payee" : "Payer"}<i
-                class={`caret fa-solid fa-caret-${((currentTab === "Pay" && sortColumn === "payee.value") || sortColumn === "payer.value") && sortOrder === "asc" ? "up" : "down"}`}
-              ></i></th
+              >{currentTab === "Pay" ? "Payee" : "Payer"}<i class={`caret `}>
+                {#if ((currentTab === "Pay" && sortColumn === "payee.value") || sortColumn === "payer.value") && sortOrder === "asc"}
+                  <ChevronUp />
+                {:else}
+                  <ChevronDown />
+                {/if}</i
+              ></th
             >
           {/if}
           <th on:click={() => handleSort("expectedAmount")}
-            >Expected Amount<i
-              class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "expectedAmount" ? "up" : "down"}`}
-            ></i></th
+            >Expected Amount<i class={`caret `}>
+              {#if sortOrder === "asc" && sortColumn === "expectedAmount"}
+                <ChevronUp />
+              {:else}
+                <ChevronDown />
+              {/if}
+            </i></th
           >
           <th on:click={() => handleSort("state")}
-            >Status<i
-              class={`caret fa-solid fa-caret-${sortOrder === "asc" && sortColumn === "state" ? "up" : "down"}`}
-            ></i></th
+            >Status<i class={`caret `}>
+              {#if sortOrder === "asc" && sortColumn === "state"}
+                <ChevronUp />
+              {:else}
+                <ChevronDown />
+              {/if}
+            </i></th
           >
         </tr>
       </thead>
@@ -391,7 +435,9 @@
         disabled={currentPage === 1}
         on:click={() => goToPage(currentPage - 1)}
       >
-        <i class="fas fa-chevron-left"></i>
+        <i></i> 
+          <ChevronLeft />
+        </i>
       </button>
 
       {#each Array(totalPages).fill(null) as _, i}
@@ -409,7 +455,9 @@
         disabled={currentPage === totalPages}
         on:click={() => goToPage(currentPage + 1)}
       >
-        <i class="fas fa-chevron-right"></i>
+        <i >
+          <ChevronRight />
+        </i>
       </button>
     </div>
   {/if}
