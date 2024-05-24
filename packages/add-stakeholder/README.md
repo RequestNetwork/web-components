@@ -1,4 +1,4 @@
-# Request Network Add Stakeholder Component
+# Request Network Add Stakeholder Web Component
 
 [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder)
 
