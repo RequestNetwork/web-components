@@ -1,5 +1,7 @@
 # Request Network Create Invoice Form Web Component
 
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form.svg)](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form)
+
 A web component for integrating the Request Network's Create Invoice Form into a web application.
 
 ## Introduction
@@ -14,23 +16,21 @@ To install the component, use npm:
 npm install @requestnetwork/create-invoice-form
 ```
 
-This command adds the create invoice form component to your project, allowing for easy integration into any web application.
-
 ## Usage
 
 ### Usage in React
 
-To use the Create Invoice Form in a React application, you must *dynamically* import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
-
-```tsx
-import("@requestnetwork/create-invoice-form");
-```
+> **⚠️ WARNING:** To use the Create Invoice Form in a React application, you must *dynamically* import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
+>
+> ```tsx
+> import("@requestnetwork/create-invoice-form");
+> ```
 
 > **ℹ️ INFO:** The following example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
 
-#### [create-invoice.tsx](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/pages/create-invoice.tsx)
+#### [create-invoice.tsx](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/pages/create-invoice.tsx)
 
-Configure the create-invoice-form web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See for details https://stackoverflow.com/a/55480022.
+Configure the create-invoice-form web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See [StackOverflow](https://stackoverflow.com/a/55480022) for details .
 
 ```tsx
 import("@requestnetwork/create-invoice-form");
@@ -62,7 +62,7 @@ export default function CreateInvoiceForm() {
 }
 ```
 
-#### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/initializeRN.ts)
+#### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/initializeRN.ts)
 
 Initialize the `RequestNetwork` object using an Ethers `Signer` or Viem `WalletClient`.
 
@@ -89,14 +89,16 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 };
 ```
 
-#### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/config.ts)
-Use the config object to pass additional configuration options to the create invoice form component
+#### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/config.ts)
+Use the config object to pass additional configuration options to the create invoice form component.
+
+Please replace the `builderId` with your own, arbitrarily chosen ID. This is used to track how many invoices are created by your application.
 
 ```ts
 import { IConfig } from "@requestnetwork/shared";
 
 export const config: IConfig = {
-  builderId: "request-network", // Replace with your builder ID, arbitrarily chosen, used to identify your app
+  builderId: "request-network", // Replace with your builder ID, arbitrarily chosen, used for metrics
   dashboardLink: "/",
   logo: "/assets/logo-sm.svg",
   colors: {
@@ -108,8 +110,8 @@ export const config: IConfig = {
 
 #### Supporting files
 
-- [context.tsx](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/context.tsx) - This example uses a context provider to pass the wallet and request network objects to the create invoice form component.
-- [types.d.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/types.d.ts) - Specify the types to avoid TypeScript errors in the IDE.
+- [context.tsx](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/context.tsx) - Use a context provider to reinitialize the Request Network instance when the wallet changes.
+- [types.d.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/types.d.ts) - Specify types to avoid TypeScript errors.
 
 ## Features
 
@@ -119,11 +121,16 @@ export const config: IConfig = {
 | rnf_invoice format 0.3.0 | ✅ |
 | Configure Logo and Colors | ✅ |
 | Minimal Chains and Currencies | ✅ |
+| Support Wallet Connectors other than Web3Onboard | ❌ |
 | Native Request | ❌ |
 | Conversion Request | ❌ |
 | Swap-to-Pay Request | ❌ |
 | Swap-to-Conversion Request | ❌ |
+| Escrow Request | ❌ |
 | Improved UI and UX | ❌ |
+| Auto-increment Invoice Number | ❌ |
+| Client Address List | ❌ |
+| Payment Recipient Address List | ❌ |
 | More Chains and Currencies | ❌ |
 | More Configuration Options | ❌ |
 | Attachments | ❌ |
@@ -138,4 +145,4 @@ export const config: IConfig = {
 
 ## Additional Information
 
-For more detailed information on using the Request Network and custom configurations, refer to the official [Request Network documentation](https://docs.request.network/).
+For more information, see the [Request Network documentation](https://docs.request.network/).

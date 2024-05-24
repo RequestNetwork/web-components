@@ -1,8 +1,10 @@
-# Request Network Create Invoice Form Component 📚
+# Request Network Shared
+
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Fshared.svg)](https://badge.fury.io/js/%40requestnetwork%2Fshared)
 
 ## Introduction
 
-This package provides shared svelte components used by other Web Components.
+This package provides shared svelte components and utils used by other web components in this repo.
 
 ## Installation
 

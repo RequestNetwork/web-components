@@ -1,4 +1,6 @@
-# Request Network Add Stakeholder Component
+# Request Network Add Stakeholder Web Component
+
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder)
 
 ## Introduction
 
@@ -17,7 +19,7 @@ import { AddStakeholder } from '@requestnetwork/add-stakeholder'
 ```
 
 ```html
-<AddStakeholder builderKey="..." webhookUrl=".."/> 
+<AddStakeholder builderKey="..." webhookUrl=".."/>
 ```
 
 As a web component
