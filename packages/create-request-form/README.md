@@ -1,14 +1,16 @@
-# Request Network Create Request Form Component 📚
+# Request Network Create Request Form Web Component
+
+A web component for integrating the Request Network's Create Request Form into a web application.
 
 ## Introduction
 
-This package offers a Web Component for integrating the Request Network's Create Request Form into web applications. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework
+The Create Request Form component allows users to create a request using the Request Network. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework.
 
 ## Installation
 
 To install the component, use npm:
 
-```console
+```bash
 npm install @requestnetwork/create-request-form
 ```
 
@@ -16,59 +18,41 @@ This command adds the create request form component to your project, allowing fo
 
 ## Usage
 
-### In React Projects
+### Usage in React
 
-To use in a React application, import `@requestnetwork/create-request-form` and
-use the component in your JSX. Configure the create-request-form web component
-by creating a reference to it and setting its properties. Unfortunately, it's
-not possible to pass objects into a web component as props. See for details
-https://stackoverflow.com/a/55480022
+To use the Create Request Form in a React application, import `@requestnetwork/create-request-form` and use the component in your JSX.
 
-This usage example uses [Web3 Onboard](https://onboard.blocknative.com/) to
-connect a wallet but you can use any wallet connection method you prefer.
+This example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
 
-```tsx
-import("@requestnetwork/create-request-form");
-import { useEffect, useRef } from "react";
-import { config } from "@/utils/config";
-import { CreateRequestFormProps } from "@/types";
+Configure the create-request-form web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See for details https://stackoverflow.com/a/55480022.
 
-export default function CreateRequestForm() {
-  const [{ wallet }] = useConnectWallet() // Web3 Onboard
-  const formRef = useRef<CreateRequestFormProps>(null);
+https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/pages/create-request.tsx
 
-  useEffect(() => {
-    if (wallet) {
-      const { provider } = wallet;
-      initRequestNetwork(provider)
-    }
-  }, [wallet]);
+https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/context.tsx
 
-  const requestNetwork = new RequestNetwork({
-    nodeConnectionConfig: {
-      baseURL: "https://gnosis.gateway.request.network",
-    },
-    signatureProvider: new Web3SignatureProvider(provider),
-    }
+https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/initializeRN.ts
 
-  useEffect(() => {
-    if (formRef.current) {
-      formRef.current.config = config;
+https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/config.ts
 
-      if (wallet && requestNetwork) {
-        formRef.current.signer = wallet.accounts[0].address;
-        formRef.current.requestNetwork = requestNetwork;
-      }
-    }
-  }, [wallet, requestNetwork]);
+https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/types.d.ts
 
-  return (
-    <div className="container m-auto  w-[100%]">
-      <create-request-form ref={formRef} />
-    </div>
-  );
-}
-```
+## Features
+
+The following table shows the features that are currently available and those that are planned for future releases.
+
+| Feature | Status |
+|---------|--------|
+| ERC20 Request | ✅ |
+| Stablecoin Currencies | ✅ |
+| Chains: Ethereum, Polygon, Sepolia | ✅ |
+| Currencies: USDC, DAI, USDT, USDCe | ✅ |
+| Native Request | ❌ |
+| Conversion Request | ❌ |
+| Swap-to-Pay Request | ❌ |
+| Swap-to-Conversion Request | ❌ |
+| Attachements | ❌ |
+| Improved UI and UX | ❌ |
+| More Chains and Currencies | ❌ |
 
 ## Additional Information
 
