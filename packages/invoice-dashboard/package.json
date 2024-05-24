@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/invoice-dashboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -31,7 +31,7 @@
     "@requestnetwork/payment-detection": "0.42.0",
     "@requestnetwork/payment-processor": "0.44.0",
     "@requestnetwork/request-client.js": "0.45.0",
-    "@requestnetwork/shared": "^0.1.0",
+    "@requestnetwork/shared": "^0.2.0",
     "@requestnetwork/web3-signature": "0.5.0",
     "@web3-onboard/core": "^2.21.6",
     "browserify-zlib": "^0.2.0",
