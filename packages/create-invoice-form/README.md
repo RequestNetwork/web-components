@@ -140,4 +140,4 @@ export const config: IConfig = {
 
 ## Additional Information
 
-For more detailed information on using the Request Network and custom configurations, refer to the official [Request Network documentation](https://docs.request.network/).
+For more information, see the [Request Network documentation](https://docs.request.network/).
