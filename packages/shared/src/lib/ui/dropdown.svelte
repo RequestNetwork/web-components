@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { openDropdown } from "../store/dropwdown";
+  import { get } from "svelte/store";
+  import { onMount } from "svelte";
+
   export let selectedValue = "";
   export let options: { value: string; label: string; checked?: boolean }[] =
     [];
@@ -6,6 +10,7 @@
   export let placeholder: string = "Select an option";
   export let type: "default" | "checkbox" = "default";
 
+  let dropdownId: string;
   let isOpen = false;
 
   const selectOption = (value: string, checked?: boolean) => {
@@ -16,14 +21,41 @@
         options.find((option) => option.value === value)?.label || "";
       onchange(value);
       isOpen = false;
+      openDropdown.set(null);
     }
   };
+
+  let dropdownContainer: HTMLElement;
+
+  function onWindowClick(e: Event) {
+    if (dropdownContainer && !dropdownContainer.contains(e.target as Node)) {
+      isOpen = false;
+      openDropdown.set(null);
+    }
+  }
+
+  let unsubscribe: () => void;
+
+  onMount(() => {
+    dropdownId = `dropdown-${Math.random().toString(36).substr(2, 9)}`;
+
+    unsubscribe = openDropdown.subscribe((currentOpenDropdown) => {
+      isOpen = currentOpenDropdown === dropdownId;
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 </script>
 
-<div class="dropdown-wrapper">
+<svelte:window on:click={onWindowClick} />
+
+<div bind:this={dropdownContainer} class="dropdown-wrapper">
   <button
     type="button"
-    on:click={() => (isOpen = !isOpen)}
+    on:click|stopPropagation={() =>
+      openDropdown.set(isOpen ? null : dropdownId)}
     class="dropdown-button"
   >
     {type === "default" ? selectedValue || placeholder : placeholder}
