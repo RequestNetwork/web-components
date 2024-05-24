@@ -111,6 +111,7 @@
     e.preventDefault();
 
     formData.miscellaneous.builderId = config?.builderId || "";
+    formData.miscellaneous.createdWith = window.location.hostname;
 
     const requestCreateParameters = prepareRequestParams({
       signer,

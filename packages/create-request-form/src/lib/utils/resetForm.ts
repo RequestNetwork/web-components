@@ -10,6 +10,7 @@ export function getInitialFormData() {
     miscellaneous: {
       labels: [],
       builderId: "",
+      createdWith: "",
     },
     items: [
       {
