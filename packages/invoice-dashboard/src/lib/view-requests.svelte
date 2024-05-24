@@ -244,6 +244,7 @@
       </div>
     </Input>
     <Dropdown
+      {config}
       type="checkbox"
       options={columnOptions}
       placeholder="Select Columns"

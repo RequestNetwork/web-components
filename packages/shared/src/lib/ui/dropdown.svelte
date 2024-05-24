@@ -1,8 +1,7 @@
 <script lang="ts">
   import { openDropdown } from "../store/dropwdown";
-  import { get } from "svelte/store";
   import { onMount } from "svelte";
-
+  export let config;
   export let selectedValue = "";
   export let options: { value: string; label: string; checked?: boolean }[] =
     [];
@@ -28,7 +27,12 @@
   let dropdownContainer: HTMLElement;
 
   function onWindowClick(e: Event) {
-    if (dropdownContainer && !dropdownContainer.contains(e.target as Node)) {
+    const target = e.target as Node;
+    if (
+      dropdownContainer &&
+      !dropdownContainer.contains(target) &&
+      type !== "checkbox"
+    ) {
       isOpen = false;
       openDropdown.set(null);
     }
@@ -51,7 +55,13 @@
 
 <svelte:window on:click={onWindowClick} />
 
-<div bind:this={dropdownContainer} class="dropdown-wrapper">
+<div
+  style="
+--mainColor: {config.colors.main};
+--secondaryColor: {config.colors.secondary};"
+  bind:this={dropdownContainer}
+  class="dropdown-wrapper"
+>
   <button
     type="button"
     on:click|stopPropagation={() =>
@@ -81,7 +91,8 @@
                 type="checkbox"
                 bind:checked={option.checked}
                 class="dropdown-checkbox-item:focus"
-                on:change={() => selectOption(option.value, option.checked)}
+                on:change|stopPropagation={() =>
+                  selectOption(option.value, option.checked)}
               />
               <label
                 for={`checkbox-${option.value}`}
@@ -145,7 +156,7 @@
 
   .dropdown-button:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #57e1a5;
+    box-shadow: 0 0 0 1px var(--secondaryColor);
   }
 
   .dropdown-button-icon {
