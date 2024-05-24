@@ -186,10 +186,9 @@
     cursor: pointer;
     background-color: white;
     padding: 12px;
-    width: 100%;
   }
 
-  .dropdown-checkbox-option {
+  .dropdown-checkbox-option:hover {
     background-color: #f3f4f6;
   }
 </style>

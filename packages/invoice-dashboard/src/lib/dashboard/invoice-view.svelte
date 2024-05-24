@@ -41,7 +41,7 @@
   let otherItems: any;
   let sellerInfo: { label: string; value: string }[] = [];
   let buyerInfo: { label: string; value: string }[] = [];
-  let isPayee = request?.payee?.value === address;
+  let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
   let correctChain =
     wallet?.chains[0].id === String(getNetworkIdFromNetworkName(network));
@@ -333,7 +333,7 @@
     <div class="invoice-view-actions">
       {#if loading}
         <div class="loading">Loading...</div>
-      {:else if !correctChain}
+      {:else if !correctChain && !isPayee}
         <Button
           type="button"
           text="Switch Network"

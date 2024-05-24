@@ -110,24 +110,39 @@
 
   $: filteredRequests = requests?.filter((request) => {
     const terms = searchQuery.toLowerCase();
-    return (
-      (currentTab === "All" ||
-        (currentTab === "Get Paid" &&
-          request.payee?.value?.toLowerCase() === signer) ||
-        (currentTab === "Pay" &&
-          request.payer?.value?.toLowerCase() === signer)) &&
-      ((request.contentData.invoiceNumber &&
-        request.contentData.invoiceNumber
-          .toString()
-          .toLowerCase()
-          .includes(terms)) ||
-        formatAddress(request.payee?.value ?? "")
-          ?.toLowerCase()
-          .includes(terms) ||
-        formatAddress(request.payer?.value ?? "")
-          ?.toLowerCase()
-          .includes(terms))
-    );
+
+    if (
+      currentTab === "All" ||
+      (currentTab === "Get Paid" &&
+        request.payee?.value?.toLowerCase() === signer.toLowerCase()) ||
+      (currentTab === "Pay" &&
+        request.payer?.value?.toLowerCase() === signer.toLowerCase())
+    ) {
+      const invoiceMatches = request.contentData?.invoiceNumber
+        ?.toString()
+        .toLowerCase()
+        .includes(terms);
+
+      const payeeMatches = formatAddress(request.payee?.value ?? "")
+        .toLowerCase()
+        .includes(terms);
+      const payerMatches = formatAddress(request.payer?.value ?? "")
+        .toLowerCase()
+        .includes(terms);
+
+      const amountMatches = request.expectedAmount.toString().includes(terms);
+
+      console.log({
+        invoiceMatches,
+        payeeMatches,
+        payerMatches,
+        amountMatches,
+      });
+
+      return invoiceMatches || payeeMatches || payerMatches || amountMatches;
+    }
+
+    return false;
   });
 
   $: totalPages = Math.ceil(filteredRequests?.length! / itemsPerPage);

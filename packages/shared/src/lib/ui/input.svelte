@@ -118,6 +118,6 @@
   }
 
   .input-wrapper .text-input-icon {
-    margin-right: 32px;
+    margin-right: 10px;
   }
 </style>
