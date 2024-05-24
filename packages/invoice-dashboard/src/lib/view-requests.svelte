@@ -132,13 +132,6 @@
 
       const amountMatches = request.expectedAmount.toString().includes(terms);
 
-      console.log({
-        invoiceMatches,
-        payeeMatches,
-        payerMatches,
-        amountMatches,
-      });
-
       return invoiceMatches || payeeMatches || payerMatches || amountMatches;
     }
 
