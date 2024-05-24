@@ -357,6 +357,7 @@
               <th
                 scope="row"
                 class="invoice-form-table-body-header invoice-form-table-body-description"
+                style="font-weight: normal;"
               >
                 <Input
                   id={`description-${index}`}
@@ -579,7 +580,6 @@
   }
 
   .invoice-form-table-header {
-    font-size: 14px;
     line-height: 20px;
     text-transform: uppercase;
     color: white;
@@ -592,7 +592,7 @@
 
   .invoice-form-table-header tr th {
     padding: 12px 16px;
-    font-size: 500;
+    font-size: 12px;
   }
 
   .invoice-form-table-body-header {

@@ -16,11 +16,8 @@
     <div class="modal-container">
       <div class="modal-header">
         <h2 class="modal-title">{title}</h2>
-        <button class="modal-close-button" on:click={closeModal}>
-          <span>
-            <Close />
-          </span>
-          <span class="sr-only">Close</span>
+        <button class="close" on:click={closeModal} aria-label="Close drawer">
+          <Close />
         </button>
       </div>
       <div class="modal-content">
@@ -65,7 +62,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #5a5a5a;
   }
 
   .modal-title {
@@ -74,18 +71,26 @@
     font-weight: 500;
   }
 
-  .modal-close-button {
-    border-radius: 6px;
-    padding: 6px;
-    color: #6b7280;
+  .close {
+    display: inline-flex;
+    top: 0.625rem;
+    right: 0.625rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    color: #9ca3af;
+    background-color: transparent;
+    border-radius: 0.5rem;
+    border: none;
+    transition: all 300ms;
   }
 
-  .modal-close-button:hover {
-    color: #374151;
-  }
-
-  .modal-close-button:focus {
-    outline: none;
+  .close:hover {
+    background-color: #e5e7eb;
+    color: #111827;
   }
 
   .modal-content {

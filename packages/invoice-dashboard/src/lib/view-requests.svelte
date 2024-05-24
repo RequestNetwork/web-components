@@ -604,11 +604,6 @@
     margin-left: 6px;
   }
 
-  .caret svg {
-    margin-bottom: -2px;
-    width: 12px;
-  }
-
   .row {
     background-color: white;
     border-bottom: 1px solid #d1d5db;

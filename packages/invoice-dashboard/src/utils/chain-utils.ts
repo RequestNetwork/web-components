@@ -16,7 +16,7 @@ export const checkNetwork = (network: string) => {
   switch (network.toLowerCase()) {
     case "mainnet":
       return "1";
-    case "polygon":
+    case "matic":
       return "137";
     case "sepolia":
       return "11155111";

@@ -138,7 +138,7 @@ export const getCurrenciesByNetwork = (
     case "1":
       currencies = mainnetCurrencies;
       break;
-    case "polygon":
+    case "matic":
     case "137":
       currencies = polygonCurrencies;
       break;
