@@ -1,5 +1,7 @@
 # Request Network Add Stakeholder Component
 
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder)
+
 ## Introduction
 
 This package provides the Request Network Add Stakeholder html module, which allows builders to provide the Request Finance Add Stakeholder feature to existing web pages / applications.

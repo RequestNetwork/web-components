@@ -1,4 +1,6 @@
-# Request Network Invoice Dashboard 📚
+# Request Network Invoice Dashboard
+
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard.svg)](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard)
 
 ## Introduction
 

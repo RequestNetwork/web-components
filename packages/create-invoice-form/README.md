@@ -1,5 +1,7 @@
 # Request Network Create Invoice Form Web Component
 
+[![npm version](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form.svg)](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form)
+
 A web component for integrating the Request Network's Create Invoice Form into a web application.
 
 ## Introduction
