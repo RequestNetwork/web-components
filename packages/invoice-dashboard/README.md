@@ -27,7 +27,7 @@ npm install @requestnetwork/invoice-dashboard
 > ```
 
 
-> **ℹ️ INFO:** The following example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
+> **⚠️ WARNING:** The Invoice Dashboard component is currently only compatible with [Web3 Onboard](https://onboard.blocknative.com/) because it takes a `WalletState` as a prop. Future iterations will allow for other wallet connectors.
 
 #### [invoice-dashboard.tsx](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/pages/index.tsx)
 
