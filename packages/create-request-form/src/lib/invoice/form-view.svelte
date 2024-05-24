@@ -1,12 +1,13 @@
 <script lang="ts">
   import {
+    Close,
     Button,
     PoweredBy,
     formatDate,
     calculateItemTotal,
     type IConfig,
     type CustomFormData,
-    Close,
+    config as defaultConfig,
   } from "@requestnetwork/shared";
 
   export let currencies;
@@ -97,7 +98,13 @@
   <div class="invoice-form-wrapper">
     <div class="invoice-header">
       <div class="invoice-header-left">
-        <img src={config.logo} alt="Logo" class="invoice-logo" />
+        <img
+          src={config.logo && config.logo.length > 0
+            ? config.logo
+            : defaultConfig.logo}
+          alt="Logo"
+          class="invoice-logo"
+        />
         <h2 class="invoice-title">
           Invoice #{formData.invoiceNumber}
         </h2>

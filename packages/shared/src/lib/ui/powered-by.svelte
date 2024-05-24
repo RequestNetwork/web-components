@@ -1,6 +1,10 @@
+<script>
+  import logo from "../assets/logo.svg";
+</script>
+
 <div class="powered-by">
   <h2>Powered by</h2>
-  <img src="assets/logo.svg" alt="Logo" class="powered-by-logo" />
+  <img src={logo} alt="Logo" class="powered-by-logo" />
 </div>
 
 <style>
