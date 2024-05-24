@@ -3,7 +3,7 @@ name: release-if-necessary
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
