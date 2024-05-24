@@ -47,8 +47,4 @@ export default defineConfig({
       },
     },
   },
-  define: {
-    "process.platform": null,
-    "process.version": null,
-  },
 });
