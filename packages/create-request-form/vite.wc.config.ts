@@ -10,7 +10,6 @@ export default defineConfig({
       compilerOptions: {
         customElement: true,
       },
-      emitCss: false,
     }),
   ],
   resolve: {
@@ -20,7 +19,7 @@ export default defineConfig({
       assert: "assert",
       zlib: "browserify-zlib",
       $src: path.resolve(__dirname, "src"),
-      $utils: path.resolve(__dirname, "src/utils"),
+      $utils: path.resolve(__dirname, "src/lib/utils"),
     },
   },
   build: {
@@ -47,8 +46,5 @@ export default defineConfig({
         global: "globalThis",
       },
     },
-  },
-  define: {
-    global: "window",
   },
 });

@@ -8,7 +8,7 @@ const config = {
     adapter: adapter(),
     alias: {
       $src: "./src",
-      $utils: "./src/utils",
+      $utils: "./src/lib/utils",
     },
   },
   compilerOptions: {

@@ -13,11 +13,26 @@ Usage depends on the component. See packages/<package>/README.md
 ## Developing
 
 ```bash
+# Clone the repository
 git clone https://github.com/RequestNetwork/web-components.git
 
+# Navigate into the cloned repository
+cd web-components
+
+# Install all dependencies
 npm install
 
-cd packages/<component>
+# Build all packages locally
+npm run build
+
+# Link packages to be used locally
+npm run link:all
+
+# Navigate to your project directory where the web components are used
+cd <project>
+
+# Use local packages instead of the deployed ones
+npm link @requestnetwork/create-request-form @requestnetwork/invoice-dashboard
 ```
 
 Further details specific to the component can be found in the relevant

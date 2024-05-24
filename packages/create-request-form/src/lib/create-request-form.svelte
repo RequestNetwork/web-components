@@ -3,7 +3,7 @@
 <script lang="ts">
   import {
     APP_STATUS,
-    currencies,
+    getCurrenciesByNetwork,
     calculateInvoiceTotals,
     config as defaultConfig,
     type IConfig,
@@ -20,11 +20,52 @@
   let activeConfig = config || defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
+  let networks = [
+    {
+      name: "Ethereum",
+      chainId: "1",
+    },
+    {
+      name: "Polygon",
+      chainId: "137",
+    },
+    {
+      name: "Sepolia",
+      chainId: "11155111",
+    },
+  ];
+
+  let network = networks[0];
+  const handleNetworkChange = (chainId: string) => {
+    const selectedNetwork = networks.find(
+      (network) => network.chainId === chainId
+    );
+
+    if (selectedNetwork) {
+      network = selectedNetwork;
+
+      const newCurrencies = getCurrenciesByNetwork(selectedNetwork.chainId);
+
+      currencies = newCurrencies;
+
+      currency = newCurrencies.keys().next().value;
+    }
+  };
 
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
+  let currencies = getCurrenciesByNetwork(network.chainId) || new Map();
+
+  $: {
+    currencies = getCurrenciesByNetwork(network.chainId);
+    currency = currencies.keys().next().value;
+  }
   let currency = currencies.keys().next().value;
+
+  const handleCurrencyChange = (value: string) => {
+    currency = value;
+  };
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -48,10 +89,6 @@
     canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
 
-  const handleCurrencyChange = (value: string) => {
-    currency = value;
-  };
-
   const addToStatus = (newStatus: APP_STATUS) => {
     appStatus = [...appStatus, newStatus];
   };
@@ -73,11 +110,15 @@
   const submitForm = async (e: Event) => {
     e.preventDefault();
 
+    formData.miscellaneous.builderId = config?.builderId || "";
+    formData.miscellaneous.createdWith = window.location.hostname;
+
     const requestCreateParameters = prepareRequestParams({
+      signer,
       formData,
       currency,
+      currencies,
       invoiceTotals,
-      signer,
     });
 
     if (requestNetwork) {
@@ -94,26 +135,35 @@
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error) {
         addToStatus(APP_STATUS.ERROR_OCCURRED);
-        console.log("Failed to create request:", error);
+        console.error("Failed to create request:", error);
       }
     }
   };
 </script>
 
 <div
-  class="flex flex-col gap-[20px]"
+  class="create-request-form-wrapper"
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
-  <div class="flex gap-[20px] w-full">
-    <InvoiceForm bind:formData {handleCurrencyChange} config={activeConfig} />
-    <div class="h-fit flex flex-col gap-[12px] w-full">
+  <div class="create-request-form-content">
+    <InvoiceForm
+      bind:formData
+      config={activeConfig}
+      bind:currencies
+      {handleCurrencyChange}
+      {handleNetworkChange}
+      {networks}
+    />
+    <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
         {currency}
+        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
+        bind:currencies
       />
     </div>
   </div>
@@ -123,7 +173,7 @@
     onClose={hanldeCreateNewRequest}
   >
     <Status statuses={appStatus} />
-    <div class="flex justify-between mt-[20px]">
+    <div class="modal-footer">
       <Button
         type="button"
         onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
@@ -139,3 +189,53 @@
     </div>
   </Modal>
 </div>
+
+<style>
+  @font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
+  }
+
+  .create-request-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+    color: black;
+  }
+
+  .create-request-form-content {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .invoice-view-wrapper {
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  :global(.modal-footer button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+</style>

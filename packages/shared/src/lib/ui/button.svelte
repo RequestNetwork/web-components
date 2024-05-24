@@ -17,15 +17,42 @@
   {type}
   {disabled}
   on:click={onClick}
-  class={`flex items-center gap-[10px] disabled:cursor-not-allowed disabled:text-dark-grey text-white rounded-[8px] transition-all text-[14px] hover:-translate-y-[2px] ${padding} ${className} main-button`}
+  class={`button ${padding} ${className} main-button`}
 >
   {#if icon}
     <i class={icon.class} style={icon.style}></i>
   {/if}
+  <slot name="icon" />
   {text}
 </button>
 
 <style>
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    border-radius: 8px;
+    transition: all;
+    font-size: 14px;
+  }
+
+  .button:disabled {
+    cursor: not-allowed;
+    color: #5a5a5a;
+  }
+
+  .button:hover {
+    transform: translateY(-2px);
+  }
+
   .main-button {
     background-color: var(--mainColor);
   }

@@ -1,5 +1,5 @@
 import { Types, Utils } from "@requestnetwork/request-client.js";
-import { currencies, type CustomFormData } from "@requestnetwork/shared";
+import type { CustomFormData } from "@requestnetwork/shared";
 import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
@@ -11,13 +11,15 @@ interface IRequestParams {
     totalAmount: number;
   };
   signer: string;
+  currencies: any;
 }
 
 export const prepareRequestParams = ({
+  signer,
   currency,
   formData,
+  currencies,
   invoiceTotals,
-  signer,
 }: IRequestParams): Types.ICreateRequestParameters => ({
   requestInfo: {
     currency: {

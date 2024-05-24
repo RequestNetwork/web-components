@@ -1,14 +1,16 @@
-# Request Network Create Request Form Component 📚
+# Request Network Create Request Form Web Component
+
+A web component for integrating the Request Network's Create Request Form into a web application.
 
 ## Introduction
 
-This package offers a Web Component for integrating the Request Network's Create Request Form into web applications. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework
+The Create Request Form component allows users to create a request using the Request Network. It is built using Svelte but compiled to a Web Component, making it usable in any web environment, regardless of the framework.
 
 ## Installation
 
 To install the component, use npm:
 
-```console
+```bash
 npm install @requestnetwork/create-request-form
 ```
 
@@ -16,55 +18,123 @@ This command adds the create request form component to your project, allowing fo
 
 ## Usage
 
-### As a Web Component
+### Usage in React
 
-Import the component into your JavaScript or TypeScript file:
+To use the Create Request Form in a React application, you must *dynamically* import `@requestnetwork/create-request-form` and use the component in your JSX file.
 
-`import '@requestnetwork/create-request-form'`
-
-Then, you can use the component directly in your HTML:
-
-```console
-<create-request-form config={config} requestNetwork={requestNetworkInstance} signer={walletAccount} />
+```tsx
+import("@requestnetwork/create-request-form");
 ```
 
-### In Svelte Projects
+> **ℹ️ INFO:** The following example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
 
-After installing, import and use the component directly in your Svelte files:
+#### [create-request.tsx](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/pages/create-request.tsx)
 
-```console
-<script>
-    import CreateRequestForm from '@requestnetwork/create-request-form';
-</script>
+Configure the create-request-form web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See for details https://stackoverflow.com/a/55480022.
 
-<CreateRequestForm />
-```
+```tsx
+import("@requestnetwork/create-request-form");
+import { useEffect, useRef } from "react";
+import { config } from "@/utils/config";
+import { useAppContext } from "@/utils/context";
+import { CreateRequestFormProps } from "@/types";
 
-### In React Projects
+export default function Home() {
+  const formRef = useRef<CreateRequestFormProps>(null);
+  const { wallet, requestNetwork } = useAppContext();
 
-To use in a React application, ensure the component is included in your project:
+  useEffect(() => {
+    if (formRef.current) {
+      formRef.current.config = config;
 
-`import '@requestnetwork/create-request-form'`
+      if (wallet && requestNetwork) {
+        formRef.current.signer = wallet.accounts[0].address;
+        formRef.current.requestNetwork = requestNetwork;
+      }
+    }
+  }, [wallet, requestNetwork]);
 
-Then use it like any other React component:
-
-```console
-export default function App() {
-    return <create-request-form></create-request-form>;
+  return (
+    <div className="container m-auto  w-[100%]">
+      <create-request-form ref={formRef} />
+    </div>
+  );
 }
 ```
 
-### In Vanilla JavaScript
+#### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/initializeRN.ts)
 
-For use in projects without a build process, include the component via script tag, either locally or from a CDN:
+Initialize the `RequestNetwork` object using an Ethers `Signer` or Viem `WalletClient`.
 
-```console
-<script src="./node_modules/@requestnetwork/create-request-form/dist/index.js" defer></script>
-<!-- or from a CDN -->
-<script src="https://unpkg.com/@requestnetwork/create-request-form" defer></script>
+```ts
+import { RequestNetwork } from "@requestnetwork/request-client.js";
+import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 
-<create-request-form></create-request-form>
+export const initializeRequestNetwork = (setter: any, walletClient: any) => {
+  try {
+    const web3SignatureProvider = new Web3SignatureProvider(walletClient);
+
+    const requestNetwork = new RequestNetwork({
+      nodeConnectionConfig: {
+        baseURL: "https://gnosis.gateway.request.network/",
+      },
+      signatureProvider: web3SignatureProvider,
+    });
+
+    setter(requestNetwork);
+  } catch (error) {
+    console.error("Failed to initialize the Request Network:", error);
+    setter(null);
+  }
+};
 ```
+
+#### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/config.ts)
+Use the config object to pass additional configuration options to the create request form component
+
+```ts
+import { IConfig } from "@requestnetwork/shared";
+
+export const config: IConfig = {
+  builderId: "request-network", // Replace with your builder ID, arbitrarily chosen, used to identify your app
+  dashboardLink: "/",
+  logo: "/assets/logo-sm.svg",
+  colors: {
+    main: "#0BB489",
+    secondary: "#58E1A5",
+  },
+};
+```
+
+#### Supporting files
+
+- [context.tsx](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/utils/context.tsx) - This example uses a context provider to pass the wallet and request network objects to the create request form component.
+- [types.d.ts](https://github.com/RequestNetwork/invoicing-template/blob/6e8840aa5373e9f83234046e07981a64b3cb826a/types.d.ts) - Specify the types to avoid TypeScript errors in the IDE.
+
+## Features
+
+| Feature | Status |
+|---------|--------|
+| ERC20 Request | ✅ |
+| rnf_invoice format 0.3.0 | ✅ |
+| Configure Logo and Colors | ✅ |
+| Minimal Chains and Currencies | ✅ |
+| Native Request | ❌ |
+| Conversion Request | ❌ |
+| Swap-to-Pay Request | ❌ |
+| Swap-to-Conversion Request | ❌ |
+| Improved UI and UX | ❌ |
+| More Chains and Currencies | ❌ |
+| More Configuration Options | ❌ |
+| Attachments | ❌ |
+
+## Chains and Currencies
+
+| Chain | Currencies |
+|-------|------------|
+| Ethereum | USDC, USDT, DAI |
+| Polygon | USDC, USDT, DAI, USDCe |
+| Sepolia | USDC, FAU |
 
 ## Additional Information
 

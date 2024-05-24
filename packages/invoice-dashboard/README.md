@@ -16,54 +16,60 @@ This command adds the Invoice Dashboard component to your project, allowing for 
 
 ## Usage
 
-### As a Web Component
-
-Import the component into your JavaScript or TypeScript file:
-
-`import '@requestnetwork/invoice-dashboard'`
-
-Then, you can use the component directly in your HTML:
-
-```console
-<invoice-dashboard config={config} wallet={wallet} requestNetwork={requestNetworkInstance}  />
-```
-
-### In Svelte Projects
-
-After installing, import and use the component directly in your Svelte files:
-
-```console
-<script>
-    import InvoiceDashboard from '@requestnetwork/invoice-dashboard';
-</script>
-
-<InvoiceDashboard />
-```
-
 ### In React Projects
 
-To use in a React application, ensure the component is included in your project:
+To use in a React application, import `@requestnetwork/invoice-dashboard` and
+use the component in your JSX. Configure the invoice-dashboard web component
+by creating a reference to it and setting its properties. Unfortunately, it's
+not possible to pass objects into a web component as props. See for details
+https://stackoverflow.com/a/55480022
 
-`import '@requestnetwork/invoice-dashboard'`
+This usage example uses [Web3 Onboard](https://onboard.blocknative.com/) to
+connect a wallet but you can use any wallet connection method you prefer.
 
-Then use it like any other React component:
+```tsx
+import("@requestnetwork/invoice-dashboard");
+import { useEffect, useRef } from "react";
+import { config } from "@/utils/config";
+import { InvoiceDashboardProps } from "@/types";
+import { useConnectWallet } from "@web3-onboard/react";
 
-```console
-export default function App() {
-    return <invoice-dashboard></invoice-dashboard>;
+export default function CreateRequestForm() {
+  const [{ wallet }] = useConnectWallet() // Web3 Onboard
+  const formRef = useRef<CreateRequestFormProps>(null);
+
+  useEffect(() => {
+    if (wallet) {
+      const { provider } = wallet;
+      initRequestNetwork(provider)
+    }
+  }, [wallet]);
+
+  const requestNetwork = new RequestNetwork({
+    nodeConnectionConfig: {
+      baseURL: "https://gnosis.gateway.request.network",
+    },
+    signatureProvider: new Web3SignatureProvider(provider),
+    }
+  )
+
+  useEffect(() => {
+    if (dashboardRef.current) {
+      dashboardRef.current.config = config;
+
+      if (wallet && requestNetwork) {
+        dashboardRef.current.wallet = wallet;
+        dashboardRef.current.requestNetwork = requestNetwork;
+      }
+    }
+  }, [wallet, requestNetwork]);
+
+  return (
+    <div className="container m-auto  w-[100%]">
+      <invoice-dashboard ref={dashboardRef} />
+    </div>
+  );
 }
-```
-
-### In Vanilla JavaScript
-
-For use in projects without a build process, include the component via script tag, either locally or from a CDN:
-
-```console
-<script src="./node_modules/@requestnetwork/invoice-dashboard/dist/index.js" defer></script>
-<!-- or from a CDN -->
-<script src="https://unpkg.com/@requestnetwork/invoice-dashboard" defer></script>
-
-<invoice-dashboard></invoice-dashboard>
 ```
 
 ## Additional Information

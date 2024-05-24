@@ -5,17 +5,23 @@
     Labels,
     Dropdown,
     Accordion,
-    currencies,
     inputDateFormat,
     calculateItemTotal,
     type IConfig,
     type CustomFormData,
+    Trash,
+    Plus,
+    getCurrenciesByNetwork,
   } from "@requestnetwork/shared";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;
   export let handleCurrencyChange: (value: string) => void;
+
+  export let handleNetworkChange: (chainId: string) => void;
+  export let networks;
+  export let currencies = new Map();
 
   let creatorId = "";
 
@@ -96,14 +102,11 @@
   };
 </script>
 
-<form
-  class="h-fit bg-white flex flex-col w-[120%] p-[20px] shadow-small gap-[20px]"
->
-  <div class="flex items-start w-full relative">
-    <div class="flex items-center gap-[12px]">
-      <h2 class="text-dark-blue font-bold text-[20px] w-full">Invoice #</h2>
+<form class="invoice-form">
+  <div class="invoice-form-header">
+    <div class="invoice-form-header-left">
+      <h2 class="invoice-form-title">Invoice #</h2>
       <Input
-        className="w-full"
         id="invoiceNumber"
         type="text"
         value={formData.invoiceNumber}
@@ -111,13 +114,12 @@
         style={`width: ${calculateInputWidth(formData.invoiceNumber.toString())}`}
       />
     </div>
-    <div class="flex flex-col gap-[9px] ml-auto w-[260px] absolute right-0">
+    <div class="invoice-form-dates">
       <Input
         id="issuedOn"
         type="date"
         min={inputDateFormat(new Date())}
         value={inputDateFormat(new Date())}
-        className="w-full"
         label="Issued Date"
         {handleInput}
       />
@@ -126,17 +128,14 @@
         type="date"
         min={inputDateFormat(formData.issuedOn)}
         value={inputDateFormat(formData.dueDate)}
-        className="w-full"
         label="Due Date"
         {handleInput}
       />
     </div>
   </div>
-  <div class="flex gap-[20px]">
-    <div class="flex flex-col w-full max-w-[520px] gap-[20px]">
-      <div
-        class="flex flex-col gap-[20px] border border-zinc-200 rounded-md p-[20px] pb-0"
-      >
+  <div class="invoice-form-details">
+    <div class="invoice-form-section-container">
+      <div class="invoice-form-section">
         <Input
           disabled
           id="creatorId"
@@ -145,8 +144,8 @@
           label="From"
           placeholder="Connect wallet to populate"
         />
-        <Accordion title="Add Your Info" icon="fa-plus" closeIcon="fa-minus">
-          <div class="grid grid-cols-2 grid-rows-2 gap-4">
+        <Accordion title="Add Your Info">
+          <div class="invoice-form-info">
             <Input
               id="sellerInfo-firstName"
               type="text"
@@ -221,9 +220,7 @@
         </Accordion>
       </div>
 
-      <div
-        class="flex flex-col gap-[20px] border border-zinc-200 rounded-md p-[20px] pb-0"
-      >
+      <div class="invoice-form-section">
         <Input
           label="Client information"
           id="payerAddress"
@@ -232,8 +229,8 @@
           placeholder="Client Wallet Address"
           {handleInput}
         />
-        <Accordion title="Add Client Info" icon="fa-plus" closeIcon="fa-minus">
-          <div class="grid grid-cols-2 grid-rows-2 gap-4">
+        <Accordion title="Add Client Info">
+          <div class="invoice-form-info">
             <Input
               id="buyerInfo-firstName"
               type="text"
@@ -307,13 +304,17 @@
           </div>
         </Accordion>
       </div>
-      <Input
-        label="Choose your payment chain"
-        id="currency"
-        type="text"
-        value="Sepolia"
-        disabled
+      <Dropdown
+        placeholder="Select payment chain"
+        options={networks.map((network) => {
+          return {
+            value: network.chainId,
+            label: network.name,
+          };
+        })}
+        onchange={handleNetworkChange}
       />
+
       <Dropdown
         placeholder="Select a currency"
         options={Array.from(currencies.entries()).map(([key, value]) => ({
@@ -333,113 +334,119 @@
     </div>
   </div>
 
-  <div class="flex flex-col gap-[20px]">
-    <div class="relative overflow-x-auto shadow rounded-lg">
-      <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+  <div class="invoice-form-table-section">
+    <div class="invoice-form-table-wrapper">
+      <table class="invoice-form-table">
         <thead
-          class="text-xs text-white uppercase"
+          class="invoice-form-table-header"
           style="background-color: var(--mainColor);"
         >
-          <tr class="text-left text-[14px]">
-            <th scope="col" class="px-4 py-3 font-medium"> Description</th>
-            <th scope="col" class="px-4 py-3 font-medium"> Qty</th>
-            <th scope="col" class="px-4 py-3 font-medium"> Unit price</th>
-            <th scope="col" class="px-4 py-3 font-medium"> Discount</th>
-            <th scope="col" class="px-4 py-3 font-medium"> Tax</th>
-            <th scope="col" class="px-4 py-3 font-medium"> Amount</th>
-            <th scope="col" class="px-4 py-3 font-medium"> </th>
+          <tr>
+            <th scope="col"> Description</th>
+            <th scope="col"> Qty</th>
+            <th scope="col"> Unit price</th>
+            <th scope="col"> Discount</th>
+            <th scope="col"> Tax</th>
+            <th scope="col"> Amount</th>
+            <th scope="col"> </th>
           </tr>
         </thead>
         <tbody>
           {#each formData.items as item, index (index)}
             <tr>
-              <th scope="row" class="px-4 py-3 font-medium whitespace-nowrap">
+              <th
+                scope="row"
+                class="invoice-form-table-body-header invoice-form-table-body-description"
+                style="font-weight: normal;"
+              >
                 <Input
                   id={`description-${index}`}
                   type="text"
                   value={item.description}
                   placeholder="Enter description"
                   handleInput={(event) => handleInput(event, index)}
-                  width="w-[135px]"
                 />
               </th>
-              <td class="px-4 py-3">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-quantity"
+              >
                 <Input
                   id={`quantity-${index}`}
                   type="number"
                   value={item.quantity}
                   handleInput={(event) => handleInput(event, index)}
-                  className="w-[40px]"
                 />
               </td>
-              <td class="px-4 py-3">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-amount"
+              >
                 <Input
                   id={`unitPrice-${index}`}
                   type="number"
                   value={item.unitPrice}
                   handleInput={(event) => handleInput(event, index)}
-                  className="w-[80px]"
                 />
               </td>
-              <td class="px-4 py-3">
+              <td
+                class="invoice-form-table-body-cell invoice-form-table-body-amount"
+              >
                 <Input
                   id={`discount-${index}`}
                   type="number"
                   value={item.discount}
                   handleInput={(event) => handleInput(event, index)}
-                  className="w-[80px]"
                 />
               </td>
-              <td class="flex items-center gap-[8px] px-4 py-3">
+              <td
+                class="invoice-form-table-body-tax-cell invoice-form-table-body-amount"
+              >
                 %
                 <Input
                   id={`tax-${index}`}
                   type="number"
                   value={item.tax.amount}
                   handleInput={(event) => handleInput(event, index)}
-                  className="w-[80px]"
                 />
               </td>
-              <td class="pr-1 pl-4 py-3">
+              <td class="invoice-form-table-body-total">
                 {calculateItemTotal(item).toFixed(2)}
               </td>
               {#if index !== 0}
-                <td class="px-4 py-3">
+                <td
+                  class="invoice-form-table-body-cell invoice-form-table-body-amount"
+                >
                   <Button
-                    padding="px-[10px] py-[10px]"
-                    className="hover:bg-gray-800"
                     type="button"
-                    icon={{
-                      class: "fa-solid fa-trash",
-                      style: "color: #fff;",
-                    }}
+                    className="invoice-form-body-remove-item"
                     onClick={() => removeInvoiceItem(index)}
-                  />
+                  >
+                    <div slot="icon">
+                      <Trash />
+                    </div>
+                  </Button>
                 </td>
               {:else}
-                <td class="px-8 py-3"></td>
+                <td class="invoice-form-table-body-total-empty"></td>
               {/if}</tr
             >
           {/each}
         </tbody>
       </table>
     </div>
-    <div class="flex justify-between">
+    <div class="flex justify-between invoice-form-table-body-add-item">
       <Button
-        padding="px-[14px] py-[6px]"
-        className="w-fit h-fit"
         text="Add Item"
         type="button"
-        icon={{
-          class: "fa-solid fa-plus",
-          style: "color: #fff;",
-        }}
         onClick={() => {
           addInvoiceItem();
         }}
-      />
+      >
+        <div slot="icon">
+          <Plus />
+        </div>
+      </Button>
     </div>
-    <div class="flex items-center gap-[16px]">
+    <div class="invoice-form-label-wrapper">
       <Input
         max={200}
         id="note"
@@ -447,9 +454,252 @@
         type="textarea"
         placeholder="Memo"
         value={formData.note}
-        className="h-[107px]"
       />
       <Labels {config} bind:formData />
     </div>
   </div>
 </form>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .invoice-form {
+    height: fit-content;
+    width: 120%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    gap: 20px;
+    box-sizing: border-box;
+  }
+
+  .invoice-form-header {
+    display: flex;
+    align-items: start;
+    width: 100%;
+    position: relative;
+  }
+
+  .invoice-form-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .invoice-form-header-left input {
+    width: 100%;
+  }
+
+  .invoice-form-title {
+    font-weight: bold;
+    font-size: 20px;
+    width: 100%;
+    color: #050b20;
+  }
+
+  .invoice-form-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-left: auto;
+    width: 260px;
+    position: absolute;
+    right: 0;
+  }
+
+  .invoice-form-dates input {
+    width: 100%;
+  }
+
+  .invoice-form-details {
+    display: flex;
+    gap: 20px;
+  }
+
+  .invoice-form-section-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 520px;
+    gap: 20px;
+  }
+
+  .invoice-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border: 1px solid #e4e4e7;
+    border-radius: 6px;
+    padding: 20px 20px 0px 20px;
+  }
+
+  .invoice-form-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .invoice-form-table-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .invoice-form-table-wrapper {
+    position: relative;
+    overflow-x: auto;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+  }
+
+  .invoice-form-table {
+    width: 100%;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    color: #6b7280;
+  }
+
+  .invoice-form-table-header {
+    line-height: 20px;
+    text-transform: uppercase;
+    color: white;
+  }
+
+  .invoice-form-table-header tr {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .invoice-form-table-header tr th {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .invoice-form-table-body-header {
+    padding: 12px 16px;
+    font-size: 500;
+    white-space: nowrap;
+  }
+
+  .invoice-form-table-body-cell {
+    padding: 12px 16px;
+  }
+
+  .invoice-form-table-body-tax-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .invoice-form-table-body-description {
+    width: 250px !important;
+  }
+
+  .invoice-form-table-body-quantity {
+    width: 80px !important;
+  }
+
+  .invoice-form-table-body-amount {
+    width: 120px !important;
+  }
+
+  .invoice-form-table-body-total {
+    padding: 12px 4px 12px 16px;
+  }
+
+  .invoice-form-body-remove-item {
+    padding: 10px;
+  }
+
+  .invoice-form-body-remove-item:hover {
+    background-color: #1f2937;
+  }
+
+  .invoice-form-table-body-total-empty {
+    padding: 12px 32px;
+  }
+
+  .invoice-form-table-body-add-item button {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+
+  .invoice-form-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: fit-content;
+    width: 100%;
+  }
+
+  :global(.invoice-form-label-wrapper .input-wrapper) {
+    flex: 1;
+  }
+
+  :global(.invoice-form-label-wrapper svg, .invoice-form-label-wrapper path) {
+    color: white;
+    fill: white;
+  }
+
+  :global(.invoice-form-label-wrapper .input-wrapper .textarea-input) {
+    width: 100%;
+    height: 107px;
+  }
+
+  :global(.invoice-form-label-wrapper .labels-wrapper) {
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  :global(.invoice-form-table-body-add-item button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+
+  :global(
+      .invoice-form-table-body-add-item button svg,
+      .invoice-form-table-body-add-item button path
+    ) {
+    fill: white;
+    color: white;
+    width: 14px;
+    height: 14px;
+  }
+
+  :global(.invoice-form-body-remove-item) {
+    padding: 6px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+
+  :global(
+      .invoice-form-body-remove-item svg,
+      .invoice-form-body-remove-item path
+    ) {
+    width: 12px;
+    height: 12px;
+  }
+</style>

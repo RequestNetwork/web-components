@@ -9,7 +9,14 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;"
+    "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;",
+    "build:shared": "cd packages/shared && npm run build && cd -",
+    "build:form": "cd packages/create-request-form && npm run build && cd -",
+    "build:dashboard": "cd packages/invoice-dashboard && npm run build && cd -",
+    "build:stakeholder": "cd packages/add-stakeholder && npm run build && cd -",
+    "build": "npm run build:shared && npm run build:form && npm run build:dashboard && npm run build:stakeholder",
+    "link:all": "for d in packages/*; do (cd $d && npm link); done",
+    "unlink:all": "for d in packages/*; do (cd $d && npm unlink); done"
   },
   "author": "",
   "license": "MIT",

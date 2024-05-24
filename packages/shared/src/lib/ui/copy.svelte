@@ -1,8 +1,11 @@
 <script lang="ts">
+  import CopyIcon from "../icons/copy-icon.svelte";
+
   export let textToCopy = "";
   let showNotification = false;
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (e: Event) => {
+    e.stopPropagation();
     if (!textToCopy) return;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -16,22 +19,62 @@
   };
 </script>
 
-<div class="relative">
+<div class="copy-wrapper">
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <i
-    class="fa-regular fa-copy cursor-pointer border border-gray-400 shadow-sm p-1 rounded-md hover:bg-gray-100 hover:border-gray-500 transition-colors duration-200 ease-in-out"
+    class="copy-icon fa-copy"
     on:click={copyToClipboard}
     role="button"
     tabindex="0"
     aria-label={`Copy text: ${textToCopy}`}
     title="Copy to clipboard"
-  ></i>
+  >
+    <CopyIcon />
+  </i>
   {#if showNotification}
     <!-- center -->
-    <div
-      class="absolute top-[-30px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 bg-green-500 text-black rounded-md shadow-lg bg-white border-[.5px] border-gray-400"
-    >
-      Copied!
-    </div>
+    <div class="copy-notification">Copied!</div>
   {/if}
 </div>
+
+<style>
+  .copy-wrapper {
+    position: relative;
+  }
+
+  .copy-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border: 1px solid #9ca3af;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    padding: 4px;
+    border-radius: 6px;
+    transition: all;
+    transition-duration: 200ms;
+    animation: ease-in-out;
+  }
+
+  .copy-icon:hover {
+    border-color: #6b7280;
+    background-color: #f3f4f6;
+  }
+
+  .copy-notification {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    transform: translateY(-50%);
+    padding: 8px;
+    background-color: #22c55e;
+    color: black;
+    background-color: white;
+    border: 0.5px solid #9ca3af;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    border-radius: 6px;
+  }
+</style>

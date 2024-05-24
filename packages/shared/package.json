@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build:wc": "vite build -c vite.wc.config.ts",
-    "build": "vite build && npm run package && npm run build:wc",
+    "build": "npm run package",
     "package": "svelte-kit sync && svelte-package && npm run build:wc && publint"
   },
   "exports": {
@@ -24,17 +24,14 @@
   ],
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "peerDependencies": {
-    "svelte": "^4.0.0",
-    "tailwindcss": "^3.4.3"
+  "dependencies": {
+    "svelte": "^4.0.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "publint": "^0.2.7",
-    "tailwindcss": "^3.4.3"
+    "path": "^0.12.7",
+    "publint": "^0.2.7"
   }
 }
