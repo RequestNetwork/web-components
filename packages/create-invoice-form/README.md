@@ -90,7 +90,9 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 ```
 
 #### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/config.ts)
-Use the config object to pass additional configuration options to the create invoice form component
+Use the config object to pass additional configuration options to the create invoice form component.
+
+Please replace the `builderId` with your own, arbitrarily chosen ID. This is used to track how many invoices are created by your application.
 
 ```ts
 import { IConfig } from "@requestnetwork/shared";
@@ -119,6 +121,7 @@ export const config: IConfig = {
 | rnf_invoice format 0.3.0 | ✅ |
 | Configure Logo and Colors | ✅ |
 | Minimal Chains and Currencies | ✅ |
+| Support Wallet Connectors other than Web3Onboard | ❌ |
 | Native Request | ❌ |
 | Conversion Request | ❌ |
 | Swap-to-Pay Request | ❌ |

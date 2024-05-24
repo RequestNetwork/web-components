@@ -2,13 +2,22 @@
 
 ## Introduction
 
-This repo contains a collection of
-[Web Components](https://opensource.com/article/21/7/web-components) which you
-can quickly embed in other projects and leverage the features they provide.
+This repo contains a collection of web components for quickly integrating
+Request Network into your web application.
+
+The components are built using Svelte but compiled to [Web Components](https://opensource.com/article/21/7/web-components) making them usable in any web environment, regardless of the framework.
 
 ## Usage
 
-Usage depends on the component. See packages/<package>/README.md
+Usage depends on the component. See packages/\<package>/README.md
+
+| Component | NPM Package |
+| --- | --- |
+| [@requestnetwork/add-stakeholder](packages/add-stakeholder/README.md)  | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder) |
+| [@requestnetwork/create-invoice-form](packages/create-invoice-form/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form.svg)](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form) |
+| [@requestnetwork/invoice-dashboard](packages/invoice-dashboard/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard.svg)](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard) |
+| [@requestnetwork/shared](packages/shared/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fshared.svg)](https://badge.fury.io/js/%40requestnetwork%2Fshared) |
+
 
 ## Developing
 
