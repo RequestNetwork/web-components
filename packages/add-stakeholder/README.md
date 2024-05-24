@@ -19,7 +19,7 @@ import { AddStakeholder } from '@requestnetwork/add-stakeholder'
 ```
 
 ```html
-<AddStakeholder builderKey="..." webhookUrl=".."/> 
+<AddStakeholder builderKey="..." webhookUrl=".."/>
 ```
 
 As a web component
