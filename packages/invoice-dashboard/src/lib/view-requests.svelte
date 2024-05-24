@@ -443,7 +443,12 @@
       onClose={handleRemoveSelectedRequest}
     >
       {#if activeRequest !== undefined}
-        <InvoiceView {wallet} {requestNetwork} request={activeRequest} />
+        <InvoiceView
+          {wallet}
+          {requestNetwork}
+          config={activeConfig}
+          request={activeRequest}
+        />
       {/if}
     </Drawer>
   </div>
@@ -552,7 +557,7 @@
 
   .active {
     color: #000;
-    border-bottom: 2px solid #6ee7b7 !important;
+    border-bottom: 2px solid var(--mainColor) !important;
     transition: all 0.3s ease-in-out;
   }
 

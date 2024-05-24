@@ -20,6 +20,7 @@
   import type { WalletState } from "@web3-onboard/core";
   import { walletClientToSigner, getSymbol, checkNetwork } from "$src/utils";
 
+  export let config;
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
@@ -182,7 +183,12 @@
   }
 </script>
 
-<div class="invoice-view">
+<div
+  class="invoice-view"
+  style="
+--mainColor: {config.colors.main};
+--secondaryColor: {config.colors.secondary};"
+>
   <div class="dates">
     <p>Issued on: {formatDate(request?.contentData?.creationDate)}</p>
     <p>Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate)}</p>
@@ -439,7 +445,7 @@
   }
 
   .invoice-border {
-    border-bottom: 1px solid #0bb489;
+    border-bottom: 1px solid var(--mainColor);
     padding-bottom: 10px;
     margin-bottom: 10px;
   }

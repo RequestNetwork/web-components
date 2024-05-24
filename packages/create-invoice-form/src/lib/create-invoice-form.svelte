@@ -168,11 +168,12 @@
     </div>
   </div>
   <Modal
+    config={activeConfig}
     title="Creating the invoice"
     isOpen={appStatus?.length > 0}
     onClose={hanldeCreateNewRequest}
   >
-    <Status statuses={appStatus} />
+    <Status config={activeConfig} statuses={appStatus} />
     <div class="modal-footer">
       <Button
         type="button"
