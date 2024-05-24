@@ -1,6 +1,7 @@
 <script lang="ts">
   import Close from "../icons/close.svelte";
 
+  export let config;
   export let isOpen = true;
   export let title = "";
   export let onClose = () => {};
@@ -12,7 +13,12 @@
 </script>
 
 {#if isOpen}
-  <div class="modal-overlay">
+  <div
+    class="modal-overlay"
+    style="
+  --mainColor: {config.colors.main};
+  --secondaryColor: {config.colors.secondary};"
+  >
     <div class="modal-container">
       <div class="modal-header">
         <h2 class="modal-title">{title}</h2>
@@ -62,7 +68,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid #5a5a5a;
+    border-bottom: 1px solid var(--mainColor);
   }
 
   .modal-title {

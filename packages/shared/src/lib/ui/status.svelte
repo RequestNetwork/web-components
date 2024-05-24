@@ -7,6 +7,7 @@
   import Check from "../icons/check.svelte";
   import { APP_STATUS } from "../types/enums";
 
+  export let config;
   export let statuses: APP_STATUS[] = [];
 
   const statusDetails = {
@@ -46,7 +47,12 @@
   };
 </script>
 
-<ol class="status-wrapper">
+<ol
+  class="status-wrapper"
+  style="
+--mainColor: {config.colors.main};
+--secondaryColor: {config.colors.secondary};"
+>
   {#each statuses as status, index}
     <li class="status-list">
       <span class={`status-icon-wrapper ${statusDetails[status].color}`}>
@@ -140,7 +146,7 @@
     font-weight: 500;
     text-align: center;
     border-radius: 9999px;
-    background-color: #0bb489;
+    background-color: var(--mainColor);
     color: white;
     width: fit-content;
   }
