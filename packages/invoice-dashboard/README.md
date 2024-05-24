@@ -127,11 +127,16 @@ export const config: IConfig = {
 | Configure Logo and Colors | ✅ |
 | Minimal Chains and Currencies | ✅ |
 | Support Wallet Connectors other than Web3Onboard | ❌ |
-| Native Payments | ❌ |
-| Conversion Payments | ❌ |
-| Declarative Payments | ❌ |
-| Swap-to-Pay Payments | ❌ |
-| Swap-to-Conversion Payments | ❌ |
+| Accept Request | ❌ |
+| Cancel Request | ❌ |
+| Add Stakeholder | ❌ |
+| Native Payment | ❌ |
+| Conversion Payment | ❌ |
+| Batch Payment | ❌ |
+| Declarative Payment | ❌ |
+| Swap-to-Pay Payment | ❌ |
+| Swap-to-Conversion Payment | ❌ |
+| Escrow Payment | ❌ |
 | Improved UI and UX | ❌ |
 | More Chains and Currencies | ❌ |
 | More Configuration Options | ❌ |

@@ -126,7 +126,11 @@ export const config: IConfig = {
 | Conversion Request | ❌ |
 | Swap-to-Pay Request | ❌ |
 | Swap-to-Conversion Request | ❌ |
+| Escrow Request | ❌ |
 | Improved UI and UX | ❌ |
+| Auto-increment Invoice Number | ❌ |
+| Client Address List | ❌ |
+| Payment Recipient Address List | ❌ |
 | More Chains and Currencies | ❌ |
 | More Configuration Options | ❌ |
 | Attachments | ❌ |
