@@ -10,7 +10,6 @@ export default defineConfig({
       compilerOptions: {
         customElement: true,
       },
-      emitCss: true,
     }),
   ],
   resolve: {
