@@ -105,7 +105,7 @@ const polygonCurrencies = new Map<string, ICurrency>([
       symbol: "DAI",
       value: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
       chainId: 137,
-      network: "matci",
+      network: "matic",
       decimals: 18,
       type: Types.RequestLogic.CURRENCY.ERC20,
     },
