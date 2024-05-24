@@ -1,4 +1,4 @@
-<svelte:options customElement="create-request-form" />
+<svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
   import {
@@ -142,10 +142,10 @@
 </script>
 
 <div
-  class="create-request-form-wrapper"
+  class="create-invoice-form-wrapper"
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}"
 >
-  <div class="create-request-form-content">
+  <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
       config={activeConfig}
@@ -205,7 +205,7 @@
     font-family: "Montserrat", sans-serif;
   }
 
-  .create-request-form-wrapper {
+  .create-invoice-form-wrapper {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -213,7 +213,7 @@
     color: black;
   }
 
-  .create-request-form-content {
+  .create-invoice-form-content {
     display: flex;
     gap: 20px;
     width: 100%;

@@ -236,8 +236,8 @@
       </div>
     {/if}
     <Button
-      className="create-request-button"
-      text="Create Request"
+      className="create-invoice-button"
+      text="Create Invoice"
       type="submit"
       disabled={!canSubmit}
       onClick={submitForm}
@@ -458,12 +458,12 @@
     font-weight: 600;
   }
 
-  .create-request-button {
+  .create-invoice-button {
     margin-right: auto;
     width: fit-content;
   }
 
-  :global(.invoice-form-wrapper .create-request-button) {
+  :global(.invoice-form-wrapper .create-invoice-button) {
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;

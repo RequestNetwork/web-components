@@ -1,5 +1,5 @@
 {
-  "name": "@requestnetwork/create-request-form",
+  "name": "@requestnetwork/create-invoice-form",
   "version": "0.1.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {

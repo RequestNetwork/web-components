@@ -32,7 +32,7 @@ npm run link:all
 cd <project>
 
 # Use local packages instead of the deployed ones
-npm link @requestnetwork/create-request-form @requestnetwork/invoice-dashboard
+npm link @requestnetwork/create-invoice-form @requestnetwork/invoice-dashboard
 ```
 
 Further details specific to the component can be found in the relevant

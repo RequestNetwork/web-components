@@ -34,9 +34,9 @@ import { config } from "@/utils/config";
 import { InvoiceDashboardProps } from "@/types";
 import { useConnectWallet } from "@web3-onboard/react";
 
-export default function CreateRequestForm() {
+export default function CreateInvoiceForm() {
   const [{ wallet }] = useConnectWallet() // Web3 Onboard
-  const formRef = useRef<CreateRequestFormProps>(null);
+  const formRef = useRef<CreateInvoiceFormProps>(null);
 
   useEffect(() => {
     if (wallet) {
