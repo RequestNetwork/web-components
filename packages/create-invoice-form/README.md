@@ -16,17 +16,15 @@ To install the component, use npm:
 npm install @requestnetwork/create-invoice-form
 ```
 
-This command adds the create invoice form component to your project, allowing for easy integration into any web application.
-
 ## Usage
 
 ### Usage in React
 
-To use the Create Invoice Form in a React application, you must *dynamically* import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
-
-```tsx
-import("@requestnetwork/create-invoice-form");
-```
+> **⚠️ WARNING:** To use the Create Invoice Form in a React application, you must *dynamically* import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
+>
+> ```tsx
+> import("@requestnetwork/create-invoice-form");
+> ```
 
 > **ℹ️ INFO:** The following example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
 
