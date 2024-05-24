@@ -31,7 +31,6 @@ connect a wallet but you can use any wallet connection method you prefer.
 import("@requestnetwork/create-request-form");
 import { useEffect, useRef } from "react";
 import { config } from "@/utils/config";
-import { useAppContext } from "@/utils/context";
 import { CreateRequestFormProps } from "@/types";
 
 export default function CreateRequestForm() {
@@ -51,9 +50,7 @@ export default function CreateRequestForm() {
     },
     signatureProvider: new Web3SignatureProvider(provider),
     }
-  }
 
-  
   useEffect(() => {
     if (formRef.current) {
       formRef.current.config = config;
