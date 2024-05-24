@@ -305,6 +305,7 @@
         </Accordion>
       </div>
       <Dropdown
+        {config}
         placeholder="Select payment chain"
         options={networks.map((network) => {
           return {
@@ -316,6 +317,7 @@
       />
 
       <Dropdown
+        {config}
         placeholder="Select a currency"
         options={Array.from(currencies.entries()).map(([key, value]) => ({
           value: key,
