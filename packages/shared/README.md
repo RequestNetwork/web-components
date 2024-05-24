@@ -2,13 +2,13 @@
 
 ## Introduction
 
-This package offers shared svelte components used by other Web Components.
+This package provides shared svelte components used by other Web Components.
 
 ## Installation
 
 To install the component, use npm:
 
-```console
+```bash
 npm install @requestnetwork/shared
 ```
 
