@@ -102,7 +102,7 @@
     window.location.href = dashboardLink;
   };
 
-  const hanldeCreateNewRequest = () => {
+  const hanldeCreateNewInvoice = () => {
     removeAllStatuses();
     formData = getInitialFormData();
   };
@@ -171,7 +171,7 @@
     config={activeConfig}
     title="Creating the invoice"
     isOpen={appStatus?.length > 0}
-    onClose={hanldeCreateNewRequest}
+    onClose={hanldeCreateNewInvoice}
   >
     <Status config={activeConfig} statuses={appStatus} />
     <div class="modal-footer">
@@ -183,8 +183,8 @@
       />
       <Button
         type="button"
-        onClick={hanldeCreateNewRequest}
-        text="Create a new request"
+        onClick={hanldeCreateNewInvoice}
+        text="Create a new invoice"
         disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
       />
     </div>
