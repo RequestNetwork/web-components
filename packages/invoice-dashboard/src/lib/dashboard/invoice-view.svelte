@@ -291,10 +291,11 @@
               <td>{formatUnits(item.discount, currencyDetails.decimals)}</td>
               <td>{Number(item.tax.amount)}</td>
               <td
-                >{calculateItemTotal(item, {
-                  format: true,
-                  currencyDecimal: currencyDetails.decimals,
-                })}</td
+                >{formatUnits(
+                  // @ts-expect-error
+                  calculateItemTotal(item),
+                  currencyDetails.decimals
+                )}</td
               >
             </tr>
           {/each}
@@ -331,10 +332,11 @@
                   >
                   <td>{Number(item.tax.amount)}</td>
                   <td
-                    >{calculateItemTotal(item, {
-                      format: true,
-                      currencyDecimal: currencyDetails.decimals,
-                    })}</td
+                    >{formatUnits(
+                      // @ts-expect-error
+                      calculateItemTotal(item),
+                      currencyDetails.decimals
+                    )}</td
                   >
                 </tr>
               {/each}</tbody
