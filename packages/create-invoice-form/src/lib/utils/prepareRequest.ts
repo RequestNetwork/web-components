@@ -65,8 +65,14 @@ export const prepareRequestParams = ({
     invoiceItems: formData.items.map((item) => ({
       name: item.description,
       quantity: Number(item.quantity),
-      unitPrice: item.unitPrice,
-      discount: item.discount.toString(),
+      unitPrice: parseUnits(
+        item.unitPrice.toString(),
+        currencies.get(currency)!.decimals
+      ).toString(),
+      discount: parseUnits(
+        item.discount.toString(),
+        currencies.get(currency)!.decimals
+      ).toString(),
       tax: {
         type: "percentage",
         amount: item.tax.amount.toString(),
