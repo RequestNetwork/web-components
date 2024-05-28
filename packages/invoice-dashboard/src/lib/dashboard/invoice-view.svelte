@@ -206,6 +206,7 @@
     return networkIds[network];
   }
 
+  // FIXME: Add rounding functionality
   function truncateNumberString(
     value: string,
     maxDecimalDigits: number
