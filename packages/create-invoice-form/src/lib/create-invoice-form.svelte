@@ -78,6 +78,9 @@
     invoiceTotals = calculateInvoiceTotals(formData.items);
   }
 
+  let payeeAddressError = false;
+  let clientAddressError = false;
+
   $: {
     const basicDetailsFilled =
       formData.payeeAddress && formData.payerAddress && formData.dueDate;
@@ -86,7 +89,13 @@
       formData.items.every(
         (item) => item.description && item.quantity > 0 && item.unitPrice > 0
       );
-    canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
+
+    const addressesAreValid = !payeeAddressError && !clientAddressError;
+
+    canSubmit =
+      basicDetailsFilled && hasItems && requestNetwork && addressesAreValid
+        ? true
+        : false;
   }
 
   const addToStatus = (newStatus: APP_STATUS) => {
@@ -154,6 +163,8 @@
       bind:formData
       config={activeConfig}
       bind:currencies
+      bind:payeeAddressError
+      bind:clientAddressError
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}

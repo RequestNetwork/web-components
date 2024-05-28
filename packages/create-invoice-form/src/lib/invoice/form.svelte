@@ -22,8 +22,8 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let currencies = new Map();
-  let payeeAddressError = false;
-  let clientAddressError = false;
+  export let payeeAddressError = false;
+  export let clientAddressError = false;
 
   let creatorId = "";
 
