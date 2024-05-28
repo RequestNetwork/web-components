@@ -107,6 +107,10 @@
     formData = getInitialFormData();
   };
 
+  const handleCloseInvoiceModal = () => {
+    removeAllStatuses();
+  };
+
   const submitForm = async (e: Event) => {
     e.preventDefault();
 
@@ -171,7 +175,7 @@
     config={activeConfig}
     title="Creating the invoice"
     isOpen={appStatus?.length > 0}
-    onClose={hanldeCreateNewInvoice}
+    onClose={handleCloseInvoiceModal}
   >
     <Status config={activeConfig} statuses={appStatus} />
     <div class="modal-footer">

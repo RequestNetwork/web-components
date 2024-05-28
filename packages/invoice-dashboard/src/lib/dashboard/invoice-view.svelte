@@ -177,9 +177,9 @@
     const networkIds: { [key: string]: string } = {
       mainnet: "0x1",
       sepolia: "0xaa36a7",
-      polygon: "0x89",
+      matic: "0x89",
     };
-    return networkIds[network] || "1";
+    return networkIds[network];
   }
 </script>
 
@@ -274,32 +274,36 @@
     </div>
     {#if otherItems.length > 0}
       <Accordion title="View All">
-        <table class="invoice-table">
-          <thead class="table-header hidden-header">
-            <tr class="table-row">
-              <th scope="col" class="table-header-cell">Description</th>
-              <th scope="col" class="table-header-cell">Qty</th>
-              <th scope="col" class="table-header-cell">Unit Price</th>
-              <th scope="col" class="table-header-cell">Discount</th>
-              <th scope="col" class="table-header-cell">Tax</th>
-              <th scope="col" class="table-header-cell">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each otherItems as item, index (index)}
-              <tr class="table-row item-row">
-                <th scope="row" class="item-description">
-                  <p class="truncate description-text">{item.name}</p>
-                </th>
-                <td>{item.quantity}</td>
-                <td>{item.unitPrice}</td>
-                <td>{item.discount}</td>
-                <td>{Number(item.tax.amount)}</td>
-                <td>{calculateItemTotal(item).toFixed(2)}</td>
+        <div class="table-container">
+          <table class="invoice-table">
+            <thead class="table-header hidden-header" style="display: none;">
+              <tr class="table-row">
+                <th scope="col" class="table-header-cell">Description</th>
+                <th scope="col" class="table-header-cell">Qty</th>
+                <th scope="col" class="table-header-cell">Unit Price</th>
+                <th scope="col" class="table-header-cell">Discount</th>
+                <th scope="col" class="table-header-cell">Tax</th>
+                <th scope="col" class="table-header-cell">Amount</th>
               </tr>
-            {/each}</tbody
-          >
-        </table>
+            </thead>
+            <tbody>
+              {#each otherItems as item, index (index)}
+                <tr class="table-row item-row">
+                  <th scope="row" class="item-description">
+                    <p class="truncate description-text" style="margin: 4px 0;">
+                      {item.name}
+                    </p>
+                  </th>
+                  <td>{item.quantity}</td>
+                  <td>{item.unitPrice}</td>
+                  <td>{item.discount}</td>
+                  <td>{Number(item.tax.amount)}</td>
+                  <td>{calculateItemTotal(item).toFixed(2)}</td>
+                </tr>
+              {/each}</tbody
+            >
+          </table>
+        </div>
       </Accordion>
     {/if}
   {/if}
@@ -604,7 +608,7 @@
 
   .unsupported-network {
     font-size: 12px;
-    color: rgba(232, 158, 20, 0.935);
+    color: #e89e14ee;
   }
 
   @keyframes pulse {

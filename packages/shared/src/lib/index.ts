@@ -38,10 +38,12 @@ export { default as Search } from "./icons/search.svelte";
 export { default as CopyIcon } from "./icons/copy-icon.svelte";
 
 // Utils
+
 export {
   calculateItemTotal,
   calculateInvoiceTotals,
 } from "./utils/invoiceTotals";
 export { config } from "./utils/config";
+export { checkAddress } from "./utils/checkEthAddress";
 export { getCurrenciesByNetwork } from "./utils/currencies";
 export { formatDate, inputDateFormat } from "./utils/formatDate";

@@ -1,11 +1,13 @@
-export const formatAddress = (
-  address: string,
-  first: number = 6,
-  last: number = 4
-): string => {
-  if (address?.length < first + last) {
-    throw new Error("Address too short to format properly.");
-  }
+import { checkAddress } from "@requestnetwork/shared";
 
-  return `${address.slice(0, first)}...${address.slice(-last)}`;
+export const formatAddress = (
+	address: string,
+	first: number = 6,
+	last: number = 4,
+): string => {
+	if (!checkAddress(address)) {
+		console.error("Invalid address!");
+	}
+
+	return `${address.slice(0, first)}...${address.slice(-last)}`;
 };
