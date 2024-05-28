@@ -20,7 +20,19 @@ npm install @requestnetwork/create-invoice-form
 
 ### Usage in React
 
-> **⚠️ WARNING:** To use the Create Invoice Form in a React application, you must *dynamically* import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
+> **⚠️ WARNING:** For NextJS 14.x , ensure you have the following configuration :
+>
+> #### [next.config.js](https://github.com/RequestNetwork/invoicing-template/blob/main/next.config.mjs)
+>
+> ```javascript
+> /** @type {import('next').NextConfig} */
+> const nextConfig = {
+>   reactStrictMode: true,
+>   swcMinify: false,
+> };
+> ```
+
+> **⚠️ WARNING:** To use the Create Invoice Form in a React application, you must _dynamically_ import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
 >
 > ```tsx
 > import("@requestnetwork/create-invoice-form");
@@ -90,6 +102,7 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 ```
 
 #### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/config.ts)
+
 Use the config object to pass additional configuration options to the create invoice form component.
 
 Please replace the `builderId` with your own, arbitrarily chosen ID. This is used to track how many invoices are created by your application.
@@ -115,33 +128,33 @@ export const config: IConfig = {
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| ERC20 Request | ✅ |
-| rnf_invoice format 0.3.0 | ✅ |
-| Configure Logo and Colors | ✅ |
-| Minimal Chains and Currencies | ✅ |
-| Support Wallet Connectors other than Web3Onboard | ❌ |
-| Native Request | ❌ |
-| Conversion Request | ❌ |
-| Swap-to-Pay Request | ❌ |
-| Swap-to-Conversion Request | ❌ |
-| Escrow Request | ❌ |
-| Improved UI and UX | ❌ |
-| Auto-increment Invoice Number | ❌ |
-| Client Address List | ❌ |
-| Payment Recipient Address List | ❌ |
-| More Chains and Currencies | ❌ |
-| More Configuration Options | ❌ |
-| Attachments | ❌ |
+| Feature                                          | Status |
+| ------------------------------------------------ | ------ |
+| ERC20 Request                                    | ✅     |
+| rnf_invoice format 0.3.0                         | ✅     |
+| Configure Logo and Colors                        | ✅     |
+| Minimal Chains and Currencies                    | ✅     |
+| Support Wallet Connectors other than Web3Onboard | ❌     |
+| Native Request                                   | ❌     |
+| Conversion Request                               | ❌     |
+| Swap-to-Pay Request                              | ❌     |
+| Swap-to-Conversion Request                       | ❌     |
+| Escrow Request                                   | ❌     |
+| Improved UI and UX                               | ❌     |
+| Auto-increment Invoice Number                    | ❌     |
+| Client Address List                              | ❌     |
+| Payment Recipient Address List                   | ❌     |
+| More Chains and Currencies                       | ❌     |
+| More Configuration Options                       | ❌     |
+| Attachments                                      | ❌     |
 
 ## Chains and Currencies
 
-| Chain | Currencies |
-|-------|------------|
-| Ethereum | USDC, USDT, DAI |
-| Polygon | USDC, USDT, DAI, USDCe |
-| Sepolia | USDC, FAU |
+| Chain    | Currencies             |
+| -------- | ---------------------- |
+| Ethereum | USDC, USDT, DAI        |
+| Polygon  | USDC, USDT, DAI, USDCe |
+| Sepolia  | USDC, FAU              |
 
 ## Additional Information
 

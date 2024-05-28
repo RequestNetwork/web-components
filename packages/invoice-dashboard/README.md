@@ -20,12 +20,23 @@ npm install @requestnetwork/invoice-dashboard
 
 ### Usage in React
 
-> **⚠️ WARNING:** To use the Invoice Dashboard in a React application, you must *dynamically* import `@requestnetwork/invoice-dashboard` and use the component in your JSX file.
+> **⚠️ WARNING:** For NextJS 14.x , ensure you have the following configuration :
+>
+> #### [next.config.js](https://github.com/RequestNetwork/invoicing-template/blob/main/next.config.mjs)
+>
+> ```javascript
+> /** @type {import('next').NextConfig} */
+> const nextConfig = {
+>   reactStrictMode: true,
+>   swcMinify: false,
+> };
+> ```
+
+> **⚠️ WARNING:** To use the Invoice Dashboard in a React application, you must _dynamically_ import `@requestnetwork/invoice-dashboard` and use the component in your JSX file.
 >
 > ```tsx
 > import("@requestnetwork/invoice-dashboard");
 > ```
-
 
 > **⚠️ WARNING:** The Invoice Dashboard component is currently only compatible with [Web3 Onboard](https://onboard.blocknative.com/) because it takes a `WalletState` as a prop. Future iterations will allow for other wallet connectors.
 
@@ -95,6 +106,7 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 ```
 
 #### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/config.ts)
+
 Use the config object to pass additional configuration options to the invoice dashboard component.
 
 Please replace the `builderId` with your own, arbitrarily chosen ID. This is used to track how many invoices are created by your application.
@@ -120,35 +132,35 @@ export const config: IConfig = {
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| ERC20 Payment | ✅ |
-| rnf_invoice format 0.3.0 | ✅ |
-| Configure Logo and Colors | ✅ |
-| Minimal Chains and Currencies | ✅ |
-| Support Wallet Connectors other than Web3Onboard | ❌ |
-| Accept Request | ❌ |
-| Cancel Request | ❌ |
-| Add Stakeholder | ❌ |
-| Native Payment | ❌ |
-| Conversion Payment | ❌ |
-| Batch Payment | ❌ |
-| Declarative Payment | ❌ |
-| Swap-to-Pay Payment | ❌ |
-| Swap-to-Conversion Payment | ❌ |
-| Escrow Payment | ❌ |
-| Improved UI and UX | ❌ |
-| More Chains and Currencies | ❌ |
-| More Configuration Options | ❌ |
-| Attachments | ❌ |
+| Feature                                          | Status |
+| ------------------------------------------------ | ------ |
+| ERC20 Payment                                    | ✅     |
+| rnf_invoice format 0.3.0                         | ✅     |
+| Configure Logo and Colors                        | ✅     |
+| Minimal Chains and Currencies                    | ✅     |
+| Support Wallet Connectors other than Web3Onboard | ❌     |
+| Accept Request                                   | ❌     |
+| Cancel Request                                   | ❌     |
+| Add Stakeholder                                  | ❌     |
+| Native Payment                                   | ❌     |
+| Conversion Payment                               | ❌     |
+| Batch Payment                                    | ❌     |
+| Declarative Payment                              | ❌     |
+| Swap-to-Pay Payment                              | ❌     |
+| Swap-to-Conversion Payment                       | ❌     |
+| Escrow Payment                                   | ❌     |
+| Improved UI and UX                               | ❌     |
+| More Chains and Currencies                       | ❌     |
+| More Configuration Options                       | ❌     |
+| Attachments                                      | ❌     |
 
 ## Chains and Currencies
 
-| Chain | Currencies |
-|-------|------------|
-| Ethereum | USDC, USDT, DAI |
-| Polygon | USDC, USDT, DAI, USDCe |
-| Sepolia | USDC, FAU |
+| Chain    | Currencies             |
+| -------- | ---------------------- |
+| Ethereum | USDC, USDT, DAI        |
+| Polygon  | USDC, USDT, DAI, USDCe |
+| Sepolia  | USDC, FAU              |
 
 ## Additional Information
 
