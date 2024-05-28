@@ -1,5 +1,7 @@
-import validator from "validator";
+import { isAddress } from "viem";
 
 export const checkAddress = (address: string): boolean => {
-  return validator.isEthereumAddress(address);
+	return isAddress(address, {
+		strict: false,
+	});
 };
