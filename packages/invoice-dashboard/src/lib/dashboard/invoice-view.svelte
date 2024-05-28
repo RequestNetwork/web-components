@@ -205,6 +205,16 @@
     };
     return networkIds[network];
   }
+
+  function truncateNumberString(
+    value: string,
+    maxDecimalDigits: number
+  ): string {
+    const [integerPart, decimalPart] = value.split(".");
+    return decimalPart
+      ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
+      : value;
+  }
 </script>
 
 <div
@@ -291,10 +301,13 @@
               <td>{formatUnits(item.discount, currencyDetails.decimals)}</td>
               <td>{Number(item.tax.amount)}</td>
               <td
-                >{formatUnits(
-                  // @ts-expect-error
-                  calculateItemTotal(item),
-                  currencyDetails.decimals
+                >{truncateNumberString(
+                  formatUnits(
+                    // @ts-expect-error
+                    calculateItemTotal(item),
+                    currencyDetails.decimals
+                  ),
+                  2
                 )}</td
               >
             </tr>
@@ -332,10 +345,13 @@
                   >
                   <td>{Number(item.tax.amount)}</td>
                   <td
-                    >{formatUnits(
-                      // @ts-expect-error
-                      calculateItemTotal(item),
-                      currencyDetails.decimals
+                    >{truncateNumberString(
+                      formatUnits(
+                        // @ts-expect-error
+                        calculateItemTotal(item),
+                        currencyDetails.decimals
+                      ),
+                      2
                     )}</td
                   >
                 </tr>
