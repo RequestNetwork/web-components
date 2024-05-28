@@ -11,7 +11,7 @@
     type CustomFormData,
     Trash,
     Plus,
-    getCurrenciesByNetwork,
+    checkAddress,
   } from "@requestnetwork/shared";
 
   export let config: IConfig;
@@ -22,12 +22,22 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let currencies = new Map();
+  let payeeAddressError = false;
+  let clientAddressError = false;
 
   let creatorId = "";
 
   $: {
     creatorId = formData.creatorId;
   }
+
+  const checkPayeeAddress = () => {
+    payeeAddressError = !checkAddress(formData.payeeAddress);
+  };
+
+  const checkClientAddress = () => {
+    clientAddressError = !checkAddress(formData.payerAddress);
+  };
 
   const calculateInputWidth = (value: string) => {
     const baseWidth = 20;
@@ -228,7 +238,11 @@
           value={formData.payerAddress}
           placeholder="Client Wallet Address"
           {handleInput}
+          onBlur={checkClientAddress}
         />
+        {#if clientAddressError}
+          <p class="error-address">Please enter a valid Ethereum address</p>
+        {/if}
         <Accordion title="Add Client Info">
           <div class="invoice-form-info">
             <Input
@@ -332,7 +346,11 @@
         value={formData.payeeAddress}
         placeholder="0x..."
         {handleInput}
+        onBlur={checkPayeeAddress}
       />
+      {#if payeeAddressError}
+        <p class="error-address">Please enter a valid Ethereum address</p>
+      {/if}
     </div>
   </div>
 
@@ -654,6 +672,11 @@
     gap: 16px;
     height: fit-content;
     width: 100%;
+  }
+
+  .error-address {
+    color: #e89e14ee;
+    font-size: 12px;
   }
 
   :global(.invoice-form-label-wrapper .input-wrapper) {

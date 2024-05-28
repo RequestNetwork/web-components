@@ -604,7 +604,7 @@
 
   .unsupported-network {
     font-size: 12px;
-    color: rgba(232, 158, 20, 0.935);
+    color: #e89e14ee;
   }
 
   @keyframes pulse {

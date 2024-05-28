@@ -8,6 +8,7 @@
   export let value: string | number = "";
   export let className = "";
   export let handleInput: ((e: Event) => void) | undefined = undefined;
+  export let onBlur: ((e: Event) => void) | undefined = undefined;
   export let disabled = false;
   export let min = "";
   export let max = 0;
@@ -43,6 +44,7 @@
         {disabled}
         {...{ type }}
         {placeholder}
+        on:blur={onBlur}
         on:input={handleInput}
         class={`text-input ${className} `}
       />

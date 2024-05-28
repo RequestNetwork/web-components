@@ -31,7 +31,9 @@
     "access": "public"
   },
   "devDependencies": {
+    "@types/validator": "^13.11.10",
     "path": "^0.12.7",
-    "publint": "^0.2.7"
+    "publint": "^0.2.7",
+    "validator": "^13.12.0"
   }
 }
