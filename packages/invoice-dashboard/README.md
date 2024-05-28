@@ -40,7 +40,7 @@ npm install @requestnetwork/invoice-dashboard
 
 > **⚠️ WARNING:** The Invoice Dashboard component is currently only compatible with [Web3 Onboard](https://onboard.blocknative.com/) because it takes a `WalletState` as a prop. Future iterations will allow for other wallet connectors.
 
-#### [invoice-dashboard.tsx](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/pages/index.tsx)
+#### [invoice-dashboard.tsx](https://github.com/RequestNetwork/invoicing-template/blob/main/pages/index.tsx)
 
 Configure the invoice-dashboard web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See [StackOverflow](https://stackoverflow.com/a/55480022) for details.
 
@@ -78,7 +78,7 @@ export default function InvoiceDashboard() {
 }
 ```
 
-#### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/initializeRN.ts)
+#### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/initializeRN.ts)
 
 Initialize the `RequestNetwork` object using an Ethers `Signer` or Viem `WalletClient`.
 
@@ -105,7 +105,7 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 };
 ```
 
-#### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/config.ts)
+#### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/config.ts)
 
 Use the config object to pass additional configuration options to the invoice dashboard component.
 
@@ -127,8 +127,8 @@ export const config: IConfig = {
 
 #### Supporting files
 
-- [context.tsx](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/utils/context.tsx) - Use a context provider to reinitialize the Request Network instance when the wallet changes.
-- [types.d.ts](https://github.com/RequestNetwork/invoicing-template/blob/2a1d0526c21f3e403bb6d6507709d0d3e0fa463f/types.d.ts) - Specify types to avoid TypeScript errors.
+- [context.tsx](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/context.tsx) - Use a context provider to reinitialize the Request Network instance when the wallet changes.
+- [types.d.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/types.d.ts) - Specify types to avoid TypeScript errors.
 
 ## Features
 
