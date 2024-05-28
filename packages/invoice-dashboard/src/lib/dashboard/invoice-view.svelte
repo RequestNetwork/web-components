@@ -18,7 +18,13 @@
     getCurrenciesByNetwork,
   } from "@requestnetwork/shared";
   import type { WalletState } from "@web3-onboard/core";
-  import { walletClientToSigner, getSymbol, checkNetwork } from "$src/utils";
+  import {
+    walletClientToSigner,
+    getSymbol,
+    checkNetwork,
+    getDecimals,
+  } from "$src/utils";
+  import { formatUnits } from "viem";
 
   export let config;
   export let wallet: WalletState | undefined;
@@ -62,6 +68,11 @@
     ].filter((detail) => detail.value);
   };
 
+  let currencyDetails = {
+    symbol: "",
+    decimals: 0,
+  };
+
   $: {
     firstItems = request?.contentData
       ? request?.contentData?.invoiceItems?.slice(0, 3)
@@ -85,6 +96,19 @@
     currency = currencies.get(
       `${checkNetwork(network)}_${request?.currencyInfo?.value}`
     );
+  }
+
+  $: {
+    currencyDetails = {
+      symbol: getSymbol(
+        request?.currencyInfo.network ?? "",
+        request?.currencyInfo.value ?? ""
+      ),
+      decimals: getDecimals(
+        request?.currencyInfo?.network ?? "",
+        request?.currencyInfo?.value ?? ""
+      ),
+    };
   }
 
   const checkInvoice = async () => {
@@ -263,10 +287,15 @@
                 <p class="truncate description-text">{item.name}</p>
               </th>
               <td>{item.quantity}</td>
-              <td>{item.unitPrice}</td>
-              <td>{item.discount}</td>
+              <td>{formatUnits(item.unitPrice, currencyDetails.decimals)}</td>
+              <td>{formatUnits(item.discount, currencyDetails.decimals)}</td>
               <td>{Number(item.tax.amount)}</td>
-              <td>{calculateItemTotal(item).toFixed(2)}</td>
+              <td
+                >{calculateItemTotal(item, {
+                  format: true,
+                  currencyDecimal: currencyDetails.decimals,
+                }).toFixed(2)}</td
+              >
             </tr>
           {/each}
         </tbody>
@@ -295,10 +324,18 @@
                     </p>
                   </th>
                   <td>{item.quantity}</td>
-                  <td>{item.unitPrice}</td>
-                  <td>{item.discount}</td>
+                  <td
+                    >{formatUnits(item.unitPrice, currencyDetails.decimals)}</td
+                  >
+                  <td>{formatUnits(item.discount, currencyDetails.decimals)}</td
+                  >
                   <td>{Number(item.tax.amount)}</td>
-                  <td>{calculateItemTotal(item).toFixed(2)}</td>
+                  <td
+                    >{calculateItemTotal(item, {
+                      format: true,
+                      currencyDecimal: currencyDetails.decimals,
+                    }).toFixed(2)}</td
+                  >
                 </tr>
               {/each}</tbody
             >

@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { InvoiceItem } from "../types";
 
 export const calculateInvoiceTotals = (data: InvoiceItem[]) => {
@@ -27,9 +28,22 @@ export const calculateInvoiceTotals = (data: InvoiceItem[]) => {
   };
 };
 
-export const calculateItemTotal = (item: InvoiceItem): number => {
-  const discountAmount = item.discount;
-  const priceAfterDiscount = item.unitPrice - discountAmount;
+export const calculateItemTotal = (
+  item: InvoiceItem,
+  options: { format?: boolean; currencyDecimal?: number } = {}
+): number => {
+  const { format = false, currencyDecimal = 2 } = options;
+
+  const discountAmount = format
+    ? // @ts-expect-error
+      parseFloat(formatUnits(item.discount, currencyDecimal))
+    : item.discount;
+
+  const unitPrice = format
+    ? // @ts-expect-error
+      parseFloat(formatUnits(item.unitPrice, currencyDecimal))
+    : item.unitPrice;
+  const priceAfterDiscount = unitPrice - discountAmount;
   const taxAmount = priceAfterDiscount * (item.tax.amount / 100);
   const itemTotal = (priceAfterDiscount + taxAmount) * item.quantity;
   return itemTotal;

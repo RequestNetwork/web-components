@@ -25,7 +25,8 @@
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "svelte": "^4.0.0"
+    "svelte": "^4.0.0",
+    "viem": "^2.13.1"
   },
   "publishConfig": {
     "access": "public"
