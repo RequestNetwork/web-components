@@ -30,7 +30,7 @@
   export let requestNetwork: RequestNetwork | null | undefined;
 
   let signer = "";
-  let activeConfig = config || generalConfig;
+  let activeConfig = config ? config : generalConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
@@ -60,6 +60,7 @@
   const getRequests = async () => {
     try {
       loading = true;
+
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: signer,
@@ -67,12 +68,19 @@
       requests = requestsData
         ?.map((request) => request.getData())
         .sort((a, b) => a.timestamp - b.timestamp);
+
       loading = false;
     } catch (error) {
       loading = false;
       console.error("Failed to fetch requests:", error);
     }
   };
+
+  $: {
+    if (requests && loading) {
+      loading = false;
+    }
+  }
 
   const itemsPerPage = 10;
   let currentPage = 1;

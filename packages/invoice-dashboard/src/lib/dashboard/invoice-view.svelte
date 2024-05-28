@@ -177,9 +177,9 @@
     const networkIds: { [key: string]: string } = {
       mainnet: "0x1",
       sepolia: "0xaa36a7",
-      polygon: "0x89",
+      matic: "0x89",
     };
-    return networkIds[network] || "1";
+    return networkIds[network];
   }
 </script>
 
