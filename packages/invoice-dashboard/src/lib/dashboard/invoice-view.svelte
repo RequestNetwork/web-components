@@ -294,7 +294,7 @@
                 >{calculateItemTotal(item, {
                   format: true,
                   currencyDecimal: currencyDetails.decimals,
-                }).toFixed(2)}</td
+                })}</td
               >
             </tr>
           {/each}
@@ -334,7 +334,7 @@
                     >{calculateItemTotal(item, {
                       format: true,
                       currencyDecimal: currencyDetails.decimals,
-                    }).toFixed(2)}</td
+                    })}</td
                   >
                 </tr>
               {/each}</tbody
