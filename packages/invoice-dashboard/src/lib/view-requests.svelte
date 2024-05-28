@@ -50,7 +50,7 @@
     { value: "issuedAt", label: "Issued Date" },
   ];
 
-  let sortOrder = "asc";
+  let sortOrder = "desc";
   let sortColumn = "timestamp";
 
   $: {
@@ -67,7 +67,7 @@
       });
       requests = requestsData
         ?.map((request) => request.getData())
-        .sort((a, b) => a.timestamp - b.timestamp);
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       loading = false;
     } catch (error) {
