@@ -113,16 +113,229 @@
 </script>
 
 <form class="invoice-form">
-  <div class="invoice-form-header">
-    <div class="invoice-form-header-left">
-      <h2 class="invoice-form-title">Invoice #</h2>
-      <Input
-        id="invoiceNumber"
-        type="text"
-        value={formData.invoiceNumber}
-        {handleInput}
-        style={`width: ${calculateInputWidth(formData.invoiceNumber.toString())}`}
-      />
+  <div class="invoice-form-container">
+    <div
+      class="invoice-form-details"
+      style="display: flex; flex-direction: column; width: 100%; "
+    >
+      <div class="invoice-form-header-left" style="width: 100%;">
+        <h2 class="invoice-form-title">Invoice #</h2>
+        <Input
+          id="invoiceNumber"
+          type="text"
+          value={formData.invoiceNumber}
+          {handleInput}
+          style={`width: ${calculateInputWidth(formData.invoiceNumber.toString())}`}
+        />
+      </div>
+      <div class="invoice-form-section-container">
+        <div class="invoice-form-section">
+          <Input
+            disabled
+            id="creatorId"
+            type="text"
+            value={creatorId}
+            label="From"
+            placeholder="Connect wallet to populate"
+          />
+          <Accordion title="Add Your Info">
+            <div class="invoice-form-info">
+              <Input
+                id="sellerInfo-firstName"
+                type="text"
+                value={formData.sellerInfo?.firstName}
+                placeholder="Seller First Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-lastName"
+                type="text"
+                value={formData.sellerInfo?.lastName}
+                placeholder="Seller Last Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-businessName"
+                type="text"
+                value={formData.sellerInfo?.businessName}
+                placeholder="Company Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-taxRegistration"
+                type="text"
+                value={formData.sellerInfo?.taxRegistration}
+                placeholder="Tax Identification Number (TIN)"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-email"
+                type="email"
+                value={formData.sellerInfo?.email}
+                placeholder="Email"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-country"
+                type="text"
+                value={formData.sellerInfo?.address?.["country-name"]}
+                placeholder="Country"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-locality"
+                type="text"
+                value={formData.sellerInfo?.address?.locality}
+                placeholder="City"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-region"
+                type="text"
+                value={formData.sellerInfo?.address?.region}
+                placeholder="Region"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-postal"
+                type="text"
+                value={formData.sellerInfo?.address?.["postal-code"]}
+                placeholder="Postal Code"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="sellerInfo-street"
+                type="text"
+                value={formData.sellerInfo?.address?.["street-address"]}
+                placeholder="Street Address"
+                handleInput={handleAdditionalInfo}
+              />
+            </div>
+          </Accordion>
+        </div>
+
+        <div class="invoice-form-section">
+          <Input
+            label="Client information"
+            id="payerAddress"
+            type="text"
+            value={formData.payerAddress}
+            placeholder="Client Wallet Address"
+            {handleInput}
+            onBlur={checkClientAddress}
+          />
+          {#if clientAddressError}
+            <p class="error-address">Please enter a valid Ethereum address</p>
+          {/if}
+          <Accordion title="Add Client Info">
+            <div class="invoice-form-info">
+              <Input
+                id="buyerInfo-firstName"
+                type="text"
+                value={formData.buyerInfo?.firstName}
+                placeholder="Buyer First Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-lastName"
+                type="text"
+                value={formData.buyerInfo?.lastName}
+                placeholder="Buyer Last Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-businessName"
+                type="text"
+                value={formData.buyerInfo?.businessName}
+                placeholder="Company Name"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-taxRegistration"
+                type="text"
+                value={formData.buyerInfo?.taxRegistration}
+                placeholder="Tax Identification Number (TIN)"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-email"
+                type="email"
+                value={formData.buyerInfo?.email}
+                placeholder="Email"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-country"
+                type="text"
+                value={formData.buyerInfo?.address?.["country-name"]}
+                placeholder="Country"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-locality"
+                type="text"
+                value={formData.buyerInfo?.address?.locality}
+                placeholder="City"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-region"
+                type="text"
+                value={formData.buyerInfo?.address?.region}
+                placeholder="Region"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-postal"
+                type="text"
+                value={formData.buyerInfo?.address?.["postal-code"]}
+                placeholder="Postal Code"
+                handleInput={handleAdditionalInfo}
+              />
+              <Input
+                id="buyerInfo-street"
+                type="text"
+                value={formData.buyerInfo?.address?.["street-address"]}
+                placeholder="Street Address"
+                handleInput={handleAdditionalInfo}
+              />
+            </div>
+          </Accordion>
+        </div>
+        <Dropdown
+          {config}
+          placeholder="Select payment chain"
+          options={networks.map((network) => {
+            return {
+              value: network.chainId,
+              label: network.name,
+            };
+          })}
+          onchange={handleNetworkChange}
+        />
+
+        <Dropdown
+          {config}
+          placeholder="Select a currency"
+          options={Array.from(currencies.entries()).map(([key, value]) => ({
+            value: key,
+            label: `${value.symbol} (${value.network})`,
+          }))}
+          onchange={handleCurrencyChange}
+        />
+        <Input
+          label="Where do you want to receive your payment?"
+          id="payeeAddress"
+          type="text"
+          value={formData.payeeAddress}
+          placeholder="0x..."
+          {handleInput}
+          onBlur={checkPayeeAddress}
+        />
+        {#if payeeAddressError}
+          <p class="error-address">Please enter a valid Ethereum address</p>
+        {/if}
+      </div>
     </div>
     <div class="invoice-form-dates">
       <Input
@@ -143,217 +356,6 @@
       />
     </div>
   </div>
-  <div class="invoice-form-details">
-    <div class="invoice-form-section-container">
-      <div class="invoice-form-section">
-        <Input
-          disabled
-          id="creatorId"
-          type="text"
-          value={creatorId}
-          label="From"
-          placeholder="Connect wallet to populate"
-        />
-        <Accordion title="Add Your Info">
-          <div class="invoice-form-info">
-            <Input
-              id="sellerInfo-firstName"
-              type="text"
-              value={formData.sellerInfo?.firstName}
-              placeholder="Seller First Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-lastName"
-              type="text"
-              value={formData.sellerInfo?.lastName}
-              placeholder="Seller Last Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-businessName"
-              type="text"
-              value={formData.sellerInfo?.businessName}
-              placeholder="Company Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-taxRegistration"
-              type="text"
-              value={formData.sellerInfo?.taxRegistration}
-              placeholder="Tax Identification Number (TIN)"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-email"
-              type="email"
-              value={formData.sellerInfo?.email}
-              placeholder="Email"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-country"
-              type="text"
-              value={formData.sellerInfo?.address?.["country-name"]}
-              placeholder="Country"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-locality"
-              type="text"
-              value={formData.sellerInfo?.address?.locality}
-              placeholder="City"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-region"
-              type="text"
-              value={formData.sellerInfo?.address?.region}
-              placeholder="Region"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-postal"
-              type="text"
-              value={formData.sellerInfo?.address?.["postal-code"]}
-              placeholder="Postal Code"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="sellerInfo-street"
-              type="text"
-              value={formData.sellerInfo?.address?.["street-address"]}
-              placeholder="Street Address"
-              handleInput={handleAdditionalInfo}
-            />
-          </div>
-        </Accordion>
-      </div>
-
-      <div class="invoice-form-section">
-        <Input
-          label="Client information"
-          id="payerAddress"
-          type="text"
-          value={formData.payerAddress}
-          placeholder="Client Wallet Address"
-          {handleInput}
-          onBlur={checkClientAddress}
-        />
-        {#if clientAddressError}
-          <p class="error-address">Please enter a valid Ethereum address</p>
-        {/if}
-        <Accordion title="Add Client Info">
-          <div class="invoice-form-info">
-            <Input
-              id="buyerInfo-firstName"
-              type="text"
-              value={formData.buyerInfo?.firstName}
-              placeholder="Buyer First Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-lastName"
-              type="text"
-              value={formData.buyerInfo?.lastName}
-              placeholder="Buyer Last Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-businessName"
-              type="text"
-              value={formData.buyerInfo?.businessName}
-              placeholder="Company Name"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-taxRegistration"
-              type="text"
-              value={formData.buyerInfo?.taxRegistration}
-              placeholder="Tax Identification Number (TIN)"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-email"
-              type="email"
-              value={formData.buyerInfo?.email}
-              placeholder="Email"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-country"
-              type="text"
-              value={formData.buyerInfo?.address?.["country-name"]}
-              placeholder="Country"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-locality"
-              type="text"
-              value={formData.buyerInfo?.address?.locality}
-              placeholder="City"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-region"
-              type="text"
-              value={formData.buyerInfo?.address?.region}
-              placeholder="Region"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-postal"
-              type="text"
-              value={formData.buyerInfo?.address?.["postal-code"]}
-              placeholder="Postal Code"
-              handleInput={handleAdditionalInfo}
-            />
-            <Input
-              id="buyerInfo-street"
-              type="text"
-              value={formData.buyerInfo?.address?.["street-address"]}
-              placeholder="Street Address"
-              handleInput={handleAdditionalInfo}
-            />
-          </div>
-        </Accordion>
-      </div>
-      <Dropdown
-        {config}
-        placeholder="Select payment chain"
-        options={networks.map((network) => {
-          return {
-            value: network.chainId,
-            label: network.name,
-          };
-        })}
-        onchange={handleNetworkChange}
-      />
-
-      <Dropdown
-        {config}
-        placeholder="Select a currency"
-        options={Array.from(currencies.entries()).map(([key, value]) => ({
-          value: key,
-          label: `${value.symbol} (${value.network})`,
-        }))}
-        onchange={handleCurrencyChange}
-      />
-      <Input
-        label="Where do you want to receive your payment?"
-        id="payeeAddress"
-        type="text"
-        value={formData.payeeAddress}
-        placeholder="0x..."
-        {handleInput}
-        onBlur={checkPayeeAddress}
-      />
-      {#if payeeAddressError}
-        <p class="error-address">Please enter a valid Ethereum address</p>
-      {/if}
-    </div>
-  </div>
-
   <div class="invoice-form-table-section">
     <div class="invoice-form-table-wrapper">
       <table class="invoice-form-table">
@@ -500,8 +502,8 @@
   }
 
   .invoice-form {
+    width: 100%;
     height: fit-content;
-    width: 120%;
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -511,11 +513,9 @@
     box-sizing: border-box;
   }
 
-  .invoice-form-header {
+  .invoice-form-container {
     display: flex;
-    align-items: start;
-    width: 100%;
-    position: relative;
+    gap: 20px;
   }
 
   .invoice-form-header-left {
@@ -524,14 +524,10 @@
     gap: 12px;
   }
 
-  .invoice-form-header-left input {
-    width: 100%;
-  }
-
   .invoice-form-title {
     font-weight: bold;
     font-size: 20px;
-    width: 100%;
+    width: fit-content;
     color: #050b20;
   }
 
@@ -541,8 +537,17 @@
     gap: 9px;
     margin-left: auto;
     width: 260px;
-    position: absolute;
-    right: 0;
+  }
+
+  @media only screen and (max-width: 1300px) {
+    .invoice-form-dates {
+      margin-left: 0;
+    }
+
+    .invoice-form-container {
+      gap: 20px;
+      flex-direction: column;
+    }
   }
 
   .invoice-form-dates input {
@@ -558,7 +563,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 520px;
     gap: 20px;
   }
 
