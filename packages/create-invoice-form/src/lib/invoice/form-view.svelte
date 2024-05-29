@@ -266,7 +266,6 @@
   }
   .invoice-form-wrapper {
     height: fit-content;
-    width: 100%;
     background-color: white;
     display: flex;
     flex-direction: column;

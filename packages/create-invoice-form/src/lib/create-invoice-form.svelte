@@ -235,6 +235,12 @@
     width: 100%;
   }
 
+  @media only screen and (max-width: 1024px) {
+    .create-invoice-form-content {
+      flex-direction: column;
+    }
+  }
+
   .invoice-view-wrapper {
     height: fit-content;
     display: flex;
