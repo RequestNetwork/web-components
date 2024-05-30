@@ -6,7 +6,7 @@ export const formatDate = (date: string): string => {
   };
 
   const dateObj = new Date(date);
-  return dateObj.toLocaleDateString("en-US", options);
+  return dateObj.toLocaleDateString("", options);
 };
 
 export const inputDateFormat = (date: Date | string) => {
