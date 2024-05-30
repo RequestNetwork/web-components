@@ -2,10 +2,15 @@
   import logo from "../assets/logo.svg";
 </script>
 
-<div class="powered-by">
+<a
+  class="powered-by"
+  href="https://request.network/"
+  rel="noopener noreferrer"
+  target="_blank"
+>
   <h2>Powered by</h2>
   <img src={logo} alt="Logo" class="powered-by-logo" />
-</div>
+</a>
 
 <style>
   @font-face {
@@ -21,6 +26,7 @@
     gap: 10px;
     margin-left: auto;
     margin-right: 32px;
+    text-decoration: none;
   }
 
   .powered-by h2 {
