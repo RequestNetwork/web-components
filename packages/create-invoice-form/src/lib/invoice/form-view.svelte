@@ -124,7 +124,7 @@
         </div>
       </div>
       <div class="invoice-header-right">
-        <p>Issued on {formatDate(new Date().toString())}</p>
+        <p>Issued on {formData.issuedOn && formatDate(formData.issuedOn)}</p>
         <p>
           Payment due by {formData.dueDate && formatDate(formData.dueDate)}
         </p>
