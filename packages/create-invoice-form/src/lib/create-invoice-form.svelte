@@ -17,7 +17,7 @@
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
 
-  let activeConfig = config || defaultConfig;
+  let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
   let networks = [
@@ -123,7 +123,7 @@
   const submitForm = async (e: Event) => {
     e.preventDefault();
 
-    formData.miscellaneous.builderId = config?.builderId || "";
+    formData.miscellaneous.builderId = activeConfig?.builderId || "";
     formData.miscellaneous.createdWith = window.location.hostname;
 
     const requestCreateParameters = prepareRequestParams({

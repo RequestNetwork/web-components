@@ -434,15 +434,13 @@
                 {calculateItemTotal(item).toFixed(2)}
               </td>
               {#if index !== 0}
-                <td
-                  class="invoice-form-table-body-cell invoice-form-table-body-amount"
-                >
+                <td class="invoice-form-table-body-trash">
                   <Button
+                    padding="10px"
                     type="button"
-                    className="invoice-form-body-remove-item"
                     onClick={() => removeInvoiceItem(index)}
                   >
-                    <div slot="icon">
+                    <div slot="icon" style="padding: 7px;">
                       <Trash />
                     </div>
                   </Button>
@@ -616,7 +614,7 @@
 
   .invoice-form-table-header tr th {
     padding: 12px 16px;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .invoice-form-table-body-header {
@@ -652,22 +650,12 @@
     padding: 12px 4px 12px 16px;
   }
 
-  .invoice-form-body-remove-item {
-    padding: 10px;
-  }
-
-  .invoice-form-body-remove-item:hover {
-    background-color: #1f2937;
-  }
-
   .invoice-form-table-body-total-empty {
     padding: 12px 32px;
   }
 
-  .invoice-form-table-body-add-item button {
-    padding: 6px 14px !important;
-    width: fit-content !important;
-    height: fit-content !important;
+  .invoice-form-table-body-trash {
+    width: 50px !important;
   }
 
   .invoice-form-label-wrapper {

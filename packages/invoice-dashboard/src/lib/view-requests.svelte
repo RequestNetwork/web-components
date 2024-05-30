@@ -15,7 +15,7 @@
     ChevronLeft,
     ChevronRight,
     type IConfig,
-    config as generalConfig,
+    config as defaultConfig,
   } from "@requestnetwork/shared";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
@@ -30,7 +30,7 @@
   export let requestNetwork: RequestNetwork | null | undefined;
 
   let signer = "";
-  let activeConfig = config ? config : generalConfig;
+  let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
 
@@ -252,7 +252,7 @@
       </div>
     </Input>
     <Dropdown
-      {config}
+      config={activeConfig}
       type="checkbox"
       options={columnOptions}
       placeholder="Select Columns"
