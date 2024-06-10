@@ -6,11 +6,11 @@ export const formatDate = (date: string): string => {
   };
 
   const dateObj = new Date(date);
-  return dateObj.toLocaleDateString("", options);
+  return dateObj.toLocaleDateString("en-US", options);
 };
 
 export const inputDateFormat = (date: Date | string) => {
-  const d = new Date(date);
+  const d = new Date(typeof date === "string" ? date : date.toString());
   let month = "" + (d.getMonth() + 1);
   let day = "" + d.getDate();
   const year = d.getFullYear();

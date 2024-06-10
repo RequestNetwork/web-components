@@ -341,7 +341,6 @@
       <Input
         id="issuedOn"
         type="date"
-        min={inputDateFormat(new Date())}
         value={inputDateFormat(new Date())}
         label="Issued Date"
         {handleInput}
@@ -350,7 +349,11 @@
         id="dueDate"
         type="date"
         min={inputDateFormat(formData.issuedOn)}
-        value={inputDateFormat(formData.dueDate)}
+        value={inputDateFormat(
+          new Date(
+            new Date(formData.issuedOn).getTime() + 30 * 24 * 60 * 60 * 1000
+          )
+        )}
         label="Due Date"
         {handleInput}
       />
