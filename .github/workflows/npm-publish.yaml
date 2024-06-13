@@ -12,25 +12,77 @@ jobs:
     strategy:
       matrix:
         package:
-          - "@requestnetwork/add-stakeholder"
-          - "@requestnetwork/create-invoice-form"
-          - "@requestnetwork/invoice-dashboard"
-          - "@requestnetwork/shared"
+          - "add-stakeholder"
+          - "create-invoice-form"
+          - "invoice-dashboard"
+          - "shared"
     steps:
-    - name: Checkout repository 🛎️
-      uses: actions/checkout@v4
-    - name: Check if version number has already been released 🕵️‍♀️
-      id: is-release-needed
-      run: npm run is-release-needed --workspace=${{ matrix.package }} --silent >> $GITHUB_OUTPUT
-    - name: Setup .npmrc file to publish to npm 📝
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        registry-url: 'https://registry.npmjs.org'
-    - name: Install dependencies 📥
-      run: npm ci
-    - name: Publish package on NPM 📦
-      if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
-      run: npm publish --workspace=${{ matrix.package }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
+      - name: Checkout repository 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies 📥
+        run: npm ci
+
+      - name: Check for shared package updates and update dependencies 🔄
+        if: ${{ matrix.package == 'shared' }}
+        run: |
+          SHARED_PACKAGE_NAME="@requestnetwork/shared"
+          CURRENT_VERSION="$(node -p -e \"require('./packages/shared/package.json').version\")"
+          LATEST_VERSION=$(npm show $SHARED_PACKAGE_NAME version)
+
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "Updating $SHARED_PACKAGE_NAME from $CURRENT_VERSION to $LATEST_VERSION"
+
+            # List of dependent packages
+            DEPENDENT_PACKAGES=(
+              "packages/create-invoice-form"
+              "packages/invoice-dashboard"
+            )
+
+            for package in "${DEPENDENT_PACKAGES[@]}"; do
+              cd "$package"
+              ncu -u "$SHARED_PACKAGE_NAME@$LATEST_VERSION"
+              cd -
+            done
+
+            # Install updated dependencies
+            npm install
+
+            # Commit and push changes
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+            git add .
+            git commit -m "Update $SHARED_PACKAGE_NAME to version $LATEST_VERSION in dependent packages"
+            git push
+          else
+            echo "$SHARED_PACKAGE_NAME is already at the latest version ($CURRENT_VERSION)"
+
+      - name: Install dependencies again if shared package was updated
+        if: ${{ matrix.package == 'shared' }}
+        run: npm ci
+
+      - name: Check if version number has already been released 🕵️‍♀️
+        id: is-release-needed
+        run: npm run is-release-needed --workspace=${{ matrix.package }}
+        env:
+          GITHUB_ENV: $GITHUB_ENV
+
+      - name: Setup .npmrc file to publish to npm 📝
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Debug package info 🐛
+        run: |
+          echo "Package Name: $(node -p -e "require('./packages/${{ matrix.package }}/package.json').name")"
+          npm info $(node -p -e "require('./packages/${{ matrix.package }}/package.json').name")
+
+      - name: Publish package on NPM 📦
+        if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
+        run: npm publish --workspace=${{ matrix.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
