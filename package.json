@@ -20,8 +20,5 @@
   },
   "author": "",
   "license": "MIT",
-  "packageManager": "yarn@4.0.2",
-  "devDependencies": {
-    "npm-check-updates": "^16.14.20"
-  }
+  "packageManager": "yarn@4.0.2"
 }
