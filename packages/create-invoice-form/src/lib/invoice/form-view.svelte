@@ -382,7 +382,7 @@
   }
 
   .invoice-table-header {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 20px;
     text-transform: uppercase;
     background-color: #e4e4e7;
@@ -390,6 +390,7 @@
 
   .invoice-table-header tr {
     text-align: left;
+    white-space: nowrap;
   }
 
   .invoice-table-header tr th {
@@ -451,6 +452,12 @@
   .invoice-note-content {
     width: 620px;
     word-break: break-all;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .invoice-note-content {
+      width: 100%;
+    }
   }
 
   .invoice-note-content span {

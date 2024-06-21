@@ -551,6 +551,12 @@
     padding: 0.75rem 0.5rem;
   }
 
+  @media only screen and (max-width: 880px) {
+    .table-header-cell {
+      white-space: nowrap;
+    }
+  }
+
   .table-header-cell.description {
     padding-left: 0.5rem;
   }

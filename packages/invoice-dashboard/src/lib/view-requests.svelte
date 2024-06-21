@@ -239,7 +239,7 @@
     </ul>
   </div>
   {#if !loading}
-    <div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
       <div class="search-wrapper">
         <Input
           placeholder="Search..."
@@ -566,6 +566,13 @@
     transition: all 0.3s ease-in-out;
   }
 
+  @media only screen and (max-width: 880px) {
+    .tabs ul li {
+      padding: 8px;
+      width: 80px;
+    }
+  }
+
   .tabs ul li:hover {
     color: #6b7280;
     border-color: #d1d5db;
@@ -584,12 +591,27 @@
     align-items: center;
   }
 
+  @media only screen and (max-width: 880px) {
+    .search-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+
   .table-wrapper {
     position: relative;
     box-shadow:
       0 1px 3px 0 rgb(0 0 0 / 0.1),
       0 1px 2px -1px rgb(0 0 0 / 0.1);
     border-radius: 0.5rem;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .table-wrapper {
+      overflow: scroll;
+      max-width: 900px;
+    }
   }
 
   .table-wrapper table {
@@ -616,6 +638,12 @@
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
     cursor: pointer;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .table-head th {
+      white-space: nowrap;
+    }
   }
 
   .table-head th div {
