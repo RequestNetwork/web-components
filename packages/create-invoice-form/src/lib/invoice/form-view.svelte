@@ -147,7 +147,7 @@
       </div>
     </div>
     <div class="invoice-section">
-      <p class="flex flex-col">
+      <p class="invoice-section-title">
         <span>Billed to</span>
         {formData.payerAddress}
       </p>
@@ -345,6 +345,13 @@
 
   .invoice-section-title span {
     font-weight: 500;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .invoice-section-title {
+      font-size: 14px;
+      word-wrap: break-word;
+    }
   }
 
   .invoice-details {
