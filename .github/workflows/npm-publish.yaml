@@ -78,8 +78,6 @@ jobs:
       - name: Check if version number has already been released 🕵️‍♀️
         id: is-release-needed
         run: ./scripts/is-release-needed.sh ./${{ matrix.package }}
-        env:
-          GITHUB_ENV: $GITHUB_ENV
 
       - name: Setup .npmrc file to publish to npm 📝
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
