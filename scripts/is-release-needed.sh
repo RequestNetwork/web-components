@@ -6,6 +6,8 @@ PACKAGE_NAME="$(node -p -e "require('./package.json').name")"
 
 FOUND_VERSION=$(npm view $PACKAGE_NAME versions | grep $PACKAGE_VERSION)
 
+echo "Checking if $PACKAGE_NAME@$PACKAGE_VERSION is already published..."
+
 if [ -z "$FOUND_VERSION" ]; then
     IS_NEW_VERSION=true
 fi
