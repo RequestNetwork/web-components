@@ -91,5 +91,3 @@ jobs:
       - name: Publish package on NPM 📦
         if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
         run: npm publish --workspace=${{ matrix.package }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
