@@ -84,7 +84,7 @@ jobs:
       - name: Setup .npmrc file to publish to npm 📝
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
 
-      - name: Debug package info 🐛
+      - name: Print package info for debugging 🐛
         run: |
           PACKAGE_NAME=$(node -p "require('./${{ matrix.package }}/package.json').name")
           echo "Package Name: $PACKAGE_NAME"
