@@ -1,4 +1,14 @@
-<svelte:options customElement="invoice-dashboard" />
+<svelte:options
+  customElement={{
+    tag: "invoice-dashboard",
+    extend: extendCustomElement,
+    props: {
+      config: { type: "Object" },
+      wallet: { type: "Object" },
+      requestNetwork: { type: "Object" },
+    },
+  }}
+/>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -24,10 +34,11 @@
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { debounce, getSymbol, getDecimals, formatAddress } from "$src/utils";
+  import extendCustomElement from "./custom-element";
 
-  export let config: IConfig;
-  export let wallet: WalletState;
-  export let requestNetwork: RequestNetwork | null | undefined;
+  export let config: Record<string, any>;
+  export let wallet: Record<string, any>;
+  export let requestNetwork: Record<string, any>;
 
   let signer = "";
   let activeConfig = config ? config : defaultConfig;
