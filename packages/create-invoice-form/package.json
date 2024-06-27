@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/create-invoice-form",
-  "version": "0.5.0",
+  "version": "0.5.1-next.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -28,9 +28,9 @@
     "!dist/**/*.spec.*"
   ],
   "dependencies": {
-    "@requestnetwork/request-client.js": "0.45.0",
+    "@requestnetwork/request-client.js": "0.47.1-next.2043",
     "@requestnetwork/shared": "0.4.0",
-    "@requestnetwork/web3-signature": "0.5.0",
+    "@requestnetwork/web3-signature": "0.6.1-next.2043",
     "browserify-zlib": "^0.2.0",
     "crypto-browserify": "^3.12.0",
     "stream-browserify": "^3.0.0",
