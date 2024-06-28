@@ -62,6 +62,7 @@ export default function CreateInvoiceForm() {
       if (wallet && requestNetwork) {
         formRef.current.signer = wallet.accounts[0].address;
         formRef.current.requestNetwork = requestNetwork;
+        formRef.current.currencies = currencies;
       }
     }
   }, [wallet, requestNetwork]);

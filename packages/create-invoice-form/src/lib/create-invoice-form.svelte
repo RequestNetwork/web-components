@@ -3,10 +3,10 @@
 <script lang="ts">
   import {
     APP_STATUS,
-    getCurrenciesByNetwork,
     calculateInvoiceTotals,
     config as defaultConfig,
     type IConfig,
+    initializeCurrencyManager,
   } from "@requestnetwork/shared";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import { Modal, Button, Status } from "@requestnetwork/shared";
@@ -16,52 +16,47 @@
   export let config: IConfig;
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
+  export let currencies: any;
 
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let networks = [
-    {
-      name: "Ethereum",
-      chainId: "1",
-    },
-    {
-      name: "Polygon",
-      chainId: "137",
-    },
-    {
-      name: "Sepolia",
-      chainId: "11155111",
-    },
-  ];
+  let currencyManager = initializeCurrencyManager(currencies);
+
+  const extractUniqueNetworkNames = (): string[] => {
+    const networkSet = new Set<string>();
+
+    currencyManager.knownCurrencies.forEach((currency: any) => {
+      networkSet.add(currency.network);
+    });
+
+    return Array.from(networkSet);
+  };
+
+  let networks = extractUniqueNetworkNames();
 
   let network = networks[0];
-  const handleNetworkChange = (chainId: string) => {
-    const selectedNetwork = networks.find(
-      (network) => network.chainId === chainId
-    );
 
-    if (selectedNetwork) {
-      network = selectedNetwork;
+  const handleNetworkChange = (network: string) => {
+    if (network) {
+      const newCurrencies = currencyManager.knownCurrencies.filter(
+        (currency: any) => currency.network === network
+      );
 
-      const newCurrencies = getCurrenciesByNetwork(selectedNetwork.chainId);
-
-      currencies = newCurrencies;
-
-      currency = newCurrencies.keys().next().value;
+      network = network;
+      defaultCurrencies = newCurrencies;
+      currency = newCurrencies[0];
     }
   };
 
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let currencies = getCurrenciesByNetwork(network.chainId) || new Map();
+  let defaultCurrencies = currencyManager.knownCurrencies.filter(
+    (currency: any) => currency.network === network
+  );
 
-  $: {
-    currencies = getCurrenciesByNetwork(network.chainId);
-    currency = currencies.keys().next().value;
-  }
-  let currency = currencies.keys().next().value;
+  let currency = defaultCurrencies[0];
 
   const handleCurrencyChange = (value: string) => {
     currency = value;
@@ -130,7 +125,6 @@
       signer,
       formData,
       currency,
-      currencies,
       invoiceTotals,
     });
 
@@ -162,7 +156,7 @@
     <InvoiceForm
       bind:formData
       config={activeConfig}
-      bind:currencies
+      bind:defaultCurrencies
       bind:payeeAddressError
       bind:clientAddressError
       {handleCurrencyChange}
@@ -173,12 +167,11 @@
       <InvoiceView
         config={activeConfig}
         {currency}
-        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
-        bind:currencies
+        bind:defaultCurrencies
       />
     </div>
   </div>

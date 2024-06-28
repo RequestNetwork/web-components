@@ -16,6 +16,7 @@
     ChevronRight,
     type IConfig,
     config as defaultConfig,
+    initializeCurrencyManager,
   } from "@requestnetwork/shared";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
@@ -24,10 +25,12 @@
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { debounce, getSymbol, getDecimals, formatAddress } from "$src/utils";
+  import { CurrencyManager } from "@requestnetwork/currency";
 
   export let config: IConfig;
   export let wallet: WalletState;
   export let requestNetwork: RequestNetwork | null | undefined;
+  export let currencies: any = [];
 
   let signer = "";
   let activeConfig = config ? config : defaultConfig;
@@ -40,6 +43,7 @@
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
   let activeRequest: Types.IRequestDataWithEvents | undefined;
+  let currencyManager: CurrencyManager;
 
   let columns = {
     issuedAt: false,
@@ -56,6 +60,10 @@
   $: {
     signer = wallet?.accounts[0]?.address;
   }
+
+  onMount(() => {
+    currencyManager = initializeCurrencyManager(currencies);
+  });
 
   const getRequests = async () => {
     try {
@@ -438,15 +446,11 @@
                   <td>
                     {formatUnits(
                       BigInt(request.expectedAmount),
-                      getDecimals(
-                        request.currencyInfo.network ?? "",
-                        request.currencyInfo.value
-                      )
+                      currencyManager.fromAddress(request.currencyInfo.value)
+                        ?.decimals ?? 18
                     )}
-                    {getSymbol(
-                      request.currencyInfo.network ?? "",
-                      request.currencyInfo.value
-                    )}
+                    {currencyManager.fromAddress(request.currencyInfo.value)
+                      ?.symbol}
                   </td>
                   <td> {checkStatus(request)}</td>
                 </tr>
@@ -462,6 +466,7 @@
             <InvoiceView
               {wallet}
               {requestNetwork}
+              {currencyManager}
               config={activeConfig}
               request={activeRequest}
             />

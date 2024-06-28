@@ -15,28 +15,20 @@
     Accordion,
     formatDate,
     calculateItemTotal,
-    getCurrenciesByNetwork,
   } from "@requestnetwork/shared";
   import type { WalletState } from "@web3-onboard/core";
-  import {
-    walletClientToSigner,
-    getSymbol,
-    checkNetwork,
-    getDecimals,
-  } from "$src/utils";
+  import { walletClientToSigner } from "$src/utils";
   import { formatUnits } from "viem";
+  import { onMount } from "svelte";
 
   export let config;
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
+  export let currencyManager: any;
 
   let network = request?.currencyInfo?.network || "mainnet";
-  let currencies = getCurrenciesByNetwork(network);
-  let currency = currencies.get(
-    `${checkNetwork(network)}_${request?.currencyInfo?.value}`
-  );
-
+  let currency = currencyManager.fromAddress(request?.currencyInfo?.value);
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -87,28 +79,16 @@
     buyerInfo = generateDetailParagraphs(request?.contentData.buyerInfo);
   }
 
+  onMount(() => {
+    checkInvoice();
+  });
+
   $: request, checkInvoice();
 
   $: {
     wallet = wallet;
     network = request?.currencyInfo?.network || "mainnet";
-    currencies = getCurrenciesByNetwork(network);
-    currency = currencies.get(
-      `${checkNetwork(network)}_${request?.currencyInfo?.value}`
-    );
-  }
-
-  $: {
-    currencyDetails = {
-      symbol: getSymbol(
-        request?.currencyInfo.network ?? "",
-        request?.currencyInfo.value ?? ""
-      ),
-      decimals: getDecimals(
-        request?.currencyInfo?.network ?? "",
-        request?.currencyInfo?.value ?? ""
-      ),
-    };
+    currency = currencyManager.fromAddress(request?.currencyInfo?.value);
   }
 
   const checkInvoice = async () => {
@@ -270,10 +250,7 @@
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
-    {getSymbol(
-      request?.currencyInfo.network ?? "",
-      request?.currencyInfo.value ?? ""
-    )}
+    {currency?.symbol}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
@@ -298,15 +275,15 @@
                 <p class="truncate description-text">{item.name}</p>
               </th>
               <td>{item.quantity}</td>
-              <td>{formatUnits(item.unitPrice, currencyDetails.decimals)}</td>
-              <td>{formatUnits(item.discount, currencyDetails.decimals)}</td>
+              <td>{formatUnits(item.unitPrice, currency?.decimals ?? 18)}</td>
+              <td>{formatUnits(item.discount, currency?.decimals ?? 18)}</td>
               <td>{Number(item.tax.amount)}</td>
               <td
                 >{truncateNumberString(
                   formatUnits(
                     // @ts-expect-error
                     calculateItemTotal(item),
-                    currencyDetails.decimals
+                    currency?.decimals ?? 18
                   ),
                   2
                 )}</td
@@ -340,9 +317,9 @@
                   </th>
                   <td>{item.quantity}</td>
                   <td
-                    >{formatUnits(item.unitPrice, currencyDetails.decimals)}</td
+                    >{formatUnits(item.unitPrice, currency?.decimals ?? 18)}</td
                   >
-                  <td>{formatUnits(item.discount, currencyDetails.decimals)}</td
+                  <td>{formatUnits(item.discount, currency?.decimals ?? 18)}</td
                   >
                   <td>{Number(item.tax.amount)}</td>
                   <td
@@ -350,7 +327,7 @@
                       formatUnits(
                         // @ts-expect-error
                         calculateItemTotal(item),
-                        currencyDetails.decimals
+                        currency?.decimals ?? 18
                       ),
                       2
                     )}</td

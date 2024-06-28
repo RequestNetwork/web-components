@@ -21,7 +21,7 @@
 
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
-  export let currencies = new Map();
+  export let defaultCurrencies: any = [];
   export let payeeAddressError = false;
   export let clientAddressError = false;
 
@@ -307,8 +307,8 @@
           placeholder="Select payment chain"
           options={networks.map((network) => {
             return {
-              value: network.chainId,
-              label: network.name,
+              value: network,
+              label: network[0].toUpperCase() + network.slice(1),
             };
           })}
           onchange={handleNetworkChange}
@@ -317,9 +317,9 @@
         <Dropdown
           {config}
           placeholder="Select a currency"
-          options={Array.from(currencies.entries()).map(([key, value]) => ({
-            value: key,
-            label: `${value.symbol} (${value.network})`,
+          options={defaultCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol} (${currency.network})`,
           }))}
           onchange={handleCurrencyChange}
         />
@@ -349,9 +349,7 @@
         id="dueDate"
         type="date"
         min={inputDateFormat(formData.issuedOn)}
-        value={inputDateFormat(
-          new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
-        )}
+        value={new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000}
         label="Due Date"
         {handleInput}
       />

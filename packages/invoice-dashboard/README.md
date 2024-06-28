@@ -64,6 +64,7 @@ export default function InvoiceDashboard() {
       if (wallet && requestNetwork) {
         dashboardRef.current.wallet = wallet;
         dashboardRef.current.requestNetwork = requestNetwork;
+        dashboardRef.current.currencies = currencies;
       }
     }
   }, [wallet, requestNetwork]);
