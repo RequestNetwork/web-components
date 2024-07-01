@@ -147,7 +147,7 @@
       </div>
     </div>
     <div class="invoice-section">
-      <p class="flex flex-col">
+      <p class="invoice-section-title">
         <span>Billed to</span>
         {formData.payerAddress}
       </p>
@@ -347,6 +347,13 @@
     font-weight: 500;
   }
 
+  @media only screen and (max-width: 880px) {
+    .invoice-section-title {
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+  }
+
   .invoice-details {
     display: flex;
     flex-wrap: wrap;
@@ -382,7 +389,7 @@
   }
 
   .invoice-table-header {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 20px;
     text-transform: uppercase;
     background-color: #e4e4e7;
@@ -390,6 +397,7 @@
 
   .invoice-table-header tr {
     text-align: left;
+    white-space: nowrap;
   }
 
   .invoice-table-header tr th {
@@ -451,6 +459,12 @@
   .invoice-note-content {
     width: 620px;
     word-break: break-all;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .invoice-note-content {
+      width: 100%;
+    }
   }
 
   .invoice-note-content span {
