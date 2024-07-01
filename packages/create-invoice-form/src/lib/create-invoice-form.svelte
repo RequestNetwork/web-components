@@ -248,6 +248,12 @@
     margin-top: 20px;
   }
 
+  @media only screen and (max-width: 880px) {
+    .modal-footer {
+      gap: 10px;
+    }
+  }
+
   :global(.modal-footer button) {
     padding: 6px 14px !important;
     width: fit-content !important;

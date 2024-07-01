@@ -38,6 +38,13 @@
     transition: all 300ms;
   }
 
+  @media only screen and (max-width: 880px) {
+    .drawer {
+      right: unset;
+      width: 600px;
+    }
+  }
+
   .innerDrawer {
     position: relative;
     width: 100%;

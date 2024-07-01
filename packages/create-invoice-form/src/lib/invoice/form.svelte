@@ -614,6 +614,7 @@
   .invoice-form-table-header tr th {
     padding: 12px 16px;
     font-size: 11px;
+    white-space: nowrap;
   }
 
   .invoice-form-table-body-header {
