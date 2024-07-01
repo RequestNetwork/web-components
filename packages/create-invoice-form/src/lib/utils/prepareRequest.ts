@@ -3,7 +3,7 @@ import type { CustomFormData } from "@requestnetwork/shared";
 import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
-  currency: string;
+  currency: any;
   formData: CustomFormData;
   invoiceTotals: {
     amountWithoutTax: number;
@@ -11,25 +11,23 @@ interface IRequestParams {
     totalAmount: number;
   };
   signer: string;
-  currencies: any;
 }
 
 export const prepareRequestParams = ({
   signer,
   currency,
   formData,
-  currencies,
   invoiceTotals,
 }: IRequestParams): Types.ICreateRequestParameters => ({
   requestInfo: {
     currency: {
-      type: currencies.get(currency)!.type,
-      value: currencies.get(currency)!.value,
-      network: currencies.get(currency)!.network,
+      type: currency.type,
+      value: currency.address,
+      network: currency.network,
     },
     expectedAmount: parseUnits(
       invoiceTotals.totalAmount.toFixed(2),
-      currencies.get(currency)!.decimals
+      currency.decimals
     ).toString(),
     payee: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -44,7 +42,7 @@ export const prepareRequestParams = ({
   paymentNetwork: {
     id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
     parameters: {
-      paymentNetworkName: currencies.get(currency)!.network,
+      paymentNetworkName: currency.network,
       paymentAddress: formData.payeeAddress,
       feeAddress: zeroAddress,
       feeAmount: "0",
@@ -67,17 +65,17 @@ export const prepareRequestParams = ({
       quantity: Number(item.quantity),
       unitPrice: parseUnits(
         item.unitPrice.toString(),
-        currencies.get(currency)!.decimals
+        currency.decimals
       ).toString(),
       discount: parseUnits(
         item.discount.toString(),
-        currencies.get(currency)!.decimals
+        currency.decimals
       ).toString(),
       tax: {
         type: "percentage",
         amount: item.tax.amount.toString(),
       },
-      currency: currencies.get(currency)!.value,
+      currency: currency.address,
     })),
     paymentTerms: {
       dueDate: new Date(formData.dueDate).toISOString(),

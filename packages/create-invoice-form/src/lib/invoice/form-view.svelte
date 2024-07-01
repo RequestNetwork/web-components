@@ -10,15 +10,11 @@
     config as defaultConfig,
   } from "@requestnetwork/shared";
 
-  export let currencies;
+  export let defaultCurrencies;
   export let config: IConfig;
   export let canSubmit = false;
-  export let network: {
-    name: string;
-    chainId: string;
-  };
   export let formData: CustomFormData;
-  export let currency = currencies.keys().next().value;
+  export let currency = defaultCurrencies[0];
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -164,12 +160,12 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {network.name}
+      {currency.network[0].toUpperCase() + currency.network.slice(1)}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {currencies.get(currency)?.symbol}
-      ({currencies.get(currency)?.network})
+      {currency.symbol}
+      ({currency.network})
     </p>
     <p class="invoice-section-title">
       <span>Invoice Type</span>
@@ -221,7 +217,7 @@
       >
         <span>Due: </span>
         <span
-          >{currencies.get(currency)?.symbol}
+          >{currency.symbol}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >

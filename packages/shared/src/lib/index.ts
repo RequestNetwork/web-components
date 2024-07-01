@@ -45,5 +45,5 @@ export {
 } from "./utils/invoiceTotals";
 export { config } from "./utils/config";
 export { checkAddress } from "./utils/checkEthAddress";
-export { getCurrenciesByNetwork } from "./utils/currencies";
 export { formatDate, inputDateFormat } from "./utils/formatDate";
+export { initializeCurrencyManager } from "./utils/initCurrencyManager";

@@ -22,7 +22,6 @@ export { default as Accordion } from "./lib/ui/accordion.svelte";
 
 // Utils
 export { config } from "./lib/utils/config";
-export { getCurrenciesByNetwork } from "./lib/utils/currencies";
 export { formatDate, inputDateFormat } from "./lib/utils/formatDate";
 export {
   calculateItemTotal,
