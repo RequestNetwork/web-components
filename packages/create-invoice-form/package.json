@@ -29,7 +29,9 @@
   ],
   "dependencies": {
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
-    "@requestnetwork/shared": "0.4.0",
+    "@requestnetwork/shared-components": "*",
+    "@requestnetwork/shared-types": "*",
+    "@requestnetwork/shared-utils": "*",
     "@requestnetwork/web3-signature": "0.6.1-next.2043",
     "browserify-zlib": "^0.2.0",
     "crypto-browserify": "^3.12.0",

@@ -1,18 +1,22 @@
 <script lang="ts">
-  import {
-    Input,
-    Button,
-    Labels,
-    Dropdown,
-    Accordion,
-    inputDateFormat,
-    calculateItemTotal,
-    type IConfig,
-    type CustomFormData,
-    Trash,
-    Plus,
-    checkAddress,
-  } from "@requestnetwork/shared";
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
+  import Input from "@requestnetwork/shared-components/input.svelte";
+  import Labels from "@requestnetwork/shared-components/labels.svelte";
+  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+
+  // Icons
+  import Trash from "@requestnetwork/shared-icons/trash.svelte";
+  import Plus from "@requestnetwork/shared-icons/plus.svelte";
+
+  // Types
+  import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+
+  // Utils
+  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
+  import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
