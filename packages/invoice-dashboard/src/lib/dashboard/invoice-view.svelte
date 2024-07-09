@@ -21,7 +21,9 @@
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
 
-  import type { WalletState } from "@web3-onboard/core";
+  // Types
+  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
+
   import { walletClientToSigner } from "$src/utils";
   import { formatUnits } from "viem";
   import { onMount } from "svelte";

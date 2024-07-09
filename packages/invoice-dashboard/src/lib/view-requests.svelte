@@ -19,6 +19,7 @@
 
   // Types
   import type { IConfig } from "@requestnetwork/shared-types";
+  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
@@ -27,7 +28,6 @@
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { Drawer, InvoiceView } from "./dashboard";
-  import type { WalletState } from "@web3-onboard/core";
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { debounce, formatAddress } from "$src/utils";
