@@ -10,15 +10,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deep-clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;",
-    "build:shared": "cd packages/shared && npm run build && cd -",
-    "build:form": "cd packages/create-invoice-form && npm run build && cd -",
-    "build:dashboard": "cd packages/invoice-dashboard && npm run build && cd -",
-    "build:stakeholder": "cd packages/add-stakeholder && npm run build && cd -",
-    "build": "npm run build:shared && npm run build:form && npm run build:dashboard && npm run build:stakeholder",
+    "build": "turbo run build",
+    "build:shared": "turbo run build --filter=@requestnetwork/shared",
+    "build:form": "turbo run build --filter=@requestnetwork/create-invoice-form",
+    "build:dashboard": "turbo run build --filter=@requestnetwork/invoice-dashboard",
+    "build:stakeholder": "turbo run build --filter=@requestnetwork/add-stakeholder",
     "link:all": "for d in packages/*; do (cd $d && npm link); done",
     "unlink:all": "for d in packages/*; do (cd $d && npm unlink); done"
   },
+  "devDependencies": {
+    "turbo": "^2.0.6"
+  },
   "author": "",
   "license": "MIT",
-  "packageManager": "yarn@4.0.2"
+  "packageManager": "npm@10.5.0"
 }
