@@ -5,7 +5,8 @@
   "description": "Request Network Web Components",
   "main": "index.js",
   "workspaces": [
-    "./packages/*"
+    "./packages/*",
+    "./shared/*"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
