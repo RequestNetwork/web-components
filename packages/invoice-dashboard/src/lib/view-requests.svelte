@@ -30,7 +30,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { debounce, formatAddress } from "$src/utils";
+  import { debounce, formatAddress } from "../utils";
   import { CurrencyManager } from "@requestnetwork/currency";
 
   export let config: IConfig;

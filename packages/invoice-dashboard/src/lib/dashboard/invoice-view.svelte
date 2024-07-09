@@ -24,7 +24,7 @@
   // Types
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
-  import { walletClientToSigner } from "$src/utils";
+  import { walletClientToSigner } from "../../utils";
   import { formatUnits } from "viem";
   import { onMount } from "svelte";
 
