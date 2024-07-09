@@ -16,7 +16,7 @@
   import Modal from "@requestnetwork/shared-components/modal.svelte";
 
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import { getInitialFormData, prepareRequestParams } from "$utils";
+  import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
