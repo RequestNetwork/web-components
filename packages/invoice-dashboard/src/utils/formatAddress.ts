@@ -1,13 +1,13 @@
-import { checkAddress } from "@requestnetwork/shared";
+import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
 
 export const formatAddress = (
-	address: string,
-	first: number = 6,
-	last: number = 4,
+  address: string,
+  first: number = 6,
+  last: number = 4
 ): string => {
-	if (!checkAddress(address)) {
-		console.error("Invalid address!");
-	}
+  if (!checkAddress(address)) {
+    console.error("Invalid address!");
+  }
 
-	return `${address.slice(0, first)}...${address.slice(-last)}`;
+  return `${address.slice(0, first)}...${address.slice(-last)}`;
 };

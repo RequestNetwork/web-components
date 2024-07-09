@@ -9,13 +9,18 @@
     hasErc20Approval,
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
-  import {
-    Check,
-    Button,
-    Accordion,
-    formatDate,
-    calculateItemTotal,
-  } from "@requestnetwork/shared";
+
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+
+  // Icons
+  import Check from "@requestnetwork/shared-icons/check.svelte";
+
+  // Utils
+  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+
   import type { WalletState } from "@web3-onboard/core";
   import { walletClientToSigner } from "$src/utils";
   import { formatUnits } from "viem";
