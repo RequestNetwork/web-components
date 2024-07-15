@@ -212,25 +212,27 @@
 --secondaryColor: {config.colors.secondary};"
 >
   <div class="dates">
-    <p>Issued on: {formatDate(request?.contentData?.creationDate)}</p>
-    <p>Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate)}</p>
+    <p>Issued on: {formatDate(request?.contentData?.creationDate || "-")}</p>
+    <p>
+      Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate || "-")}
+    </p>
   </div>
   <h2 class="invoice-number">
-    Invoice #{request?.contentData?.invoiceNumber}
+    Invoice #{request?.contentData?.invoiceNumber || "-"}
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
-    <p>{request?.payee?.value}</p>
+    <p>{request?.payee?.value || "-"}</p>
   </div>
   {#if sellerInfo.length > 0}
     <div class={`invoice-info bg-zinc-light`}>
       {#each sellerInfo as { label, value }}
         <p>
-          <span>{label}:</span>
-          {value}
+          <span>{label || "-"}:</span>
+          {value || "-"}
         </p>
       {/each}
     </div>
@@ -238,14 +240,14 @@
   <div class="invoice-border"></div>
   <div class="invoice-address">
     <h2>Billed to:</h2>
-    <p>{request?.payer?.value}</p>
+    <p>{request?.payer?.value || "-"}</p>
   </div>
   {#if buyerInfo.length > 0}
     <div class={`invoice-info bg-zinc-light`}>
       {#each buyerInfo as { label, value }}
         <p>
-          <span>{label}:</span>
-          {value}
+          <span>{label || "-"}:</span>
+          {value || "-"}
         </p>
       {/each}
     </div>
@@ -253,11 +255,11 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {currency?.network}
+    {currency?.network || "-"}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
-    {currency?.symbol}
+    {currency?.symbol || "-"}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
@@ -279,12 +281,20 @@
           {#each firstItems as item, index (index)}
             <tr class="table-row item-row">
               <th scope="row" class="item-description">
-                <p class="truncate description-text">{item.name}</p>
+                <p class="truncate description-text">{item.name || "-"}</p>
               </th>
-              <td>{item.quantity}</td>
-              <td>{formatUnits(item.unitPrice, currency?.decimals ?? 18)}</td>
-              <td>{formatUnits(item.discount, currency?.decimals ?? 18)}</td>
-              <td>{Number(item.tax.amount)}</td>
+              <td>{item.quantity || "-"}</td>
+              <td
+                >{item.unitPrice
+                  ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
+              <td
+                >{item.discount
+                  ? formatUnits(item.discount, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
+              <td>{Number(item.tax.amount || "-")}</td>
               <td
                 >{truncateNumberString(
                   formatUnits(
@@ -319,16 +329,21 @@
                 <tr class="table-row item-row">
                   <th scope="row" class="item-description">
                     <p class="truncate description-text" style="margin: 4px 0;">
-                      {item.name}
+                      {item.name || "-"}
                     </p>
                   </th>
-                  <td>{item.quantity}</td>
+                  <td>{item.quantity || "-"}</td>
                   <td
-                    >{formatUnits(item.unitPrice, currency?.decimals ?? 18)}</td
+                    >{item.unitPrice
+                      ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                      : "-"}</td
                   >
-                  <td>{formatUnits(item.discount, currency?.decimals ?? 18)}</td
+                  <td
+                    >{item.discount
+                      ? formatUnits(item.discount, currency?.decimals ?? 18)
+                      : "-"}</td
                   >
-                  <td>{Number(item.tax.amount)}</td>
+                  <td>{Number(item.tax.amount || "-")}</td>
                   <td
                     >{truncateNumberString(
                       formatUnits(
@@ -351,7 +366,7 @@
     <div class="note-container">
       <p class="note-content">
         <span class="note-title">Memo:</span> <br />
-        {request.contentData.note}
+        {request.contentData.note || "-"}
       </p>
     </div>
   {/if}
@@ -359,7 +374,7 @@
     {#if request?.contentData?.miscellaneous?.labels}
       {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
         <div class="label">
-          {label}
+          {label || "-"}
         </div>
       {/each}
     {/if}
@@ -369,7 +384,7 @@
       {#if statuses.length > 0 && loading}
         {#each statuses as status, index (index)}
           <div class="status">
-            {status}
+            {status || "-"}
             {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
               <i>
                 <Check />
