@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Close } from "@requestnetwork/shared";
+  import Close from "@requestnetwork/shared-icons/close.svelte";
 
   export let active = false;
   export let onClose: () => void;

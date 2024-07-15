@@ -1,16 +1,22 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
-  import {
-    APP_STATUS,
-    calculateInvoiceTotals,
-    config as defaultConfig,
-    type IConfig,
-    initializeCurrencyManager,
-  } from "@requestnetwork/shared";
+  // Types
+  import { APP_STATUS } from "@requestnetwork/shared-types/enums";
+  import type { IConfig } from "@requestnetwork/shared-types";
+
+  // Utils
+  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
+  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Status from "@requestnetwork/shared-components/status.svelte";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
+
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import { Modal, Button, Status } from "@requestnetwork/shared";
-  import { getInitialFormData, prepareRequestParams } from "$utils";
+  import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
