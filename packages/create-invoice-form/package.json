@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/create-invoice-form",
-  "version": "0.5.1-next.0",
+  "version": "0.5.2",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
