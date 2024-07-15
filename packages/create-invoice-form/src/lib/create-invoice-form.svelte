@@ -24,6 +24,7 @@
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: any;
 
+  let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
@@ -55,6 +56,7 @@
     }
   };
 
+  let activeRequest: any = null;
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
@@ -143,12 +145,19 @@
           contentData: requestCreateParameters.contentData,
           signer: requestCreateParameters.signer,
         });
+
+        activeRequest = request;
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
-      } catch (error) {
-        addToStatus(APP_STATUS.ERROR_OCCURRED);
-        console.error("Failed to create request:", error);
+      } catch (error: any) {
+        if (error.message.includes("timeout")) {
+          isTimeout = true;
+          removeAllStatuses();
+        } else {
+          addToStatus(APP_STATUS.ERROR_OCCURRED);
+          console.error("Failed to create request:", error);
+        }
       }
     }
   };
@@ -200,6 +209,37 @@
         onClick={hanldeCreateNewInvoice}
         text="Create a new invoice"
         disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
+      />
+    </div>
+  </Modal>
+  <Modal
+    config={activeConfig}
+    title="Invoice Creation Taking Longer Than Expected"
+    isOpen={isTimeout}
+    onClose={() => (isTimeout = false)}
+  >
+    <p>
+      Creating the invoice is taking longer than expected. You can refresh and
+      keep waiting or return to the dashboard. Your invoice will be created
+      eventually.
+    </p>
+    <div class="modal-footer">
+      <Button
+        type="button"
+        onClick={async () => {
+          isTimeout = false;
+          addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
+          activeRequest.refresh();
+          addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
+          await activeRequest.waitForConfirmation();
+          addToStatus(APP_STATUS.REQUEST_CONFIRMED);
+        }}
+        text="Refresh and Keep Waiting"
+      />
+      <Button
+        type="button"
+        onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
+        text="Return to Dashboard"
       />
     </div>
   </Modal>
