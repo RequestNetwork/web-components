@@ -46,6 +46,7 @@
   let loading = false;
   let searchQuery = "";
   let debouncedUpdate: any;
+  let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
   let activeRequest: Types.IRequestDataWithEvents | undefined;
@@ -67,6 +68,8 @@
     signer = wallet?.accounts[0]?.address;
   }
 
+  $: isRequestPayed, getOneRequest(activeRequest);
+
   onMount(() => {
     currencyManager = initializeCurrencyManager(currencies);
   });
@@ -87,6 +90,28 @@
     } catch (error) {
       loading = false;
       console.error("Failed to fetch requests:", error);
+    }
+  };
+
+  const getOneRequest = async (activeRequest: any) => {
+    try {
+      loading = true;
+
+      const _request = await requestNetwork?.fromRequestId(
+        activeRequest?.requestId!
+      );
+
+      requests = requests?.filter(
+        (request) => request.requestId !== activeRequest.requestId
+      );
+      requests = [...requests, _request.getData()].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
+      loading = false;
+    } catch (error) {
+      loading = false;
+      console.error("Failed to fetch request:", error);
     }
   };
 
@@ -471,6 +496,7 @@
           {#if activeRequest !== undefined}
             <InvoiceView
               {wallet}
+              bind:isRequestPayed
               {requestNetwork}
               {currencyManager}
               config={activeConfig}
