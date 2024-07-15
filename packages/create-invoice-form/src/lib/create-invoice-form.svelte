@@ -1,67 +1,70 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
-  import {
-    APP_STATUS,
-    getCurrenciesByNetwork,
-    calculateInvoiceTotals,
-    config as defaultConfig,
-    type IConfig,
-  } from "@requestnetwork/shared";
+  // Types
+  import { APP_STATUS } from "@requestnetwork/shared-types/enums";
+  import type { IConfig } from "@requestnetwork/shared-types";
+
+  // Utils
+  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
+  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Status from "@requestnetwork/shared-components/status.svelte";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
+
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import { Modal, Button, Status } from "@requestnetwork/shared";
-  import { getInitialFormData, prepareRequestParams } from "$utils";
+  import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
   export let signer: string = "";
   export let requestNetwork: RequestNetwork | null | undefined;
+  export let currencies: any;
 
+  let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let networks = [
-    {
-      name: "Ethereum",
-      chainId: "1",
-    },
-    {
-      name: "Polygon",
-      chainId: "137",
-    },
-    {
-      name: "Sepolia",
-      chainId: "11155111",
-    },
-  ];
+  let currencyManager = initializeCurrencyManager(currencies);
+
+  const extractUniqueNetworkNames = (): string[] => {
+    const networkSet = new Set<string>();
+
+    currencyManager.knownCurrencies.forEach((currency: any) => {
+      networkSet.add(currency.network);
+    });
+
+    return Array.from(networkSet);
+  };
+
+  let networks = extractUniqueNetworkNames();
 
   let network = networks[0];
-  const handleNetworkChange = (chainId: string) => {
-    const selectedNetwork = networks.find(
-      (network) => network.chainId === chainId
-    );
 
-    if (selectedNetwork) {
-      network = selectedNetwork;
+  const handleNetworkChange = (network: string) => {
+    if (network) {
+      const newCurrencies = currencyManager.knownCurrencies.filter(
+        (currency: any) => currency.network === network
+      );
 
-      const newCurrencies = getCurrenciesByNetwork(selectedNetwork.chainId);
-
-      currencies = newCurrencies;
-
-      currency = newCurrencies.keys().next().value;
+      network = network;
+      defaultCurrencies = newCurrencies;
+      currency = newCurrencies[0];
     }
   };
 
+  let activeRequest: any = null;
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let currencies = getCurrenciesByNetwork(network.chainId) || new Map();
+  let defaultCurrencies = currencyManager.knownCurrencies.filter(
+    (currency: any) => currency.network === network
+  );
 
-  $: {
-    currencies = getCurrenciesByNetwork(network.chainId);
-    currency = currencies.keys().next().value;
-  }
-  let currency = currencies.keys().next().value;
+  let currency = defaultCurrencies[0];
 
   const handleCurrencyChange = (value: string) => {
     currency = value;
@@ -130,7 +133,6 @@
       signer,
       formData,
       currency,
-      currencies,
       invoiceTotals,
     });
 
@@ -143,12 +145,19 @@
           contentData: requestCreateParameters.contentData,
           signer: requestCreateParameters.signer,
         });
+
+        activeRequest = request;
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
-      } catch (error) {
-        addToStatus(APP_STATUS.ERROR_OCCURRED);
-        console.error("Failed to create request:", error);
+      } catch (error: any) {
+        if (error.message.includes("timeout")) {
+          isTimeout = true;
+          removeAllStatuses();
+        } else {
+          addToStatus(APP_STATUS.ERROR_OCCURRED);
+          console.error("Failed to create request:", error);
+        }
       }
     }
   };
@@ -162,7 +171,7 @@
     <InvoiceForm
       bind:formData
       config={activeConfig}
-      bind:currencies
+      bind:defaultCurrencies
       bind:payeeAddressError
       bind:clientAddressError
       {handleCurrencyChange}
@@ -173,12 +182,11 @@
       <InvoiceView
         config={activeConfig}
         {currency}
-        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}
         {submitForm}
-        bind:currencies
+        bind:defaultCurrencies
       />
     </div>
   </div>
@@ -201,6 +209,36 @@
         onClick={hanldeCreateNewInvoice}
         text="Create a new invoice"
         disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
+      />
+    </div>
+  </Modal>
+  <Modal
+    config={activeConfig}
+    title="Invoice Creation Taking Longer Than Expected"
+    isOpen={isTimeout}
+    onClose={() => (isTimeout = false)}
+  >
+    <p>
+      Creating the invoice is taking longer than expected. You can refresh and
+      keep waiting or return to the dashboard. Your invoice will be created
+      eventually.
+    </p>
+    <div class="modal-footer">
+      <Button
+        type="button"
+        onClick={async () => {
+          isTimeout = false;
+          addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
+          addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
+          await activeRequest.waitForConfirmation();
+          addToStatus(APP_STATUS.REQUEST_CONFIRMED);
+        }}
+        text="Refresh and Keep Waiting"
+      />
+      <Button
+        type="button"
+        onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
+        text="Return to Dashboard"
       />
     </div>
   </Modal>
@@ -253,6 +291,12 @@
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .modal-footer {
+      gap: 10px;
+    }
   }
 
   :global(.modal-footer button) {

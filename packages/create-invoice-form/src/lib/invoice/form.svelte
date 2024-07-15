@@ -1,18 +1,22 @@
 <script lang="ts">
-  import {
-    Input,
-    Button,
-    Labels,
-    Dropdown,
-    Accordion,
-    inputDateFormat,
-    calculateItemTotal,
-    type IConfig,
-    type CustomFormData,
-    Trash,
-    Plus,
-    checkAddress,
-  } from "@requestnetwork/shared";
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
+  import Input from "@requestnetwork/shared-components/input.svelte";
+  import Labels from "@requestnetwork/shared-components/labels.svelte";
+  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+
+  // Icons
+  import Trash from "@requestnetwork/shared-icons/trash.svelte";
+  import Plus from "@requestnetwork/shared-icons/plus.svelte";
+
+  // Types
+  import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+
+  // Utils
+  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
+  import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
@@ -21,7 +25,7 @@
 
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
-  export let currencies = new Map();
+  export let defaultCurrencies: any = [];
   export let payeeAddressError = false;
   export let clientAddressError = false;
 
@@ -307,8 +311,8 @@
           placeholder="Select payment chain"
           options={networks.map((network) => {
             return {
-              value: network.chainId,
-              label: network.name,
+              value: network,
+              label: network[0].toUpperCase() + network.slice(1),
             };
           })}
           onchange={handleNetworkChange}
@@ -317,9 +321,9 @@
         <Dropdown
           {config}
           placeholder="Select a currency"
-          options={Array.from(currencies.entries()).map(([key, value]) => ({
-            value: key,
-            label: `${value.symbol} (${value.network})`,
+          options={defaultCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol} (${currency.network})`,
           }))}
           onchange={handleCurrencyChange}
         />
@@ -349,9 +353,7 @@
         id="dueDate"
         type="date"
         min={inputDateFormat(formData.issuedOn)}
-        value={inputDateFormat(
-          new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
-        )}
+        value={new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000}
         label="Due Date"
         {handleInput}
       />
@@ -616,6 +618,7 @@
   .invoice-form-table-header tr th {
     padding: 12px 16px;
     font-size: 11px;
+    white-space: nowrap;
   }
 
   .invoice-form-table-body-header {

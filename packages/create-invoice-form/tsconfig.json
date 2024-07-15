@@ -10,8 +10,13 @@
     "sourceMap": true,
     "strict": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "moduleResolution": "Bundler",
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "$src/*": ["src/*"],
+      "$utils/*": ["src/lib/utils/*"],
+    },
   },
-  "include": ["src/**/*", "src/*.d.ts"]
+  "include": ["src/**/*", "src/*.d.ts"],
 }

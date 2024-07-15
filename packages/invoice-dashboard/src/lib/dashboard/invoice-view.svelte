@@ -9,34 +9,34 @@
     hasErc20Approval,
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
-  import {
-    Check,
-    Button,
-    Accordion,
-    formatDate,
-    calculateItemTotal,
-    getCurrenciesByNetwork,
-  } from "@requestnetwork/shared";
-  import type { WalletState } from "@web3-onboard/core";
-  import {
-    walletClientToSigner,
-    getSymbol,
-    checkNetwork,
-    getDecimals,
-  } from "$src/utils";
+
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+
+  // Icons
+  import Check from "@requestnetwork/shared-icons/check.svelte";
+
+  // Utils
+  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+
+  // Types
+  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
+
+  import { walletClientToSigner } from "../../utils";
   import { formatUnits } from "viem";
+  import { onMount } from "svelte";
 
   export let config;
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
+  export let currencyManager: any;
+  export let isRequestPayed: boolean;
 
   let network = request?.currencyInfo?.network || "mainnet";
-  let currencies = getCurrenciesByNetwork(network);
-  let currency = currencies.get(
-    `${checkNetwork(network)}_${request?.currencyInfo?.value}`
-  );
-
+  let currency = currencyManager.fromAddress(request?.currencyInfo?.value);
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -87,28 +87,16 @@
     buyerInfo = generateDetailParagraphs(request?.contentData.buyerInfo);
   }
 
+  onMount(() => {
+    checkInvoice();
+  });
+
   $: request, checkInvoice();
 
   $: {
     wallet = wallet;
     network = request?.currencyInfo?.network || "mainnet";
-    currencies = getCurrenciesByNetwork(network);
-    currency = currencies.get(
-      `${checkNetwork(network)}_${request?.currencyInfo?.value}`
-    );
-  }
-
-  $: {
-    currencyDetails = {
-      symbol: getSymbol(
-        request?.currencyInfo.network ?? "",
-        request?.currencyInfo.value ?? ""
-      ),
-      decimals: getDecimals(
-        request?.currencyInfo?.network ?? "",
-        request?.currencyInfo?.value ?? ""
-      ),
-    };
+    currency = currencyManager.fromAddress(request?.currencyInfo?.value);
   }
 
   const checkInvoice = async () => {
@@ -153,6 +141,7 @@
       isPaid = true;
       loading = false;
       statuses = [];
+      isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
       loading = false;
@@ -225,25 +214,27 @@
 --secondaryColor: {config.colors.secondary};"
 >
   <div class="dates">
-    <p>Issued on: {formatDate(request?.contentData?.creationDate)}</p>
-    <p>Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate)}</p>
+    <p>Issued on: {formatDate(request?.contentData?.creationDate || "-")}</p>
+    <p>
+      Due by: {formatDate(request?.contentData?.paymentTerms?.dueDate || "-")}
+    </p>
   </div>
   <h2 class="invoice-number">
-    Invoice #{request?.contentData?.invoiceNumber}
+    Invoice #{request?.contentData?.invoiceNumber || "-"}
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
-    <p>{request?.payee?.value}</p>
+    <p>{request?.payee?.value || "-"}</p>
   </div>
   {#if sellerInfo.length > 0}
     <div class={`invoice-info bg-zinc-light`}>
       {#each sellerInfo as { label, value }}
         <p>
-          <span>{label}:</span>
-          {value}
+          <span>{label || "-"}:</span>
+          {value || "-"}
         </p>
       {/each}
     </div>
@@ -251,14 +242,14 @@
   <div class="invoice-border"></div>
   <div class="invoice-address">
     <h2>Billed to:</h2>
-    <p>{request?.payer?.value}</p>
+    <p>{request?.payer?.value || "-"}</p>
   </div>
   {#if buyerInfo.length > 0}
     <div class={`invoice-info bg-zinc-light`}>
       {#each buyerInfo as { label, value }}
         <p>
-          <span>{label}:</span>
-          {value}
+          <span>{label || "-"}:</span>
+          {value || "-"}
         </p>
       {/each}
     </div>
@@ -266,14 +257,11 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {currency?.network}
+    {currency?.network || "-"}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
-    {getSymbol(
-      request?.currencyInfo.network ?? "",
-      request?.currencyInfo.value ?? ""
-    )}
+    {currency?.symbol || "-"}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
@@ -295,18 +283,26 @@
           {#each firstItems as item, index (index)}
             <tr class="table-row item-row">
               <th scope="row" class="item-description">
-                <p class="truncate description-text">{item.name}</p>
+                <p class="truncate description-text">{item.name || "-"}</p>
               </th>
-              <td>{item.quantity}</td>
-              <td>{formatUnits(item.unitPrice, currencyDetails.decimals)}</td>
-              <td>{formatUnits(item.discount, currencyDetails.decimals)}</td>
-              <td>{Number(item.tax.amount)}</td>
+              <td>{item.quantity || "-"}</td>
+              <td
+                >{item.unitPrice
+                  ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
+              <td
+                >{item.discount
+                  ? formatUnits(item.discount, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
+              <td>{Number(item.tax.amount || "-")}</td>
               <td
                 >{truncateNumberString(
                   formatUnits(
                     // @ts-expect-error
                     calculateItemTotal(item),
-                    currencyDetails.decimals
+                    currency?.decimals ?? 18
                   ),
                   2
                 )}</td
@@ -335,22 +331,27 @@
                 <tr class="table-row item-row">
                   <th scope="row" class="item-description">
                     <p class="truncate description-text" style="margin: 4px 0;">
-                      {item.name}
+                      {item.name || "-"}
                     </p>
                   </th>
-                  <td>{item.quantity}</td>
+                  <td>{item.quantity || "-"}</td>
                   <td
-                    >{formatUnits(item.unitPrice, currencyDetails.decimals)}</td
+                    >{item.unitPrice
+                      ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                      : "-"}</td
                   >
-                  <td>{formatUnits(item.discount, currencyDetails.decimals)}</td
+                  <td
+                    >{item.discount
+                      ? formatUnits(item.discount, currency?.decimals ?? 18)
+                      : "-"}</td
                   >
-                  <td>{Number(item.tax.amount)}</td>
+                  <td>{Number(item.tax.amount || "-")}</td>
                   <td
                     >{truncateNumberString(
                       formatUnits(
                         // @ts-expect-error
                         calculateItemTotal(item),
-                        currencyDetails.decimals
+                        currency?.decimals ?? 18
                       ),
                       2
                     )}</td
@@ -367,7 +368,7 @@
     <div class="note-container">
       <p class="note-content">
         <span class="note-title">Memo:</span> <br />
-        {request.contentData.note}
+        {request.contentData.note || "-"}
       </p>
     </div>
   {/if}
@@ -375,7 +376,7 @@
     {#if request?.contentData?.miscellaneous?.labels}
       {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
         <div class="label">
-          {label}
+          {label || "-"}
         </div>
       {/each}
     {/if}
@@ -385,7 +386,7 @@
       {#if statuses.length > 0 && loading}
         {#each statuses as status, index (index)}
           <div class="status">
-            {status}
+            {status || "-"}
             {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
               <i>
                 <Check />
@@ -549,6 +550,12 @@
 
   .table-header-cell {
     padding: 0.75rem 0.5rem;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .table-header-cell {
+      white-space: nowrap;
+    }
   }
 
   .table-header-cell.description {

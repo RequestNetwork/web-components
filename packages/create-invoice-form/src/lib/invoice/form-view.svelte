@@ -1,24 +1,24 @@
 <script lang="ts">
-  import {
-    Close,
-    Button,
-    PoweredBy,
-    formatDate,
-    calculateItemTotal,
-    type IConfig,
-    type CustomFormData,
-    config as defaultConfig,
-  } from "@requestnetwork/shared";
+  // Components
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
 
-  export let currencies;
+  // Icons
+  import Close from "@requestnetwork/shared-icons/close.svelte";
+
+  // Types
+  import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+
+  // Utils
+  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
+  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+
+  export let defaultCurrencies;
   export let config: IConfig;
   export let canSubmit = false;
-  export let network: {
-    name: string;
-    chainId: string;
-  };
   export let formData: CustomFormData;
-  export let currency = currencies.keys().next().value;
+  export let currency = defaultCurrencies[0];
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -147,7 +147,7 @@
       </div>
     </div>
     <div class="invoice-section">
-      <p class="flex flex-col">
+      <p class="invoice-section-title">
         <span>Billed to</span>
         {formData.payerAddress}
       </p>
@@ -164,12 +164,12 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {network.name}
+      {currency.network[0].toUpperCase() + currency.network.slice(1)}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {currencies.get(currency)?.symbol}
-      ({currencies.get(currency)?.network})
+      {currency.symbol}
+      ({currency.network})
     </p>
     <p class="invoice-section-title">
       <span>Invoice Type</span>
@@ -221,7 +221,7 @@
       >
         <span>Due: </span>
         <span
-          >{currencies.get(currency)?.symbol}
+          >{currency.symbol}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >
@@ -347,6 +347,13 @@
     font-weight: 500;
   }
 
+  @media only screen and (max-width: 880px) {
+    .invoice-section-title {
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+  }
+
   .invoice-details {
     display: flex;
     flex-wrap: wrap;
@@ -382,7 +389,7 @@
   }
 
   .invoice-table-header {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 20px;
     text-transform: uppercase;
     background-color: #e4e4e7;
@@ -390,6 +397,7 @@
 
   .invoice-table-header tr {
     text-align: left;
+    white-space: nowrap;
   }
 
   .invoice-table-header tr th {
@@ -451,6 +459,12 @@
   .invoice-note-content {
     width: 620px;
     word-break: break-all;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .invoice-note-content {
+      width: 100%;
+    }
   }
 
   .invoice-note-content span {

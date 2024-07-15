@@ -1,0 +1,7 @@
+{
+  "name": "@requestnetwork/shared-icons",
+  "license": "MIT",
+  "devDependencies": {
+    "svelte": "^4.0.5"
+  }
+}

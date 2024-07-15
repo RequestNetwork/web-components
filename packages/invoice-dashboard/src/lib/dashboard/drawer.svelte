@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { Close } from "@requestnetwork/shared";
+  import Close from "@requestnetwork/shared-icons/close.svelte";
 
   export let active = false;
   export let onClose: () => void;
+
+  let drawerElement: HTMLElement;
 </script>
 
-<div class={`drawer ${active ? "active" : "hidden"} `}>
+<div
+  class={`drawer-overlay ${active ? "active" : "hidden"}`}
+  on:click|stopPropagation={onClose}
+></div>
+<div bind:this={drawerElement} class={`drawer ${active ? "active" : "hidden"}`}>
   <div class="innerDrawer">
     <button class="close" on:click={onClose} aria-label="Close drawer">
       <Close />
@@ -16,6 +22,16 @@
 </div>
 
 <style>
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -28,6 +44,7 @@
     border-width: 0;
   }
   .drawer {
+    z-index: 1000;
     display: flex;
     position: absolute;
     top: 10px;
@@ -36,6 +53,13 @@
     display: flex;
     width: 800px;
     transition: all 300ms;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .drawer {
+      right: unset;
+      width: 600px;
+    }
   }
 
   .innerDrawer {

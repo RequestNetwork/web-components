@@ -3,31 +3,40 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
-  import {
-    Copy,
-    Input,
-    Search,
-    Dropdown,
-    Skeleton,
-    PoweredBy,
-    ChevronUp,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    type IConfig,
-    config as defaultConfig,
-  } from "@requestnetwork/shared";
+  // Components
+  import Copy from "@requestnetwork/shared-components/copy.svelte";
+  import Input from "@requestnetwork/shared-components/input.svelte";
+  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
+  import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
+  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+
+  // Icons
+  import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
+  import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
+  import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
+  import ChevronRight from "@requestnetwork/shared-icons/chevron-right.svelte";
+  import Search from "@requestnetwork/shared-icons/search.svelte";
+
+  // Types
+  import type { IConfig } from "@requestnetwork/shared-types";
+  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
+
+  // Utils
+  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
+  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { Drawer, InvoiceView } from "./dashboard";
-  import type { WalletState } from "@web3-onboard/core";
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { debounce, getSymbol, getDecimals, formatAddress } from "$src/utils";
+  import { debounce, formatAddress } from "../utils";
+  import { CurrencyManager } from "@requestnetwork/currency";
 
   export let config: IConfig;
   export let wallet: WalletState;
   export let requestNetwork: RequestNetwork | null | undefined;
+  export let currencies: any = [];
 
   let signer = "";
   let activeConfig = config ? config : defaultConfig;
@@ -37,9 +46,11 @@
   let loading = false;
   let searchQuery = "";
   let debouncedUpdate: any;
+  let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
   let activeRequest: Types.IRequestDataWithEvents | undefined;
+  let currencyManager: CurrencyManager;
 
   let columns = {
     issuedAt: false,
@@ -57,6 +68,12 @@
     signer = wallet?.accounts[0]?.address;
   }
 
+  $: isRequestPayed, getOneRequest(activeRequest);
+
+  onMount(() => {
+    currencyManager = initializeCurrencyManager(currencies);
+  });
+
   const getRequests = async () => {
     try {
       loading = true;
@@ -73,6 +90,28 @@
     } catch (error) {
       loading = false;
       console.error("Failed to fetch requests:", error);
+    }
+  };
+
+  const getOneRequest = async (activeRequest: any) => {
+    try {
+      loading = true;
+
+      const _request = await requestNetwork?.fromRequestId(
+        activeRequest?.requestId!
+      );
+
+      requests = requests?.filter(
+        (request) => request.requestId !== activeRequest.requestId
+      );
+      requests = [...requests, _request.getData()].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
+      loading = false;
+    } catch (error) {
+      loading = false;
+      console.error("Failed to fetch request:", error);
     }
   };
 
@@ -239,7 +278,7 @@
     </ul>
   </div>
   {#if !loading}
-    <div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
       <div class="search-wrapper">
         <Input
           placeholder="Search..."
@@ -438,15 +477,11 @@
                   <td>
                     {formatUnits(
                       BigInt(request.expectedAmount),
-                      getDecimals(
-                        request.currencyInfo.network ?? "",
-                        request.currencyInfo.value
-                      )
+                      currencyManager.fromAddress(request.currencyInfo.value)
+                        ?.decimals ?? 18
                     )}
-                    {getSymbol(
-                      request.currencyInfo.network ?? "",
-                      request.currencyInfo.value
-                    )}
+                    {currencyManager.fromAddress(request.currencyInfo.value)
+                      ?.symbol}
                   </td>
                   <td> {checkStatus(request)}</td>
                 </tr>
@@ -461,7 +496,9 @@
           {#if activeRequest !== undefined}
             <InvoiceView
               {wallet}
+              bind:isRequestPayed
               {requestNetwork}
+              {currencyManager}
               config={activeConfig}
               request={activeRequest}
             />
@@ -566,6 +603,13 @@
     transition: all 0.3s ease-in-out;
   }
 
+  @media only screen and (max-width: 880px) {
+    .tabs ul li {
+      padding: 8px;
+      width: 80px;
+    }
+  }
+
   .tabs ul li:hover {
     color: #6b7280;
     border-color: #d1d5db;
@@ -584,12 +628,27 @@
     align-items: center;
   }
 
+  @media only screen and (max-width: 880px) {
+    .search-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+
   .table-wrapper {
     position: relative;
     box-shadow:
       0 1px 3px 0 rgb(0 0 0 / 0.1),
       0 1px 2px -1px rgb(0 0 0 / 0.1);
     border-radius: 0.5rem;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .table-wrapper {
+      overflow: scroll;
+      max-width: 900px;
+    }
   }
 
   .table-wrapper table {
@@ -616,6 +675,12 @@
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
     cursor: pointer;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .table-head th {
+      white-space: nowrap;
+    }
   }
 
   .table-head th div {
