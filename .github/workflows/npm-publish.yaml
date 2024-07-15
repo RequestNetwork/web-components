@@ -35,15 +35,20 @@ jobs:
         run: |
           PACKAGE_NAME=$(node -p "require('./${{ matrix.package }}/package.json').name")
           echo "Package Name: $PACKAGE_NAME"
+          echo "Package Version: $(node -p "require('./${{ matrix.package }}/package.json').version")"
           npm info $PACKAGE_NAME
-
       - name: Check if version number has already been released 🕵️‍♀️
         id: is-release-needed
-        run: echo "is-release-needed-${{ matrix.package }}=(npm run is-release-needed -- --workspace=${{ matrix.package }} --silent)" >> $GITHUB_OUTPUT
+        run: |
+          IS_RELEASE_NEEDED=$(npm run is-release-needed -- --workspace=${{ matrix.package }} --silent)
+          echo "is-release-needed=$IS_RELEASE_NEEDED"
+          echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
 
       - name: Setup .npmrc file to publish to npm 📝
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish package on NPM 📦
-        if: ${{ steps.is-release-needed.outputs.is-release-needed-${{ matrix.package }} == 'true' }}
-        run: npm publish --workspace=${{ matrix.package }}
+        if: steps.is-release-needed.outputs.is-release-needed == 'true'
+        run: |
+          # npm publish --workspace=${{ matrix.package }}
+          echo "Would publish matrix package: ${{ matrix.package }}"
