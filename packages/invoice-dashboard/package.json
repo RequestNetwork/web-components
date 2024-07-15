@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/invoice-dashboard",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -31,10 +31,6 @@
     "@requestnetwork/payment-detection": "0.43.1-next.2043",
     "@requestnetwork/payment-processor": "0.45.1-next.2043",
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
-    "@requestnetwork/shared-components": "*",
-    "@requestnetwork/shared-icons": "*",
-    "@requestnetwork/shared-types": "*",
-    "@requestnetwork/shared-utils": "*",
     "viem": "^2.9.15",
     "ethers": "^5.7.2"
   },

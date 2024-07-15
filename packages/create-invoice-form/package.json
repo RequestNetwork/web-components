@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/create-invoice-form",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -29,9 +29,6 @@
   ],
   "dependencies": {
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
-    "@requestnetwork/shared-components": "*",
-    "@requestnetwork/shared-types": "*",
-    "@requestnetwork/shared-utils": "*",
     "viem": "^2.9.15"
   },
   "devDependencies": {
