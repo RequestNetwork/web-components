@@ -46,6 +46,7 @@
   let loading = false;
   let searchQuery = "";
   let debouncedUpdate: any;
+  let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
   let activeRequest: Types.IRequestDataWithEvents | undefined;
@@ -66,6 +67,8 @@
   $: {
     signer = wallet?.accounts[0]?.address;
   }
+
+  $: isRequestPayed, getRequests(), (activeRequest = undefined);
 
   onMount(() => {
     currencyManager = initializeCurrencyManager(currencies);
@@ -471,6 +474,7 @@
           {#if activeRequest !== undefined}
             <InvoiceView
               {wallet}
+              bind:isRequestPayed
               {requestNetwork}
               {currencyManager}
               config={activeConfig}

@@ -33,6 +33,7 @@
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents | undefined;
   export let currencyManager: any;
+  export let isRequestPayed: boolean;
 
   let network = request?.currencyInfo?.network || "mainnet";
   let currency = currencyManager.fromAddress(request?.currencyInfo?.value);
@@ -140,6 +141,7 @@
       isPaid = true;
       loading = false;
       statuses = [];
+      isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
       loading = false;
