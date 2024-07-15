@@ -68,7 +68,7 @@
     signer = wallet?.accounts[0]?.address;
   }
 
-  $: isRequestPayed, getRequests(), (activeRequest = undefined);
+  $: isRequestPayed, getOneRequest(activeRequest);
 
   onMount(() => {
     currencyManager = initializeCurrencyManager(currencies);
@@ -90,6 +90,28 @@
     } catch (error) {
       loading = false;
       console.error("Failed to fetch requests:", error);
+    }
+  };
+
+  const getOneRequest = async (activeRequest: any) => {
+    try {
+      loading = true;
+
+      const _request = await requestNetwork?.fromRequestId(
+        activeRequest?.requestId!
+      );
+
+      requests = requests?.filter(
+        (request) => request.requestId !== activeRequest.requestId
+      );
+      requests = [...requests, _request.getData()].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
+      loading = false;
+    } catch (error) {
+      loading = false;
+      console.error("Failed to fetch request:", error);
     }
   };
 
