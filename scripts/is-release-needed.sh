@@ -7,7 +7,7 @@ PACKAGE_NAME="$(node -p -e "require('./package.json').name")"
 FOUND_VERSION=$(npm view $PACKAGE_NAME versions | grep $PACKAGE_VERSION)
 
 if [ -z "$FOUND_VERSION" ]; then
-    IS_NEW_VERSION=true
+    echo 'true' # release needed
+else
+    echo 'false' # release not needed
 fi
-
-echo "is-release-needed=$(echo $IS_NEW_VERSION)"

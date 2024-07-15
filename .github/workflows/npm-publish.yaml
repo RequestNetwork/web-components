@@ -15,22 +15,35 @@ jobs:
           - "@requestnetwork/add-stakeholder"
           - "@requestnetwork/create-invoice-form"
           - "@requestnetwork/invoice-dashboard"
-          - "@requestnetwork/shared"
     steps:
-    - name: Checkout repository 🛎️
-      uses: actions/checkout@v4
-    - name: Check if version number has already been released 🕵️‍♀️
-      id: is-release-needed
-      run: npm run is-release-needed --workspace=${{ matrix.package }} --silent >> $GITHUB_OUTPUT
-    - name: Setup .npmrc file to publish to npm 📝
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        registry-url: 'https://registry.npmjs.org'
-    - name: Install dependencies 📥
-      run: npm ci
-    - name: Publish package on NPM 📦
-      if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
-      run: npm publish --workspace=${{ matrix.package }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
+      - name: Checkout repository 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies 📥
+        run: npm ci
+
+      - name: Make is-release-needed.sh executable
+        run: chmod +x ./scripts/is-release-needed.sh
+
+      - name: Check if version number has already been released 🕵️‍♀️
+        id: is-release-needed
+        run: |
+          echo "Checking if ${{ matrix.package }} is already published..."
+          IS_RELEASE_NEEDED=$(npm run is-release-needed --workspace=${{ matrix.package }} --silent)
+          echo "is-release-needed=$IS_RELEASE_NEEDED"
+          echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
+
+      - name: Setup .npmrc file to publish to npm 📝
+        if: steps.is-release-needed.outputs.is-release-needed == 'true'
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Publish package on NPM 📦
+        if: steps.is-release-needed.outputs.is-release-needed == 'true'
+        run: |
+          npm publish --workspace=${{ matrix.package }}
