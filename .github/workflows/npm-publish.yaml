@@ -31,12 +31,6 @@ jobs:
       - name: Make is-release-needed.sh executable
         run: chmod +x ./scripts/is-release-needed.sh
 
-      - name: Print package info for debugging 🐛
-        run: |
-          PACKAGE_NAME=$(node -p "require('./${{ matrix.package }}/package.json').name")
-          echo "Package Name: $PACKAGE_NAME"
-          echo "Package Version: $(node -p "require('./${{ matrix.package }}/package.json').version")"
-          npm info $PACKAGE_NAME
       - name: Check if version number has already been released 🕵️‍♀️
         id: is-release-needed
         run: |
