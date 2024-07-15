@@ -35,6 +35,7 @@ jobs:
         id: is-release-needed
         run: |
           IS_RELEASE_NEEDED=$(npm run is-release-needed -- --workspace=${{ matrix.package }} --silent)
+          pwd
           echo "is-release-needed=$IS_RELEASE_NEEDED"
           echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
 
