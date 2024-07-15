@@ -34,12 +34,13 @@ jobs:
       - name: Check if version number has already been released 🕵️‍♀️
         id: is-release-needed
         run: |
-          pwd
+          echo "Checking if ${{ matrix.package }} is already published..."
           IS_RELEASE_NEEDED=$(npm run is-release-needed --workspace=${{ matrix.package }} --silent)
           echo "is-release-needed=$IS_RELEASE_NEEDED"
           echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
 
       - name: Setup .npmrc file to publish to npm 📝
+        if: steps.is-release-needed.outputs.is-release-needed == 'true'
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish package on NPM 📦
