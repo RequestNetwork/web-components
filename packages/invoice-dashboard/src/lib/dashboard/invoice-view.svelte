@@ -284,8 +284,16 @@
                 <p class="truncate description-text">{item.name || "-"}</p>
               </th>
               <td>{item.quantity || "-"}</td>
-              <td>{formatUnits(item.unitPrice, currency?.decimals ?? 18)}</td>
-              <td>{formatUnits(item.discount, currency?.decimals ?? 18)}</td>
+              <td
+                >{item.unitPrice
+                  ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
+              <td
+                >{item.discount
+                  ? formatUnits(item.discount, currency?.decimals ?? 18)
+                  : "-"}</td
+              >
               <td>{Number(item.tax.amount || "-")}</td>
               <td
                 >{truncateNumberString(
