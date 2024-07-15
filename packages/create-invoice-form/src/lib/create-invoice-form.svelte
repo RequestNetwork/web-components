@@ -229,7 +229,6 @@
         onClick={async () => {
           isTimeout = false;
           addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
-          activeRequest.refresh();
           addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
           await activeRequest.waitForConfirmation();
           addToStatus(APP_STATUS.REQUEST_CONFIRMED);
