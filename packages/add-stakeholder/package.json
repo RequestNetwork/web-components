@@ -1,6 +1,6 @@
 {
 	"name": "@requestnetwork/add-stakeholder",
-	"version": "0.1.2",
+	"version": "0.1.1",
 	"main": "./dist/web-component.umd.cjs",
 	"scripts": {
 		"dev": "vite dev",
