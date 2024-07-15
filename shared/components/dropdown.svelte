@@ -1,6 +1,7 @@
 <script lang="ts">
   import { openDropdown } from "../store/dropwdown";
   import { onMount } from "svelte";
+
   export let config;
   export let selectedValue = "";
   export let options: { value: string; label: string; checked?: boolean }[] =
@@ -11,6 +12,7 @@
 
   let dropdownId: string;
   let isOpen = false;
+  let dropdownContainer: HTMLElement;
 
   const selectOption = (value: string, checked?: boolean) => {
     if (type === "checkbox") {
@@ -19,23 +21,18 @@
       selectedValue =
         options.find((option) => option.value === value)?.label || "";
       onchange(value);
-      isOpen = false;
-      openDropdown.set(null);
+      closeDropdown();
     }
   };
 
-  let dropdownContainer: HTMLElement;
+  function closeDropdown() {
+    isOpen = false;
+    openDropdown.set(null);
+  }
 
-  function onWindowClick(e: Event) {
-    const target = e.target as Node;
-    if (
-      dropdownContainer &&
-      !dropdownContainer.contains(target) &&
-      type !== "checkbox"
-    ) {
-      isOpen = false;
-      openDropdown.set(null);
-    }
+  function toggleDropdown(event: Event) {
+    event.stopPropagation();
+    openDropdown.set(isOpen ? null : dropdownId);
   }
 
   let unsubscribe: () => void;
@@ -53,21 +50,17 @@
   });
 </script>
 
-<svelte:window on:click={onWindowClick} />
+{#if isOpen}
+  <div class="dropdown-overlay" on:click={closeDropdown}></div>
+{/if}
 
 <div
-  style="
---mainColor: {config.colors.main};
---secondaryColor: {config.colors.secondary};"
+  style="--mainColor: {config.colors.main}; --secondaryColor: {config.colors
+    .secondary};"
   bind:this={dropdownContainer}
   class="dropdown-wrapper"
 >
-  <button
-    type="button"
-    on:click|stopPropagation={() =>
-      openDropdown.set(isOpen ? null : dropdownId)}
-    class="dropdown-button"
-  >
+  <button type="button" on:click={toggleDropdown} class="dropdown-button">
     {type === "default" ? selectedValue || placeholder : placeholder}
     <svg class="dropdown-button-icon" fill="none" viewBox="0 0 20 20">
       <path
@@ -108,7 +101,7 @@
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <li
               class="dropdown-checkbox-option"
-              on:click={() => selectOption(option.value)}
+              on:click|stopPropagation={() => selectOption(option.value)}
             >
               {option.label}
             </li>
@@ -120,6 +113,15 @@
 </div>
 
 <style>
+  .dropdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+  }
+
   ul {
     list-style: none;
     margin: 0;
@@ -166,7 +168,7 @@
   }
 
   .dropdown-menu {
-    z-index: 10;
+    z-index: 1200;
     position: absolute;
     width: 100%;
     top: 55px;
