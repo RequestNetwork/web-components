@@ -46,4 +46,4 @@ jobs:
       - name: Publish package on NPM 📦
         if: steps.is-release-needed.outputs.is-release-needed == 'true'
         run: |
-          npm publish --workspace=${{ matrix.package }} --dry-run
+          npm publish --workspace=${{ matrix.package }}
