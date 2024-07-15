@@ -9,7 +9,7 @@ FOUND_VERSION=$(npm view $PACKAGE_NAME versions | grep $PACKAGE_VERSION)
 echo "Checking if $PACKAGE_NAME@$PACKAGE_VERSION is already published..."
 
 if [ -z "$FOUND_VERSION" ]; then
-    IS_NEW_VERSION=true
+    exit 1
+else
+    exit 0
 fi
-
-echo "is-release-needed=$(echo $IS_NEW_VERSION)"

@@ -15,7 +15,6 @@ jobs:
           - "@requestnetwork/add-stakeholder"
           - "@requestnetwork/create-invoice-form"
           - "@requestnetwork/invoice-dashboard"
-          - "@requestnetwork/shared"
     steps:
       - name: Checkout repository 🛎️
         uses: actions/checkout@v4
@@ -29,58 +28,8 @@ jobs:
       - name: Install dependencies 📥
         run: npm ci
 
-      - name: Check for shared package updates and update dependencies 🔄
-        if: ${{ matrix.package == 'packages/shared' }}
-        run: |
-          SHARED_PACKAGE_NAME="@requestnetwork/shared"
-          CURRENT_VERSION=$(node -p "require('./packages/shared/package.json').version")
-          LATEST_VERSION=$(npm show $SHARED_PACKAGE_NAME version)
-
-          echo "Current version of $SHARED_PACKAGE_NAME: $CURRENT_VERSION"
-          echo "Latest version of $SHARED_PACKAGE_NAME: $LATEST_VERSION"
-
-          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
-            echo "Updating $SHARED_PACKAGE_NAME from $CURRENT_VERSION to $LATEST_VERSION"
-
-            # List of dependent packages
-            DEPENDENT_PACKAGES=(
-              "packages/create-invoice-form"
-              "packages/invoice-dashboard"
-            )
-
-            for package in "${DEPENDENT_PACKAGES[@]}"; do
-              echo "Updating $package to use $SHARED_PACKAGE_NAME@$LATEST_VERSION"
-              cd "$package"
-              npm install "$SHARED_PACKAGE_NAME@$LATEST_VERSION"
-
-              # Update package version (minor version increment)
-              npm version minor
-
-              cd -
-            done
-
-            # Install updated dependencies
-            npm install
-
-            # Commit and push changes
-            git config --global user.name 'github-actions[bot]'
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-            git add .
-            git commit -m "Update $SHARED_PACKAGE_NAME to version $LATEST_VERSION in dependent packages"
-            git push
-          else
-            echo "$SHARED_PACKAGE_NAME is already at the latest version ($CURRENT_VERSION)"
-          fi
-
       - name: Make is-release-needed.sh executable
         run: chmod +x ./scripts/is-release-needed.sh
-
-      - name: Check if version number has already been released 🕵️‍♀️
-        id: is-release-needed
-        run: echo "is-release-needed-${{ matrix.package }}=(npm run ./scripts/is-release-needed.sh --workspace=${{ matrix.package }} --silent)" >> $GITHUB_OUTPUT
-
-      - name: Setup .npmrc file to publish to npm 📝
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
 
       - name: Print package info for debugging 🐛
         run: |
@@ -88,6 +37,13 @@ jobs:
           echo "Package Name: $PACKAGE_NAME"
           npm info $PACKAGE_NAME
 
+      - name: Check if version number has already been released 🕵️‍♀️
+        id: is-release-needed
+        run: echo "is-release-needed-${{ matrix.package }}=(npm run is-release-needed -- --workspace=${{ matrix.package }} --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup .npmrc file to publish to npm 📝
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
+
       - name: Publish package on NPM 📦
-        if: ${{ steps.is-release-needed.outputs.is-release-needed == 'true' }}
+        if: ${{ steps.is-release-needed.outputs.is-release-needed-${{ matrix.package }} == 'true' }}
         run: npm publish --workspace=${{ matrix.package }}
