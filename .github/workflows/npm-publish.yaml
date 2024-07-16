@@ -48,4 +48,5 @@ jobs:
         run: |
           npm config set registry https://registry.npmjs.org
           npm whoami
+          npm config get registry
           npm publish --workspace=${{ matrix.package }} --dry-run
