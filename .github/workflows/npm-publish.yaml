@@ -47,4 +47,6 @@ jobs:
         if: steps.is-release-needed.outputs.is-release-needed == 'true'
         run: |
           npm config set registry https://registry.npmjs.org
-          npm publish --workspace=${{ matrix.package }}
+          npm whoami || { echo "Failed to identify npm user."; exit 1; }
+          npm config get registry || { echo "Failed to get npm registry."; exit 1; }
+          npm publish --workspace=${{ matrix.package }} --dry-run
