@@ -7,7 +7,8 @@
     "build": "npm run package",
     "build:wc": "vite build -c vite.wc.config.ts",
     "preview": "vite preview",
-    "package": "svelte-kit sync && svelte-package && npm run build:wc && publint",
+    "package": "svelte-kit sync && svelte-package && npm run build:wc && npm run build:react && publint",
+    "build:react": "tsc -p tsconfig.react.json --jsx react-jsx --outDir ./dist/react --declaration",
     "prepublishOnly": "npm run package",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -20,6 +21,10 @@
       "svelte": "./dist/index.js",
       "require": "./dist/web-component.umd.cjs",
       "default": "./dist/web-component.js"
+    },
+    "./react": {
+      "types": "./dist/react/PaymentWidget.d.ts",
+      "default": "./dist/react/PaymentWidget.tsx"
     }
   },
   "files": [
@@ -27,8 +32,17 @@
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*"
   ],
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
+  },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.5.2",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "sass": "^1.77.8",
     "svelte": "^4.0.5",
     "svelte-check": "^3.6.0",
     "typescript": "^5.0.0",
