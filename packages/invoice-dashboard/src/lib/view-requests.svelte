@@ -9,6 +9,7 @@
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
 
   // Icons
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
@@ -487,16 +488,18 @@
                   </td>
                   <td> {checkStatus(request)}</td>
                   <td
-                    ><Download
-                      onClick={() =>
-                        exportToPDF(
-                          request,
-                          currencyManager.fromAddress(
-                            request?.currencyInfo?.value
-                          ),
-                          config.logo
-                        )}
-                    /></td
+                    ><Tooltip text="Download PDF">
+                      <Download
+                        onClick={() =>
+                          exportToPDF(
+                            request,
+                            currencyManager.fromAddress(
+                              request?.currencyInfo?.value
+                            ),
+                            config.logo
+                          )}
+                      />
+                    </Tooltip></td
                   >
                 </tr>
               {/each}

@@ -13,6 +13,7 @@
   // Components
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
 
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
@@ -225,7 +226,9 @@
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
-    <Download onClick={() => exportToPDF(request, currency, config.logo)} />
+    <Tooltip text="Download PDF">
+      <Download onClick={() => exportToPDF(request, currency, config.logo)} />
+    </Tooltip>
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
