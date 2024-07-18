@@ -16,6 +16,7 @@
 
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
+  import Download from "@requestnetwork/shared-icons/download.svelte";
 
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
@@ -24,7 +25,7 @@
   // Types
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
-  import { walletClientToSigner } from "../../utils";
+  import { walletClientToSigner, exportToPDF } from "../../utils";
   import { formatUnits } from "viem";
   import { onMount } from "svelte";
 
@@ -224,6 +225,7 @@
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
+    <Download onClick={() => exportToPDF(request, currency, config.logo)} />
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
@@ -451,7 +453,13 @@
     line-height: 1.75rem;
     font-weight: 700;
     display: flex;
+    align-items: center;
     gap: 12px;
+  }
+
+  .invoice-number svg {
+    width: 13px;
+    height: 13px;
   }
 
   .invoice-status {

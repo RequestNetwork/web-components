@@ -16,6 +16,7 @@
   import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
   import ChevronRight from "@requestnetwork/shared-icons/chevron-right.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
+  import Download from "@requestnetwork/shared-icons/download.svelte";
 
   // Types
   import type { IConfig } from "@requestnetwork/shared-types";
@@ -30,7 +31,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { debounce, formatAddress } from "../utils";
+  import { debounce, exportToPDF, formatAddress } from "../utils";
   import { CurrencyManager } from "@requestnetwork/currency";
 
   export let config: IConfig;
@@ -412,6 +413,7 @@
                   </i>
                 </div>
               </th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -484,6 +486,18 @@
                       ?.symbol}
                   </td>
                   <td> {checkStatus(request)}</td>
+                  <td
+                    ><Download
+                      onClick={() =>
+                        exportToPDF(
+                          request,
+                          currencyManager.fromAddress(
+                            request?.currencyInfo?.value
+                          ),
+                          config.logo
+                        )}
+                    /></td
+                  >
                 </tr>
               {/each}
             {/if}
