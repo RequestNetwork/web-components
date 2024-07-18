@@ -32,7 +32,6 @@
     "@requestnetwork/payment-processor": "0.45.1-next.2043",
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
     "ethers": "^5.7.2",
-    "html2pdf.js": "^0.10.2",
     "viem": "^2.9.15"
   },
   "devDependencies": {
