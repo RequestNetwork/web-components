@@ -490,14 +490,19 @@
                   <td
                     ><Tooltip text="Download PDF">
                       <Download
-                        onClick={() =>
-                          exportToPDF(
-                            request,
-                            currencyManager.fromAddress(
-                              request?.currencyInfo?.value
-                            ),
-                            config.logo
-                          )}
+                        onClick={async () => {
+                          try {
+                            await exportToPDF(
+                              request,
+                              currencyManager.fromAddress(
+                                request?.currencyInfo?.value
+                              ),
+                              config.logo
+                            );
+                          } catch (error) {
+                            console.error("Failed to export PDF:", error);
+                          }
+                        }}
                       />
                     </Tooltip></td
                   >

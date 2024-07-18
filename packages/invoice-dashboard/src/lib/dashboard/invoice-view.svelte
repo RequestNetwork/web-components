@@ -227,7 +227,15 @@
       {isPaid ? "Paid" : "Created"}
     </p>
     <Tooltip text="Download PDF">
-      <Download onClick={() => exportToPDF(request, currency, config.logo)} />
+      <Download
+        onClick={async () => {
+          try {
+            await exportToPDF(request, currency, config.logo);
+          } catch (error) {
+            console.error("Failed to export PDF:", error);
+          }
+        }}
+      />
     </Tooltip>
   </h2>
   <div class="invoice-address">

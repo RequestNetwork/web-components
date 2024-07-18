@@ -10,9 +10,13 @@ declare global {
 
 async function ensureHtml2PdfLoaded() {
   if (typeof window.html2pdf === "undefined") {
-    await loadScript(
-      "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-    );
+    try {
+      await loadScript(
+        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+      );
+    } catch (error) {
+      console.error("Failed to load html2pdf script:", error);
+    }
   }
 }
 
@@ -21,10 +25,10 @@ export const exportToPDF = async (
   currency: any,
   logo: string
 ) => {
-  await ensureHtml2PdfLoaded();
-  console.log(invoice);
+  try {
+    await ensureHtml2PdfLoaded();
 
-  const content = `
+    const content = `
     <html>
     <head>
       <link rel="preconnect" href="https://fonts.googleapis.com" /> 
@@ -54,12 +58,12 @@ export const exportToPDF = async (
           <strong>From:</strong><br>
           <p style="font-size: 14px">${invoice.payee.value}</p>
           ${invoice.contentData.sellerInfo.firstName ?? ""} ${
-    invoice.contentData.sellerInfo.lastName ?? ""
-  }<br>
+      invoice.contentData.sellerInfo.lastName ?? ""
+    }<br>
           ${invoice.contentData.sellerInfo.address["street-address"] ?? ""}<br>
           ${invoice.contentData.sellerInfo.address.locality ?? ""}${
-    invoice.contentData.sellerInfo.address.locality ? "," : ""
-  } ${invoice.contentData.sellerInfo.address["postal-code"] ?? ""}<br>
+      invoice.contentData.sellerInfo.address.locality ? "," : ""
+    } ${invoice.contentData.sellerInfo.address["postal-code"] ?? ""}<br>
           ${invoice.contentData.sellerInfo.address["country-name"] ?? ""}<br>
            ${
              invoice.contentData.sellerInfo.taxRegistration
@@ -72,12 +76,12 @@ export const exportToPDF = async (
           <strong>To:</strong><br>
           <p style="font-size: 14px">${invoice.payer.value}</p>
           ${invoice.contentData.buyerInfo.firstName ?? ""} ${
-    invoice.contentData.buyerInfo.lastName ?? ""
-  }<br>
+      invoice.contentData.buyerInfo.lastName ?? ""
+    }<br>
           ${invoice.contentData.buyerInfo.address["street-address"] ?? ""}<br>
           ${invoice.contentData.buyerInfo.address.locality ?? ""}${
-    invoice.contentData.sellerInfo.address.locality ? "," : ""
-  } ${invoice.contentData.buyerInfo.address["postal-code"] ?? ""}<br>
+      invoice.contentData.sellerInfo.address.locality ? "," : ""
+    } ${invoice.contentData.buyerInfo.address["postal-code"] ?? ""}<br>
           ${invoice.contentData.buyerInfo.address["country-name"] ?? ""}<br>
            ${
              invoice.contentData.buyerInfo.taxRegistration
@@ -159,13 +163,16 @@ export const exportToPDF = async (
     </html>
   `;
 
-  const opt = {
-    margin: 10,
-    filename: `invoice-${invoice.contentData.invoiceNumber}.PDF`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  };
+    const opt = {
+      margin: 10,
+      filename: `invoice-${invoice.contentData.invoiceNumber}.PDF`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
 
-  window.html2pdf().from(content).set(opt).save();
+    window.html2pdf().from(content).set(opt).save();
+  } catch (error) {
+    console.error("Failed to export invoice to PDF:", error);
+  }
 };
