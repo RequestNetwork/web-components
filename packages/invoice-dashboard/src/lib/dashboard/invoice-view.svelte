@@ -9,6 +9,7 @@
     hasErc20Approval,
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { toast } from "svelte-sonner";
 
   // Components
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -232,6 +233,13 @@
           try {
             await exportToPDF(request, currency, config.logo);
           } catch (error) {
+            toast.error(`Failed to export PDF`, {
+              description: `${error}`,
+              action: {
+                label: "X",
+                onClick: () => console.info("Close"),
+              },
+            });
             console.error("Failed to export PDF:", error);
           }
         }}

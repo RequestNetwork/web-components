@@ -3,6 +3,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
+  import "../app.css";
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
@@ -10,6 +11,8 @@
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import { Toaster } from "./components/ui/sonner";
+  import { toast } from "svelte-sonner";
 
   // Icons
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
@@ -500,6 +503,13 @@
                               config.logo
                             );
                           } catch (error) {
+                            toast.error(`Failed to export PDF`, {
+                              description: `${error}`,
+                              action: {
+                                label: "X",
+                                onClick: () => console.info("Close"),
+                              },
+                            });
                             console.error("Failed to export PDF:", error);
                           }
                         }}
@@ -573,6 +583,7 @@
     </div>
   {/if}
   <PoweredBy />
+  <Toaster />
 </div>
 
 <style>
