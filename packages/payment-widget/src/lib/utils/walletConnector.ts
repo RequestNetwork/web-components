@@ -14,14 +14,18 @@ export const initWalletConnector = () => {
   // 4. Create Ethers config
   const ethersConfig = defaultConfig({
     metadata,
+    auth: {
+      email: false,
+    },
   });
 
   const modal = createWeb3Modal({
     ethersConfig,
     chains,
     projectId,
-    enableAnalytics: true, // Optional - defaults to your Cloud configuration
-    enableOnramp: true, // Optional - false as default
+    enableAnalytics: true,
+    enableOnramp: true,
+    themeMode: "light",
   });
 
   return modal;
