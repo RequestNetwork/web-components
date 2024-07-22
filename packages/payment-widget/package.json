@@ -54,5 +54,9 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@web3modal/ethers": "^5.0.7",
+    "ethers": "^6.13.1"
   }
 }

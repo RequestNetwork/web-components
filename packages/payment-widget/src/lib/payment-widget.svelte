@@ -3,10 +3,13 @@
 <script lang="ts">
   import type { SellerInfo, ProductInfo, Total } from "./types";
   import { Button } from "@requestnetwork/shared-components/button";
+  import { initWalletConnector } from "./utils/walletConnector";
 
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let total: Total;
+
+  const web3Modal = initWalletConnector();
 </script>
 
 <section class="rn-payment-widget">
@@ -40,7 +43,7 @@
 
   <section class="rn-payment-widget-body">
     <h2>Pay with crypto</h2>
-    <Button>Pay</Button>
+    <Button on:click={() => web3Modal.open()}>Pay</Button>
   </section>
 </section>
 
