@@ -3,7 +3,6 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
-  import "../app.css";
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
@@ -11,7 +10,7 @@
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
-  import { Toaster } from "./components/ui/sonner";
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import { toast } from "svelte-sonner";
 
   // Icons

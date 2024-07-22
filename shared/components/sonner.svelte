@@ -6,6 +6,7 @@
   import { mode } from "mode-watcher";
 
   type $$Props = SonnerProps;
+  import "./app.css";
 </script>
 
 <Sonner
