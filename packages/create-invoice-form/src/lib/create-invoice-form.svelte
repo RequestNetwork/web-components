@@ -228,7 +228,6 @@
         type="button"
         onClick={async () => {
           isTimeout = false;
-          console.log(activeRequest);
           addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
           addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
           await activeRequest.waitForConfirmation();
