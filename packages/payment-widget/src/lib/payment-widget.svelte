@@ -1,15 +1,45 @@
 <svelte:options customElement="payment-widget" />
 
 <script lang="ts">
-  import type { SellerInfo, ProductInfo, Total } from "./types";
   import { Button } from "@requestnetwork/shared-components/button";
+  import type { EventsControllerState } from "@web3modal/core";
+  import type { ProductInfo, SellerInfo, Total } from "./types";
+
+  import type { Web3Modal } from "@web3modal/ethers";
+  import { onMount } from "svelte";
   import { initWalletConnector } from "./utils/walletConnector";
 
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let total: Total;
 
-  const web3Modal = initWalletConnector();
+  let web3Modal: Web3Modal | null = null;
+  $: isConnected = false;
+  let userAddress: string | null = null;
+
+  onMount(() => {
+    web3Modal = initWalletConnector();
+
+    if (web3Modal) {
+      web3Modal.subscribeEvents(handleWeb3ModalEvents);
+    }
+  });
+  function handleWeb3ModalEvents(newEvent: EventsControllerState) {
+    if (newEvent.data.event === "MODAL_LOADED") {
+      checkWalletState();
+    }
+    if (newEvent.data.event === "CONNECT_SUCCESS") {
+      checkWalletState();
+      isConnected = true;
+    } else if (newEvent.data.event === "DISCONNECT_SUCCESS") {
+      checkWalletState();
+    }
+  }
+
+  function checkWalletState() {
+    isConnected = web3Modal?.getIsConnected() ?? false;
+    userAddress = web3Modal?.getAddress() ?? null;
+  }
 </script>
 
 <section class="rn-payment-widget">
@@ -43,7 +73,15 @@
 
   <section class="rn-payment-widget-body">
     <h2>Pay with crypto</h2>
-    <Button on:click={() => web3Modal.open()}>Pay</Button>
+    <Button
+      on:click={() => {
+        if (!isConnected) {
+          web3Modal?.open();
+        } else {
+          alert("Already connected");
+        }
+      }}>Pay</Button
+    >
   </section>
 </section>
 

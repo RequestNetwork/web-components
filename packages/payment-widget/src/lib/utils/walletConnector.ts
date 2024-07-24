@@ -6,26 +6,29 @@ export const initWalletConnector = () => {
 
   const metadata = {
     name: "Request Checkout",
-    description: "",
-    url: "",
-    icons: [""],
+    description: "Request Network payment widget",
+    url: "https://request.network/",
+    icons: [],
   };
 
-  // 4. Create Ethers config
   const ethersConfig = defaultConfig({
     metadata,
+    defaultChainId: 1,
+    enableEIP6963: true,
+    enableInjected: true,
     auth: {
       email: false,
     },
+    enableCoinbase: true,
   });
 
   const modal = createWeb3Modal({
     ethersConfig,
     chains,
     projectId,
-    enableAnalytics: true,
-    enableOnramp: true,
     themeMode: "light",
+    enableAnalytics: false,
+    enableOnramp: false,
   });
 
   return modal;
