@@ -151,7 +151,7 @@
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error: any) {
-        if (error.message.includes("timeout")) {
+        if (error.message.includes("Transactioon confirmation not received")) {
           isTimeout = true;
           removeAllStatuses();
         } else {
@@ -228,6 +228,7 @@
         type="button"
         onClick={async () => {
           isTimeout = false;
+          console.log(activeRequest);
           addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
           addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
           await activeRequest.waitForConfirmation();
