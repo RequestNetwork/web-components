@@ -9,13 +9,16 @@
     hasErc20Approval,
   } from "@requestnetwork/payment-processor";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { toast } from "svelte-sonner";
 
   // Components
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
 
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
+  import Download from "@requestnetwork/shared-icons/download.svelte";
 
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
@@ -24,7 +27,7 @@
   // Types
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
-  import { walletClientToSigner } from "../../utils";
+  import { walletClientToSigner, exportToPDF } from "../../utils";
   import { formatUnits } from "viem";
   import { onMount } from "svelte";
 
@@ -224,6 +227,24 @@
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
       {isPaid ? "Paid" : "Created"}
     </p>
+    <Tooltip text="Download PDF">
+      <Download
+        onClick={async () => {
+          try {
+            await exportToPDF(request, currency, config.logo);
+          } catch (error) {
+            toast.error(`Failed to export PDF`, {
+              description: `${error}`,
+              action: {
+                label: "X",
+                onClick: () => console.info("Close"),
+              },
+            });
+            console.error("Failed to export PDF:", error);
+          }
+        }}
+      />
+    </Tooltip>
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
@@ -451,7 +472,13 @@
     line-height: 1.75rem;
     font-weight: 700;
     display: flex;
+    align-items: center;
     gap: 12px;
+  }
+
+  .invoice-number svg {
+    width: 13px;
+    height: 13px;
   }
 
   .invoice-status {
