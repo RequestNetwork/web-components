@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/react",
+    "declaration": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2017", "DOM"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/lib/react/**/*"]
+}
