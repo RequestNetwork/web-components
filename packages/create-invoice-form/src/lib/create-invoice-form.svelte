@@ -151,7 +151,7 @@
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error: any) {
-        if (error.message.includes("timeout")) {
+        if (error.message.includes("Transactioon confirmation not received")) {
           isTimeout = true;
           removeAllStatuses();
         } else {
