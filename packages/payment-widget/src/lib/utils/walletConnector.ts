@@ -20,6 +20,7 @@ export const initWalletConnector = () => {
       email: false,
     },
     enableCoinbase: true,
+    rpcUrl: "https://cloudflare-eth.com",
   });
 
   const modal = createWeb3Modal({

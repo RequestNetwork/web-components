@@ -3,7 +3,12 @@
 <script lang="ts">
   import { Button } from "@requestnetwork/shared-components/button";
   import type { EventsControllerState } from "@web3modal/core";
-  import type { ProductInfo, SellerInfo, Total } from "./types";
+  import type {
+    ProductInfo,
+    SellerInfo,
+    SupportedCurrencies,
+    AmountInUSD,
+  } from "./types";
 
   import type { Web3Modal } from "@web3modal/ethers";
   import { onMount } from "svelte";
@@ -11,11 +16,12 @@
 
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
-  export let total: Total;
+  export let amountInUSD: AmountInUSD;
+  export let supportedCurrencies: SupportedCurrencies;
 
   let web3Modal: Web3Modal | null = null;
   $: isConnected = false;
-  let userAddress: string | null = null;
+  $: isModalOpen = false;
 
   onMount(() => {
     web3Modal = initWalletConnector();
@@ -38,7 +44,6 @@
 
   function checkWalletState() {
     isConnected = web3Modal?.getIsConnected() ?? false;
-    userAddress = web3Modal?.getAddress() ?? null;
   }
 </script>
 
@@ -67,7 +72,7 @@
 
     <div class="rn-payment-widget-header-total">
       <span>TOTAL</span>
-      <span>{total}</span>
+      <span>{amountInUSD} USD</span>
     </div>
   </section>
 
@@ -78,7 +83,7 @@
         if (!isConnected) {
           web3Modal?.open();
         } else {
-          alert("Already connected");
+          isModalOpen = true;
         }
       }}>Pay</Button
     >

@@ -56,7 +56,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@web3modal/ethers": "^5.0.7",
-    "ethers": "^6.13.1"
+    "@requestnetwork/currency": "^0.17.0",
+    "@web3modal/ethers": "^5.0.7"
   }
 }
