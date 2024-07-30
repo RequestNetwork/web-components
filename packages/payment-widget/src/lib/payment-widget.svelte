@@ -3,15 +3,14 @@
 <script lang="ts">
   import { Button } from "@requestnetwork/shared-components/button";
   import type { EventsControllerState } from "@web3modal/core";
+  import type { Web3Modal } from "@web3modal/ethers";
+  import { onMount } from "svelte";
   import type {
+    AmountInUSD,
     ProductInfo,
     SellerInfo,
     SupportedCurrencies,
-    AmountInUSD,
   } from "./types";
-
-  import type { Web3Modal } from "@web3modal/ethers";
-  import { onMount } from "svelte";
   import { initWalletConnector } from "./utils/walletConnector";
 
   export let selletInfo: SellerInfo;
