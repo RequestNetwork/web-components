@@ -11,16 +11,21 @@
     SellerInfo,
     SupportedCurrencies,
   } from "./types";
+  import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
-
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import CurrencySelector from "./components/currency-selector.svelte";
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
 
   let web3Modal: Web3Modal | null = null;
+  let currencyDetails = getSupportedCurrencies(supportedCurrencies);
+  let selectedCurrency: any | null = null;
   $: isConnected = false;
   $: isModalOpen = false;
+  $: currentPaymentStep = "currency";
 
   onMount(() => {
     web3Modal = initWalletConnector();
@@ -87,6 +92,21 @@
       }}>Pay</Button
     >
   </section>
+  <Modal
+    config={{}}
+    title="Pay with crypto"
+    isOpen={isModalOpen}
+    onClose={() => {
+      isModalOpen = false;
+    }}
+  >
+    {#if currentPaymentStep === "currency"}
+      <CurrencySelector
+        currencies={currencyDetails.currencies}
+        bind:selectedCurrency
+      />
+    {/if}
+  </Modal>
 </section>
 
 <style lang="scss">

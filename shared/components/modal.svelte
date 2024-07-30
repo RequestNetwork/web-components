@@ -16,8 +16,8 @@
   <div
     class="modal-overlay"
     style="
-  --mainColor: {config.colors.main};
-  --secondaryColor: {config.colors.secondary};"
+  --mainColor: {config?.colors?.main ? config.colors.main : ''};
+  --secondaryColor: {config?.colors?.secondary ? config.colors.secondary : ''};"
   >
     <div class="modal-container">
       <div class="modal-header">
