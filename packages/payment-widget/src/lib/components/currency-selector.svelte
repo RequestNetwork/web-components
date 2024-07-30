@@ -1,9 +1,13 @@
 <script lang="ts">
-  export let currencies: any[];
-  export let selectedCurrency: any | null = null;
+  import { Currency } from "../types";
 
-  function selectCurrency(currencyId: string) {
-    selectedCurrency = currencyId;
+  export let currencies: any[];
+  export let selectedCurrency: Currency | null = null;
+  export let currentPaymentStep: string;
+
+  function selectCurrency(currency: any) {
+    selectedCurrency = currency;
+    currentPaymentStep = "confirmation";
   }
 </script>
 
@@ -11,10 +15,10 @@
   <h3>Select a Currency</h3>
   <div class="currency-list">
     {#each currencies as currency (currency.id)}
-      <div
+      <button
         class="currency-item"
         class:selected={selectedCurrency === currency.id}
-        on:click={() => selectCurrency(currency.id)}
+        on:click={() => selectCurrency(currency)}
       >
         <div class="currency-info">
           <span class="currency-symbol">{currency.symbol}</span>
@@ -23,7 +27,7 @@
         <div class="currency-type">
           {currency.type}
         </div>
-      </div>
+      </button>
     {/each}
   </div>
 </div>
@@ -63,6 +67,9 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px;
+      outline: none;
+      border: none;
+      width: 100%;
       margin-bottom: 8px;
       background-color: #f5f5f5;
       border-radius: 8px;

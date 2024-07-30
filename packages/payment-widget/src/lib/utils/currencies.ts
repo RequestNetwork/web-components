@@ -1,12 +1,12 @@
 import { initializeCurrencyManagerWithCurrencyIDS } from "@requestnetwork/shared-utils/initCurrencyManager";
-import type { SupportedCurrencies } from "../types";
+import type { SupportedCurrencies, Currency } from "../types";
 import type { CurrencyManager } from "@requestnetwork/currency";
 
 export const getSupportedCurrencies = (
   supportedCurrencies: SupportedCurrencies
 ): {
   currencyManager: CurrencyManager;
-  currencies: any[];
+  currencies: Currency[];
 } => {
   return initializeCurrencyManagerWithCurrencyIDS(supportedCurrencies);
 };

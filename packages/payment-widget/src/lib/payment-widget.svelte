@@ -7,6 +7,7 @@
   import { onMount } from "svelte";
   import type {
     AmountInUSD,
+    Currency,
     ProductInfo,
     SellerInfo,
     SupportedCurrencies,
@@ -15,6 +16,8 @@
   import { initWalletConnector } from "./utils/walletConnector";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import CurrencySelector from "./components/currency-selector.svelte";
+  import PaymentConfirmation from "./components/payment-confirmation.svelte";
+
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
@@ -22,7 +25,7 @@
 
   let web3Modal: Web3Modal | null = null;
   let currencyDetails = getSupportedCurrencies(supportedCurrencies);
-  let selectedCurrency: any | null = null;
+  let selectedCurrency: Currency | null = null;
   $: isConnected = false;
   $: isModalOpen = false;
   $: currentPaymentStep = "currency";
@@ -104,6 +107,18 @@
       <CurrencySelector
         currencies={currencyDetails.currencies}
         bind:selectedCurrency
+        bind:currentPaymentStep
+      />
+    {:else if selectedCurrency && currentPaymentStep === "confirmation"}
+      <PaymentConfirmation
+        {amountInUSD}
+        onBack={() => {
+          currentPaymentStep = "currency";
+        }}
+        onPay={() => {
+          console.log("Process payment");
+        }}
+        {selectedCurrency}
       />
     {/if}
   </Modal>
