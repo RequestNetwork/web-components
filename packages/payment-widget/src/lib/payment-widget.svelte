@@ -153,6 +153,12 @@
 </section>
 
 <style lang="scss">
+  @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+  body {
+    font-family: "Montserrat", sans-serif;
+  }
+
   h2 {
     padding: 0;
     margin: 0;
@@ -257,9 +263,9 @@
   }
 
   :global(.modal-header) {
-    padding: 10px !important;
+    padding: 16px !important;
   }
   :global(.modal-content) {
-    padding: 10px !important;
+    padding: 16px !important;
   }
 </style>

@@ -10,8 +10,6 @@
     selectedCurrency = currency;
     currentPaymentStep = "confirmation";
   }
-
-  console.log(currencies);
 </script>
 
 <div class="currency-selector">
@@ -43,6 +41,12 @@
 </div>
 
 <style lang="scss">
+  @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+  body {
+    font-family: "Montserrat", sans-serif;
+  }
+
   .currency-selector {
     width: 100%;
     color: #333;
@@ -50,7 +54,7 @@
     h3 {
       margin: 0 0 15px;
       font-size: 18px;
-      font-weight: 500;
+      font-weight: bold;
     }
 
     .currency-list {

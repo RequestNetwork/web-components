@@ -1,19 +1,31 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-  import { Button } from "@requestnetwork/shared-components/button";
+  import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
+  import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
+  import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
+  import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
+  import { NETWORK_LABEL } from "../utils/currencies";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
   export let onBack: () => void;
   export let onPay: () => void;
 
+  const COUNTDOWN_INTERVAL = 30;
+
   let amountInCrypto: number = 0;
-  let countdown: number = 30;
+  let countdown: number = COUNTDOWN_INTERVAL;
   let intervalId: NodeJS.Timeout;
+  $: isLoadingPrice = true;
+  const currencySymbol = selectedCurrency.symbol.includes(
+    selectedCurrency.network
+  )
+    ? selectedCurrency.symbol.split("-")[0]
+    : selectedCurrency.symbol;
 
   async function fetchExchangeRate() {
     try {
+      isLoadingPrice = true;
       const response = await fetch(
         `https://api.coinbase.com/v2/exchange-rates?currency=USD`
       );
@@ -21,18 +33,19 @@
 
       const rate = data.data.rates[selectedCurrency.symbol.split("-")[0]];
       amountInCrypto = amountInUSD * parseFloat(rate);
+      isLoadingPrice = false;
     } catch (error) {
       console.error("Error fetching exchange rate:", error);
     }
   }
 
   function startCountdown() {
-    countdown = 30;
+    countdown = COUNTDOWN_INTERVAL;
     intervalId = setInterval(() => {
       countdown--;
       if (countdown === 0) {
         fetchExchangeRate();
-        countdown = 30;
+        countdown = COUNTDOWN_INTERVAL;
       }
     }, 1000);
   }
@@ -45,62 +58,151 @@
   onDestroy(() => {
     clearInterval(intervalId);
   });
+
+  function formatCryptoAmount(amount: number): string {
+    const stringAmount = amount.toString();
+    const [wholePart, decimalPart] = stringAmount.split(".");
+
+    if (!decimalPart) {
+      return wholePart;
+    }
+
+    const trimmedDecimal = decimalPart.replace(/0+$/, "");
+    return trimmedDecimal ? `${wholePart}.${trimmedDecimal}` : wholePart;
+  }
 </script>
 
 <div class="payment-confirmation">
-  <h2>Confirm Payment</h2>
-  <div class="amount-display">
-    <span class="amount">{amountInCrypto.toFixed(6)}</span>
-    <span class="currency">{selectedCurrency.symbol}</span>
+  <h3>Confirm Payment</h3>
+  <div class="payment-confirmation-amount-info">
+    <div>
+      <div>USD</div>
+      <span>${amountInUSD}</span>
+    </div>
+    <ExchangeIcon />
+    <div>
+      <div>{currencySymbol}</div>
+      <span
+        >{formatCryptoAmount(parseFloat(amountInCrypto.toFixed(6)))}
+        {currencySymbol}</span
+      >
+    </div>
   </div>
-  <div class="network">on {selectedCurrency.network}</div>
-  <div class="countdown" class:warning={countdown <= 10}>
-    Price updates in {countdown}s
+  <div class="payment-confirmation-tab">
+    <h4>Payment to</h4>
+    <span
+      >{formatAddress(
+        "0x03671423327Cfab41C21060Ed4Bf7f1a4179BcD5",
+        10,
+        10
+      )}</span
+    >
   </div>
+  <div class="payment-confirmation-tab">
+    <h4>Payment network</h4>
+    <span>{NETWORK_LABEL[selectedCurrency.network]}</span>
+  </div>
+  <div class="payment-confirmation-tab">
+    <h4>Total</h4>
+    <span>{formatCryptoAmount(amountInCrypto)} {currencySymbol}</span>
+  </div>
+
+  <div class="payment-confirmation-warning">
+    <InfoCircleIcon />
+    <div class="countdown" class:warning={countdown <= 10}>
+      Price updates in {countdown}s
+    </div>
+  </div>
+
   <div class="button-group">
-    <Button on:click={onBack}>Back</Button>
-    <Button on:click={onPay}>Pay</Button>
+    <button on:click={onBack} class="btn btn-secondary">Back</button>
+    <button class="btn" disabled={isLoadingPrice} on:click={onPay}>Pay</button>
   </div>
 </div>
 
 <style lang="scss">
+  @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+  body {
+    font-family: "Montserrat", sans-serif;
+  }
+
+  h3 {
+    margin: 0 0 15px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
   .payment-confirmation {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    background-color: #fafafa;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    gap: 16px;
 
-    h2 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #333;
-    }
+    &-amount-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
 
-    .amount-display {
-      font-size: 36px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #01503a;
+      & > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
 
-      .currency {
-        font-size: 24px;
-        margin-left: 5px;
+        & > div {
+          width: 54px;
+          height: 54px;
+          border-radius: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #f5f5f5;
+          font-weight: bold;
+          padding: 4px;
+          font-size: 14px;
+        }
+
+        span {
+          font-weight: bold;
+        }
       }
     }
 
-    .network {
+    &-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e0e0e0;
+
+      & > h4 {
+        color: #666;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      & > span {
+        color: black;
+        font-weight: 500;
+        font-size: 14px;
+      }
+    }
+
+    &-warning {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      color: black;
+      background-color: #f5f5f5;
+      border-radius: 12px;
       font-size: 14px;
-      color: #666;
-      margin-bottom: 10px;
+      font-weight: bold;
     }
 
     .countdown {
-      font-size: 14px;
-      margin-bottom: 20px;
-      color: #666;
+      color: black;
 
       &.warning {
         color: #ff4136;
@@ -109,8 +211,37 @@
     }
 
     .button-group {
+      width: 100%;
       display: flex;
       gap: 10px;
+
+      .btn {
+        display: inline-flex;
+        cursor: pointer;
+        color: white;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: #0bb489;
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 8px 16px;
+
+        &:hover {
+          background-color: rgba($color: #0bb489, $alpha: 0.8);
+        }
+      }
+
+      .btn-secondary {
+        background-color: #666;
+
+        &:hover {
+          background-color: rgba($color: #666, $alpha: 0.8);
+        }
+      }
     }
   }
 
