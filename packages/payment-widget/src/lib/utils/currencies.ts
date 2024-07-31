@@ -145,3 +145,23 @@ export const CURRENCY_ID = {
   "ETH-ZKSYNC_ZKSYNCERA": "ETH-zksync-zksyncera",
   "ETH-BASE_BASE": "ETH-base-base",
 } as const;
+
+export const NETWORK_LABEL = {
+  mainnet: "Ethereum mainnet ",
+  matic: "Polygon",
+  sepolia: "Sepolia testnet",
+  celo: "Celo",
+  fantom: "Fantom",
+  bsc: "Binance Smart Chain",
+  xdai: "Gnosis Chain",
+  avalanche: "Avalanche",
+  optimism: "Optimism",
+  moonbeam: "Moonbeam",
+  fuse: "Fuse",
+  "arbitrum-one": "Arbitrum One",
+  tombchain: "Tombchain",
+  mantle: "Mantle",
+  core: "CORE",
+  zksyncera: "zkSync Era",
+  base: "Base",
+};

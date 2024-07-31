@@ -1,4 +1,4 @@
-import type { CURRENCY_ID } from "../utils/currencies";
+import type { CURRENCY_ID, NETWORK_LABEL } from "../utils/currencies";
 
 export type SellerInfo = {
   logo?: string;
@@ -20,7 +20,7 @@ export type Currency = {
   id: string;
   hash: string;
   address?: string;
-  network: string;
+  network: keyof typeof NETWORK_LABEL;
   decimals: number;
   symbol: string;
   type: "ERC20" | "ETH";

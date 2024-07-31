@@ -1,7 +1,8 @@
 <script lang="ts">
   import { Currency } from "../types";
+  import { NETWORK_LABEL } from "../utils/currencies";
 
-  export let currencies: any[];
+  export let currencies: Currency[];
   export let selectedCurrency: Currency | null = null;
   export let currentPaymentStep: string;
 
@@ -9,6 +10,8 @@
     selectedCurrency = currency;
     currentPaymentStep = "confirmation";
   }
+
+  console.log(currencies);
 </script>
 
 <div class="currency-selector">
@@ -17,15 +20,22 @@
     {#each currencies as currency (currency.id)}
       <button
         class="currency-item"
-        class:selected={selectedCurrency === currency.id}
+        class:selected={selectedCurrency?.id === currency.id}
         on:click={() => selectCurrency(currency)}
       >
         <div class="currency-info">
-          <span class="currency-symbol">{currency.symbol}</span>
-          <span class="currency-network">{currency.network}</span>
+          <div class="currency-info-symbol">
+            <span
+              >{currency.symbol.includes(currency.network)
+                ? currency.symbol.split("-")[0]
+                : currency.symbol}</span
+            >
+          </div>
+          <span class="currency-network">{NETWORK_LABEL[currency.network]}</span
+          >
         </div>
         <div class="currency-type">
-          {currency.type}
+          {currency.type === "ETH" ? "Native" : currency.type}
         </div>
       </button>
     {/each}
@@ -66,13 +76,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px;
+      padding: 15px;
       outline: none;
       border: none;
       width: 100%;
       margin-bottom: 8px;
       background-color: #f5f5f5;
-      border-radius: 8px;
+      border-radius: 15px;
       cursor: pointer;
       transition: all 0.3s ease;
 
@@ -86,9 +96,22 @@
 
       .currency-info {
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        gap: 14px;
       }
 
+      .currency-info-symbol {
+        width: 50px;
+        height: 50px;
+        border-radius: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: white;
+        font-weight: bold;
+        padding: 4px;
+        font-size: 14px;
+      }
       .currency-symbol {
         font-size: 16px;
         font-weight: 500;
