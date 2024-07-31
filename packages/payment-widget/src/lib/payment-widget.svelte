@@ -4,7 +4,7 @@
   import { Button } from "@requestnetwork/shared-components/button";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import type {
     AmountInUSD,
     Currency,
@@ -48,6 +48,34 @@
       checkWalletState();
     }
   }
+
+  let scrollPosition = 0;
+
+  function disableBodyScroll() {
+    scrollPosition = window.pageYOffset;
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.width = "100%";
+  }
+
+  function enableBodyScroll() {
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("position");
+    document.body.style.removeProperty("top");
+    document.body.style.removeProperty("width");
+    window.scrollTo(0, scrollPosition);
+  }
+
+  $: if (isModalOpen) {
+    disableBodyScroll();
+  } else {
+    enableBodyScroll();
+  }
+
+  onDestroy(() => {
+    enableBodyScroll();
+  });
 
   function checkWalletState() {
     isConnected = web3Modal?.getIsConnected() ?? false;
@@ -222,5 +250,16 @@
         font-weight: 500;
       }
     }
+  }
+
+  :global(body.modal-open) {
+    overflow: hidden;
+  }
+
+  :global(.modal-header) {
+    padding: 10px !important;
+  }
+  :global(.modal-content) {
+    padding: 10px !important;
   }
 </style>
