@@ -2,28 +2,41 @@
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
+  import type { Web3Modal } from "@web3modal/ethers";
+  import { BrowserProvider } from "ethers";
   import { onDestroy, onMount } from "svelte";
-  import type { Currency } from "../types";
-  import { NETWORK_LABEL } from "../utils/currencies";
+  import type { Currency, CurrencyID } from "../types";
+  import { NETWORK_LABEL, STABLE_COINS } from "../utils/currencies";
+  import { prepareRequestParams, processPayment } from "../utils/request";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
+  export let sellerAddress: string;
   export let onBack: () => void;
-  export let onPay: () => void;
+  export let web3Modal: Web3Modal | null;
 
   const COUNTDOWN_INTERVAL = 30;
+  const isStableCoin = STABLE_COINS.includes(selectedCurrency.id as any);
 
-  let amountInCrypto: number = 0;
-  let countdown: number = COUNTDOWN_INTERVAL;
-  let intervalId: NodeJS.Timeout;
-  $: isLoadingPrice = true;
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
   )
     ? selectedCurrency.symbol.split("-")[0]
     : selectedCurrency.symbol;
+  let amountInCrypto: number = 0;
+  let countdown: number = COUNTDOWN_INTERVAL;
+  let intervalId: NodeJS.Timeout;
+  let conversionRate: number = 0;
+  $: isLoadingPrice = true;
 
   async function fetchExchangeRate() {
+    if (isStableCoin) {
+      conversionRate = 1;
+      amountInCrypto = amountInUSD;
+      isLoadingPrice = false;
+      return;
+    }
+
     try {
       isLoadingPrice = true;
       const response = await fetch(
@@ -32,6 +45,8 @@
       const data = await response.json();
 
       const rate = data.data.rates[selectedCurrency.symbol.split("-")[0]];
+
+      conversionRate = parseFloat(rate);
       amountInCrypto = amountInUSD * parseFloat(rate);
       isLoadingPrice = false;
     } catch (error) {
@@ -40,6 +55,8 @@
   }
 
   function startCountdown() {
+    if (isStableCoin) return;
+
     countdown = COUNTDOWN_INTERVAL;
     intervalId = setInterval(() => {
       countdown--;
@@ -52,11 +69,15 @@
 
   onMount(() => {
     fetchExchangeRate();
-    startCountdown();
+    if (!isStableCoin) {
+      startCountdown();
+    }
   });
 
   onDestroy(() => {
-    clearInterval(intervalId);
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
   });
 
   function formatCryptoAmount(amount: number): string {
@@ -90,13 +111,7 @@
   </div>
   <div class="payment-confirmation-tab">
     <h4>Payment to</h4>
-    <span
-      >{formatAddress(
-        "0x03671423327Cfab41C21060Ed4Bf7f1a4179BcD5",
-        10,
-        10
-      )}</span
-    >
+    <span>{formatAddress(sellerAddress, 10, 10)}</span>
   </div>
   <div class="payment-confirmation-tab">
     <h4>Payment network</h4>
@@ -107,16 +122,49 @@
     <span>{formatCryptoAmount(amountInCrypto)} {currencySymbol}</span>
   </div>
 
-  <div class="payment-confirmation-warning">
-    <InfoCircleIcon />
-    <div class="countdown" class:warning={countdown <= 10}>
-      Price updates in {countdown}s
+  {#if !isStableCoin}
+    <div class="payment-confirmation-warning">
+      <InfoCircleIcon />
+      <div class="countdown" class:warning={countdown <= 10}>
+        Price updates in {countdown}s
+      </div>
     </div>
-  </div>
+  {/if}
 
   <div class="button-group">
     <button on:click={onBack} class="btn btn-secondary">Back</button>
-    <button class="btn" disabled={isLoadingPrice} on:click={onPay}>Pay</button>
+    <button
+      class="btn"
+      disabled={isLoadingPrice}
+      on:click={async () => {
+        const payerAddress = web3Modal?.getAddress();
+        const walletProvider = web3Modal?.getWalletProvider();
+
+        if (!walletProvider || !payerAddress) {
+          throw new Error("Invalid wallet provider or address");
+        }
+
+        console.log(walletProvider, payerAddress);
+
+        const ethersProvider = new BrowserProvider(walletProvider);
+        const signer = await ethersProvider.getSigner();
+
+        console.log("Currency : ", selectedCurrency);
+
+        const result = await prepareRequestParams({
+          selectedCurrency,
+          amountInCrypto,
+          amountInUSD,
+          sellerAddress,
+          payerAddress,
+          conversionRate,
+        });
+
+        console.log("Result : ", result);
+
+        await processPayment(result, signer);
+      }}>Pay</button
+    >
   </div>
 </div>
 

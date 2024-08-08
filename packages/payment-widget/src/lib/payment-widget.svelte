@@ -22,13 +22,15 @@
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
+  export let sellerAddress: string;
 
-  let web3Modal: Web3Modal | null = null;
   let currencyDetails = getSupportedCurrencies(supportedCurrencies);
   let selectedCurrency: Currency | null = null;
+  let web3Modal: Web3Modal | null = null;
   $: isConnected = false;
   $: isModalOpen = false;
   $: currentPaymentStep = "currency";
+  $: conversionRate: 0;
 
   onMount(() => {
     web3Modal = initWalletConnector();
@@ -129,6 +131,8 @@
     isOpen={isModalOpen}
     onClose={() => {
       isModalOpen = false;
+      currentPaymentStep = "currency";
+      selectedCurrency = null;
     }}
   >
     {#if currentPaymentStep === "currency"}
@@ -140,12 +144,11 @@
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
         {amountInUSD}
+        {web3Modal}
         onBack={() => {
           currentPaymentStep = "currency";
         }}
-        onPay={() => {
-          console.log("Process payment");
-        }}
+        {sellerAddress}
         {selectedCurrency}
       />
     {/if}

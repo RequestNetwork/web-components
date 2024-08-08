@@ -25,6 +25,7 @@ interface PaymentWidgetProps {
   productInfo?: ProductInfo;
   amountInUSD: AmountInUSD;
   supportedCurrencies: SupportedCurrencies;
+  sellerAddress: string;
 }
 
 /**
@@ -33,7 +34,6 @@ interface PaymentWidgetProps {
  * @property {string} [name] - Name of the seller
  */
 
-// @ts-ignore
 /**
  * @typedef {Object} ProductInfo
  * @property {string} [name] - Name of the product
@@ -41,28 +41,28 @@ interface PaymentWidgetProps {
  * @property {string} [image] - URL of the product's image
  */
 
-// @ts-ignore
 /**
  * @typedef {number} amountInUSD - The price in US dollars that the seller wants to charge. This amount will be used to calculate the equivalent cryptocurrency amount for the buyer.
  */
 
-// @ts-ignore
 /**
  * @typedef {keyof typeof CURRENCY_ID} CurrencyID
  */
 
-// @ts-ignore
 /**
  * @typedef {[CurrencyID, ...CurrencyID[]]} SupportedCurrencies
  */
 
-// @ts-ignore
+/**
+ * @typedef {string} sellerAddress - Evm address of seller where they wish to recieve payments
+ */
 /**
  * @typedef {Object} PaymentWidgetProps
  * @property {SellerInfo} [sellerInfo]
  * @property {ProductInfo} [productInfo]
  * @property {number} amountInUSD
  * @property {SupportedCurrencies} supportedCurrencies
+ * @property {string} sellerAddress
  */
 
 /**
@@ -92,8 +92,9 @@ interface PaymentWidgetProps {
  *     description: 'A curated collection of digital artworks.',
  *     image: 'https://example.com/product-image.jpg'
  *   }}
- *   total="1.5 ETH"
- *   supportedCurrencies={['ETH_MAINNET', 'USDC_MAINNET', 'USDC_MATIC']}
+ *   amountInUSD={22.5}
+ *   sellerAddress="0x03671423327Cfab41C21060Ed4Bf7f1a4179BcD5"
+ *   supportedCurrencies={["USDC-matic" , "ETH-mainnet" , "ETH-sepolia-sepolia"]}
  * />
  */
 export const PaymentWidget: React.FC<PaymentWidgetProps> = (props) => {
