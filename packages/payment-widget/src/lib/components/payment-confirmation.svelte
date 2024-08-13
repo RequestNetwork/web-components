@@ -1,6 +1,7 @@
 <script lang="ts">
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
+  import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
   import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
   import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
@@ -23,8 +24,11 @@
   let countdown: number = COUNTDOWN_INTERVAL;
   let intervalId: NodeJS.Timeout;
   let exchangeRate: number = 0;
+  let error: string = "";
+
   $: isLoadingPrice = true;
   $: isPaying = false;
+
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
   )
@@ -40,7 +44,13 @@
       );
       const data = await response.json();
 
-      const rate = data.data.rates[selectedCurrency.symbol.split("-")[0]];
+      let symbolCurrency = selectedCurrency.symbol.split("-")[0];
+      const symbolMap: { [key: string]: string } = {
+        fUSDC: "USDC",
+        fUSDT: "USDT",
+      };
+      const lookupSymbol = symbolMap[symbolCurrency] || symbolCurrency;
+      const rate = data.data.rates[lookupSymbol];
       exchangeRate = parseFloat(rate);
       amountInCrypto = amountInUSD * parseFloat(rate);
       isLoadingPrice = false;
@@ -135,6 +145,16 @@
     </div>
   {/if}
 
+  {#if error && error.length > 0}
+    <div class="payment-confirmation-error">
+      <CloseIcon />
+
+      <div class="error-message">
+        {error}
+      </div>
+    </div>
+  {/if}
+
   <div class="button-group">
     <button
       on:click={() => {
@@ -166,13 +186,22 @@
 
         console.log(requestParameters);
 
-        await handleRequestPayment({
-          requestParameters,
-          walletProvider,
-          payerAddress: payerAddress,
-        });
-
-        currentPaymentStep = "complete";
+        try {
+          await handleRequestPayment({
+            requestParameters,
+            walletProvider,
+            payerAddress: payerAddress,
+          });
+          currentPaymentStep = "complete";
+        } catch (err) {
+          if (err instanceof Error) {
+            if (err.message.includes("ACTION_REJECTED")) {
+              error = "Payment process was rejected by the user";
+            } else {
+              error = err.message;
+            }
+          }
+        }
 
         isPaying = false;
       }}
@@ -305,6 +334,23 @@
         }
       }
     }
+  }
+
+  .payment-confirmation-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    color: black;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .error-message {
+    color: red;
   }
 
   @keyframes blink {

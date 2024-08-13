@@ -3,7 +3,7 @@
 <script lang="ts">
   import { Button } from "@requestnetwork/shared-components/button";
   import type { EventsControllerState } from "@web3modal/core";
-  import type { Web3Modal } from "@web3modal/ethers";
+  import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
   import type {
     AmountInUSD,

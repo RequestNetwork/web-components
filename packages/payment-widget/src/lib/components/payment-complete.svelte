@@ -1,14 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-
-  let isVisible = false;
-
-  onMount(() => {
-    setTimeout(() => {
-      isVisible = true;
-    }, 100);
-  });
 </script>
 
 <div class="payment-complete" transition:fade={{ duration: 300 }}>

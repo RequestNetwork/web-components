@@ -5,7 +5,7 @@ import {
 } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 import type { Currency } from "../types";
-import { providers, utils } from "ethers";
+import { Contract, providers, utils } from "ethers";
 import {
   hasSufficientFunds,
   approveErc20,
@@ -37,7 +37,9 @@ export const prepareRequestParameters = ({
         value: currencyValue,
         network: currency.network,
       },
-      expectedAmount: utils.parseUnits(amountInCrypto.toString()).toString(),
+      expectedAmount: utils
+        .parseUnits(amountInCrypto.toString(), currency.decimals)
+        .toString(),
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: sellerAddress,
@@ -108,26 +110,40 @@ export const handleRequestPayment = async ({
 
   const signer = await ethersProvider.getSigner();
   if (isERC20) {
+    const requestData = inMemoryRequest.inMemoryInfo?.requestData!;
+    const tokenAddress = requestData.currencyInfo.value;
+    const amount = requestData.expectedAmount;
+
+    const erc20Contract = new Contract(
+      tokenAddress,
+      ["function allowance(address,address) view returns (uint256)"],
+      signer
+    );
+
     const _hasSufficientFunds = await hasSufficientFunds({
       request: inMemoryRequest.inMemoryInfo?.requestData!,
       address: payerAddress,
       providerOptions: {
-        provider: ethersProvider.provider,
+        provider: ethersProvider,
       },
     });
-
-    console.log("hasSufficientFunds", _hasSufficientFunds);
 
     if (!_hasSufficientFunds) {
       throw new Error("Insufficient funds");
     }
 
-    const _approve = await approveErc20(
-      inMemoryRequest.inMemoryInfo?.requestData!,
-      signer
+    const currentAllowance = await erc20Contract.allowance(
+      payerAddress,
+      payerAddress
     );
 
-    await _approve.wait(2);
+    if (currentAllowance.lt(amount)) {
+      const _approve = await approveErc20(
+        inMemoryRequest.inMemoryInfo?.requestData!,
+        signer
+      );
+      await _approve.wait(1);
+    }
   }
 
   const paymentTx = await payRequest(
