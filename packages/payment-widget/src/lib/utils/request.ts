@@ -6,6 +6,7 @@ import {
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 import type { Currency } from "../types";
 import { parseUnits } from "viem";
+import { providers } from "ethers";
 
 export const prepareRequestParameters = ({
   currency,
@@ -69,7 +70,7 @@ export const prepareRequestParameters = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: sellerAddress,
+      value: payerAddress,
     },
   };
 };
@@ -81,19 +82,22 @@ export const handleRequestPayment = async ({
   requestParameters: any;
   walletProvider: any;
 }) => {
-  if (!walletProvider.isConnected()) {
-    await walletProvider.enable();
-  }
+  const ethersProvider = new providers.Web3Provider(walletProvider);
+
+  const web3SignatureProvider = new Web3SignatureProvider(
+    ethersProvider.provider
+  );
 
   const inMemoryRequestNetwork = new RequestNetwork({
     nodeConnectionConfig: {
       baseURL: "https://gnosis.gateway.request.network",
     },
-    signatureProvider: new Web3SignatureProvider(walletProvider),
+    signatureProvider: web3SignatureProvider,
+    skipPersistence: true,
   });
 
   const inMemoryRequest =
     await inMemoryRequestNetwork.createRequest(requestParameters);
 
-  console.log("In memory request", inMemoryRequest);
+  return inMemoryRequest;
 };

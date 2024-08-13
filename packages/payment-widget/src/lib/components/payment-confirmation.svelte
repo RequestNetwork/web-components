@@ -5,7 +5,7 @@
   import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
   import { NETWORK_LABEL } from "../utils/currencies";
-  import { Web3Modal } from "@web3modal/ethers";
+  import type { Web3Modal } from "@web3modal/ethers5";
   import {
     handleRequestPayment,
     prepareRequestParameters,

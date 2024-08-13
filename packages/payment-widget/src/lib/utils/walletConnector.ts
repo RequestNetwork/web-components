@@ -1,5 +1,5 @@
 import { chains } from "./chains";
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers";
+import { createWeb3Modal, defaultConfig } from "@web3modal/ethers5";
 
 export const initWalletConnector = () => {
   const projectId = "b74023ca2db2d75c7b6dffd0173b8dba";
@@ -16,9 +16,6 @@ export const initWalletConnector = () => {
     defaultChainId: 1,
     enableEIP6963: true,
     enableInjected: true,
-    auth: {
-      email: false,
-    },
     enableCoinbase: true,
     rpcUrl: "https://cloudflare-eth.com",
   });
