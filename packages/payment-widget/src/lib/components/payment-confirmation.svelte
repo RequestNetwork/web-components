@@ -19,6 +19,7 @@
   export let sellerAddress: string;
   export let currentPaymentStep: string;
   export let web3Modal: Web3Modal | null;
+  export let persistRequest: boolean;
 
   const COUNTDOWN_INTERVAL = 30;
 
@@ -177,22 +178,21 @@
 
         if (!walletProvider || !payerAddress) return;
 
-        const requestParameters = prepareRequestParameters({
-          currency: selectedCurrency,
-          sellerAddress,
-          payerAddress,
-          amountInCrypto,
-          exchangeRate,
-          amountInUSD,
-        });
-
-        console.log(requestParameters);
-
         try {
+          const requestParameters = prepareRequestParameters({
+            currency: selectedCurrency,
+            sellerAddress,
+            payerAddress,
+            amountInCrypto,
+            exchangeRate,
+            amountInUSD,
+          });
+
           const request = await handleRequestPayment({
             requestParameters,
             walletProvider,
             payerAddress: payerAddress,
+            persistRequest,
           });
           dispatch("paymentSuccess", request);
           currentPaymentStep = "complete";

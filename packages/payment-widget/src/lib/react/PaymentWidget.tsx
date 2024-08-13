@@ -25,6 +25,7 @@ interface PaymentWidgetProps {
   productInfo?: ProductInfo;
   amountInUSD: AmountInUSD;
   supportedCurrencies: SupportedCurrencies;
+  persistRequest?: boolean;
   onPaymentSuccess?: (request: any) => void;
   onError?: (error: string) => void;
 }
@@ -61,6 +62,24 @@ interface PaymentWidgetProps {
 /**
  * @typedef {string} SellerAddress - The wallet address of the seller
  *  
+ * /
+ * 
+
+  /**
+   * @typedef {boolean} PersistRequest - Whether to persist the request on the blockchain
+   */
+
+/**
+ * @typedef {function} OnPaymentSuccess - Callback function to be called when the payment is successful
+ * @param {Request} request - The Request object representing the payment transaction
+ * @returns {void}
+ */
+
+/**
+ * @typedef {function} OnError - Callback function to be called when an error occurs during payment
+ * @param {string} error - The error message
+ * @returns {void}
+ */
 
 // @ts-ignore
 /**
@@ -70,6 +89,9 @@ interface PaymentWidgetProps {
  * @property {number} amountInUSD
  * @property {SupportedCurrencies} supportedCurrencies
  * @property {SellerAddress} sellerAddress
+ * @property {PersistRequest} [persistRequest]
+ * @property {OnPaymentSuccess} [onPaymentSuccess]
+ * @property {OnError} [onError]
  */
 
 /**
@@ -102,6 +124,13 @@ interface PaymentWidgetProps {
  *   amountInUSD={1.5}
  *   sellerAddress="0x1234567890123456789012345678901234567890"
  *   supportedCurrencies={['ETH_MAINNET', 'USDC_MAINNET', 'USDC_MATIC']}
+ *   persistRequest={true}
+ *   onPaymentSuccess={(request) => {
+ *     console.log(request);
+ *   }}
+ *   onError={(error) => {
+ *     console.error(error);
+ *   }}
  * />
  */
 export const PaymentWidget: React.FC<PaymentWidgetProps> = (props) => {

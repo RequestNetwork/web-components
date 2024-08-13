@@ -82,10 +82,12 @@ export const handleRequestPayment = async ({
   requestParameters,
   walletProvider,
   payerAddress,
+  persistRequest,
 }: {
   requestParameters: any;
   walletProvider: any;
   payerAddress: string;
+  persistRequest: boolean;
 }) => {
   const isERC20 =
     requestParameters.requestInfo.currency.type ===
@@ -159,7 +161,9 @@ export const handleRequestPayment = async ({
     },
   });
 
-  await persistingRequestNetwork.persistRequest(inMemoryRequest);
+  if (persistRequest) {
+    await persistingRequestNetwork.persistRequest(inMemoryRequest);
+  }
 
   return inMemoryRequest;
 };

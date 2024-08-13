@@ -24,6 +24,7 @@
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
   export let sellerAddress: string;
+  export let persistRequest: boolean = true;
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;
 
@@ -147,6 +148,7 @@
         {sellerAddress}
         {web3Modal}
         {selectedCurrency}
+        {persistRequest}
         bind:currentPaymentStep
         on:paymentSuccess={(event) => onPaymentSuccess(event.detail)}
         on:paymentError={(event) => onError(event.detail)}
