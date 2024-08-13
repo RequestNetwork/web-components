@@ -22,6 +22,7 @@
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
+  export let sellerAddress: string;
 
   let web3Modal: Web3Modal | null = null;
   let currencyDetails = getSupportedCurrencies(supportedCurrencies);
@@ -140,11 +141,10 @@
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
         {amountInUSD}
+        {sellerAddress}
+        {web3Modal}
         onBack={() => {
           currentPaymentStep = "currency";
-        }}
-        onPay={() => {
-          console.log("Process payment");
         }}
         {selectedCurrency}
       />

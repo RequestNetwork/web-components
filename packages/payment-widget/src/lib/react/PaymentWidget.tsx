@@ -56,6 +56,10 @@ interface PaymentWidgetProps {
  * @typedef {[CurrencyID, ...CurrencyID[]]} SupportedCurrencies
  */
 
+/**
+ * @typedef {string} SellerAddress - The wallet address of the seller
+ *  
+
 // @ts-ignore
 /**
  * @typedef {Object} PaymentWidgetProps
@@ -63,6 +67,7 @@ interface PaymentWidgetProps {
  * @property {ProductInfo} [productInfo]
  * @property {number} amountInUSD
  * @property {SupportedCurrencies} supportedCurrencies
+ * @property {SellerAddress} sellerAddress
  */
 
 /**
@@ -92,7 +97,8 @@ interface PaymentWidgetProps {
  *     description: 'A curated collection of digital artworks.',
  *     image: 'https://example.com/product-image.jpg'
  *   }}
- *   total="1.5 ETH"
+ *   amountInUSD={1.5}
+ *   sellerAddress="0x1234567890123456789012345678901234567890"
  *   supportedCurrencies={['ETH_MAINNET', 'USDC_MAINNET', 'USDC_MATIC']}
  * />
  */

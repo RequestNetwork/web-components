@@ -5,17 +5,24 @@
   import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
   import { NETWORK_LABEL } from "../utils/currencies";
+  import { Web3Modal } from "@web3modal/ethers";
+  import {
+    handleRequestPayment,
+    prepareRequestParameters,
+  } from "../utils/request";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
   export let onBack: () => void;
-  export let onPay: () => void;
+  export let sellerAddress: string;
+  export let web3Modal: Web3Modal | null;
 
   const COUNTDOWN_INTERVAL = 30;
 
   let amountInCrypto: number = 0;
   let countdown: number = COUNTDOWN_INTERVAL;
   let intervalId: NodeJS.Timeout;
+  let exchangeRate: number = 0;
   $: isLoadingPrice = true;
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
@@ -32,6 +39,7 @@
       const data = await response.json();
 
       const rate = data.data.rates[selectedCurrency.symbol.split("-")[0]];
+      exchangeRate = parseFloat(rate);
       amountInCrypto = amountInUSD * parseFloat(rate);
       isLoadingPrice = false;
     } catch (error) {
@@ -116,7 +124,34 @@
 
   <div class="button-group">
     <button on:click={onBack} class="btn btn-secondary">Back</button>
-    <button class="btn" disabled={isLoadingPrice} on:click={onPay}>Pay</button>
+    <button
+      class="btn"
+      disabled={isLoadingPrice || !web3Modal}
+      on:click={async () => {
+        if (!web3Modal) return;
+
+        const walletProvider = web3Modal.getWalletProvider();
+        const payerAddress = web3Modal.getAddress();
+
+        if (!walletProvider || !payerAddress) return;
+
+        const requestParameters = prepareRequestParameters({
+          currency: selectedCurrency,
+          sellerAddress,
+          payerAddress,
+          amountInCrypto,
+          exchangeRate,
+          amountInUSD,
+        });
+
+        console.log(requestParameters);
+
+        await handleRequestPayment({
+          requestParameters,
+          walletProvider: walletProvider,
+        });
+      }}>Pay</button
+    >
   </div>
 </div>
 
