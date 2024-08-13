@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
@@ -187,19 +189,20 @@
         console.log(requestParameters);
 
         try {
-          await handleRequestPayment({
+          const request = await handleRequestPayment({
             requestParameters,
             walletProvider,
             payerAddress: payerAddress,
           });
+          dispatch("paymentSuccess", request);
           currentPaymentStep = "complete";
         } catch (err) {
           if (err instanceof Error) {
-            if (err.message.includes("ACTION_REJECTED")) {
-              error = "Payment process was rejected by the user";
-            } else {
-              error = err.message;
-            }
+            const errorMessage = err.message.includes("ACTION_REJECTED")
+              ? "Payment process was rejected by the user"
+              : err.message;
+            dispatch("paymentError", errorMessage);
+            error = errorMessage;
           }
         }
 

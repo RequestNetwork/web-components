@@ -25,6 +25,8 @@ interface PaymentWidgetProps {
   productInfo?: ProductInfo;
   amountInUSD: AmountInUSD;
   supportedCurrencies: SupportedCurrencies;
+  onPaymentSuccess?: (request: any) => void;
+  onError?: (error: string) => void;
 }
 
 /**

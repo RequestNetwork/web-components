@@ -24,6 +24,8 @@
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
   export let sellerAddress: string;
+  export let onPaymentSuccess: (request: any) => void;
+  export let onError: (error: string) => void;
 
   let web3Modal: Web3Modal | null = null;
   let currencyDetails = getSupportedCurrencies(supportedCurrencies);
@@ -146,6 +148,8 @@
         {web3Modal}
         {selectedCurrency}
         bind:currentPaymentStep
+        on:paymentSuccess={(event) => onPaymentSuccess(event.detail)}
+        on:paymentError={(event) => onError(event.detail)}
       />
     {:else}
       <PaymentComplete />
