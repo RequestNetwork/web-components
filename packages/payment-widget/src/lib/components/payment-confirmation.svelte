@@ -13,8 +13,8 @@
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
-  export let onBack: () => void;
   export let sellerAddress: string;
+  export let currentPaymentStep: string;
   export let web3Modal: Web3Modal | null;
 
   const COUNTDOWN_INTERVAL = 30;
@@ -24,6 +24,7 @@
   let intervalId: NodeJS.Timeout;
   let exchangeRate: number = 0;
   $: isLoadingPrice = true;
+  $: isPaying = false;
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
   )
@@ -31,6 +32,7 @@
     : selectedCurrency.symbol;
 
   async function fetchExchangeRate() {
+    if (isPaying) return;
     try {
       isLoadingPrice = true;
       const response = await fetch(
@@ -56,6 +58,15 @@
         countdown = COUNTDOWN_INTERVAL;
       }
     }, 1000);
+  }
+
+  $: {
+    if (isPaying) {
+      clearInterval(intervalId);
+      countdown = 0;
+    } else if (countdown === 0) {
+      startCountdown();
+    }
   }
 
   onMount(() => {
@@ -115,19 +126,28 @@
     <span>{formatCryptoAmount(amountInCrypto)} {currencySymbol}</span>
   </div>
 
-  <div class="payment-confirmation-warning">
-    <InfoCircleIcon />
-    <div class="countdown" class:warning={countdown <= 10}>
-      Price updates in {countdown}s
+  {#if !isPaying}
+    <div class="payment-confirmation-warning">
+      <InfoCircleIcon />
+      <div class="countdown" class:warning={countdown <= 10}>
+        Price updates in {countdown}s
+      </div>
     </div>
-  </div>
+  {/if}
 
   <div class="button-group">
-    <button on:click={onBack} class="btn btn-secondary">Back</button>
+    <button
+      on:click={() => {
+        currentPaymentStep = "currency";
+      }}
+      disabled={isPaying}
+      class="btn btn-secondary">Back</button
+    >
     <button
       class="btn"
-      disabled={isLoadingPrice || !web3Modal}
+      disabled={isLoadingPrice || !web3Modal || isPaying}
       on:click={async () => {
+        isPaying = true;
         if (!web3Modal) return;
 
         const walletProvider = web3Modal.getWalletProvider();
@@ -148,10 +168,17 @@
 
         await handleRequestPayment({
           requestParameters,
-          walletProvider: walletProvider,
+          walletProvider,
+          payerAddress: payerAddress,
         });
-      }}>Pay</button
+
+        currentPaymentStep = "complete";
+
+        isPaying = false;
+      }}
     >
+      {isPaying ? "Processing payment..." : "Pay"}
+    </button>
   </div>
 </div>
 

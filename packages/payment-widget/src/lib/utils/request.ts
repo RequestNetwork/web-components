@@ -5,8 +5,12 @@ import {
 } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 import type { Currency } from "../types";
-import { parseUnits } from "viem";
-import { providers } from "ethers";
+import { providers, utils } from "ethers";
+import {
+  hasSufficientFunds,
+  approveErc20,
+  payRequest,
+} from "@requestnetwork/payment-processor";
 
 export const prepareRequestParameters = ({
   currency,
@@ -33,10 +37,7 @@ export const prepareRequestParameters = ({
         value: currencyValue,
         network: currency.network,
       },
-      expectedAmount: parseUnits(
-        amountInCrypto.toString(),
-        currency.decimals
-      ).toString(),
+      expectedAmount: utils.parseUnits(amountInCrypto.toString()).toString(),
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: sellerAddress,
@@ -78,10 +79,16 @@ export const prepareRequestParameters = ({
 export const handleRequestPayment = async ({
   requestParameters,
   walletProvider,
+  payerAddress,
 }: {
   requestParameters: any;
   walletProvider: any;
+  payerAddress: string;
 }) => {
+  const isERC20 =
+    requestParameters.requestInfo.currency.type ===
+    Types.RequestLogic.CURRENCY.ERC20;
+
   const ethersProvider = new providers.Web3Provider(walletProvider);
 
   const web3SignatureProvider = new Web3SignatureProvider(
@@ -98,6 +105,45 @@ export const handleRequestPayment = async ({
 
   const inMemoryRequest =
     await inMemoryRequestNetwork.createRequest(requestParameters);
+
+  const signer = await ethersProvider.getSigner();
+  if (isERC20) {
+    const _hasSufficientFunds = await hasSufficientFunds({
+      request: inMemoryRequest.inMemoryInfo?.requestData!,
+      address: payerAddress,
+      providerOptions: {
+        provider: ethersProvider.provider,
+      },
+    });
+
+    console.log("hasSufficientFunds", _hasSufficientFunds);
+
+    if (!_hasSufficientFunds) {
+      throw new Error("Insufficient funds");
+    }
+
+    const _approve = await approveErc20(
+      inMemoryRequest.inMemoryInfo?.requestData!,
+      signer
+    );
+
+    await _approve.wait(2);
+  }
+
+  const paymentTx = await payRequest(
+    inMemoryRequest.inMemoryInfo?.requestData!,
+    signer
+  );
+
+  await paymentTx.wait(1);
+
+  const persistingRequestNetwork = new RequestNetwork({
+    nodeConnectionConfig: {
+      baseURL: "https://gnosis.gateway.request.network",
+    },
+  });
+
+  await persistingRequestNetwork.persistRequest(inMemoryRequest);
 
   return inMemoryRequest;
 };

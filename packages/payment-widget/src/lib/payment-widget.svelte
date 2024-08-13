@@ -17,6 +17,7 @@
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import CurrencySelector from "./components/currency-selector.svelte";
   import PaymentConfirmation from "./components/payment-confirmation.svelte";
+  import PaymentComplete from "./components/payment-complete.svelte";
 
   export let selletInfo: SellerInfo;
   export let productInfo: ProductInfo;
@@ -143,11 +144,11 @@
         {amountInUSD}
         {sellerAddress}
         {web3Modal}
-        onBack={() => {
-          currentPaymentStep = "currency";
-        }}
         {selectedCurrency}
+        bind:currentPaymentStep
       />
+    {:else}
+      <PaymentComplete />
     {/if}
   </Modal>
 </section>
