@@ -19,7 +19,7 @@
   import PaymentConfirmation from "./components/payment-confirmation.svelte";
   import PaymentComplete from "./components/payment-complete.svelte";
 
-  export let selletInfo: SellerInfo;
+  export let sellerInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
@@ -89,12 +89,12 @@
 
 <section class="rn-payment-widget">
   <section class="rn-payment-widget-header">
-    {#if selletInfo?.logo || selletInfo?.name}
+    {#if sellerInfo?.logo || sellerInfo?.name}
       <div class="rn-payment-widget-header-seller-info">
-        {#if selletInfo.logo}
-          <img src={selletInfo.logo} alt="Seller logo" />
+        {#if sellerInfo.logo}
+          <img src={sellerInfo.logo} alt="Seller logo" />
         {/if}
-        <h2>{selletInfo.name}</h2>
+        <h2>{sellerInfo.name}</h2>
       </div>
     {/if}
 
