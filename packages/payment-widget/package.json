@@ -7,8 +7,7 @@
     "build": "npm run package",
     "build:wc": "vite build -c vite.wc.config.ts",
     "preview": "vite preview",
-    "package": "svelte-kit sync && svelte-package && npm run build:wc && npm run build:react && publint",
-    "build:react": "tsc -p tsconfig.react.json --jsx react-jsx --outDir ./dist/react --declaration",
+    "package": "svelte-kit sync && svelte-package && npm run build:wc && publint",
     "prepublishOnly": "npm run package",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -24,7 +23,7 @@
     },
     "./react": {
       "types": "./dist/react/PaymentWidget.d.ts",
-      "default": "./dist/react/PaymentWidget.tsx"
+      "default": "./dist/react/PaymentWidget.jsx"
     }
   },
   "files": [
