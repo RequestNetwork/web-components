@@ -23,7 +23,7 @@
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
   export let supportedCurrencies: SupportedCurrencies;
-  export let sellerAddress: string;
+  export let sellerAddress: string = "";
   export let persistRequest: boolean = true;
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;

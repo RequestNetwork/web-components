@@ -31,8 +31,6 @@ export function initializeCurrencyManager(
 export function initializeCurrencyManagerWithCurrencyIDS(
   curstomCurrencyIds: string[]
 ): any {
-  const networkMap = new Set();
-
   const currencies = CurrencyManager.getDefaultList().filter((currency) => {
     return curstomCurrencyIds.includes(currency.id);
   });

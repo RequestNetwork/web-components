@@ -121,13 +121,7 @@
   </div>
   <div class="payment-confirmation-tab">
     <h4>Payment to</h4>
-    <span
-      >{formatAddress(
-        "0x03671423327Cfab41C21060Ed4Bf7f1a4179BcD5",
-        10,
-        10
-      )}</span
-    >
+    <span>{formatAddress(sellerAddress, 10, 10)}</span>
   </div>
   <div class="payment-confirmation-tab">
     <h4>Payment network</h4>
@@ -194,7 +188,9 @@
             persistRequest,
           });
 
-          onPaymentSuccess(request);
+          if (onPaymentSuccess) {
+            onPaymentSuccess(request);
+          }
 
           currentPaymentStep = "complete";
         } catch (err) {
@@ -202,8 +198,9 @@
             const errorMessage = err.message.includes("ACTION_REJECTED")
               ? "Payment process was rejected by the user"
               : err.message;
-
-            onPaymentError(errorMessage);
+            if (onPaymentError) {
+              onPaymentError(errorMessage);
+            }
 
             error = errorMessage;
           }
