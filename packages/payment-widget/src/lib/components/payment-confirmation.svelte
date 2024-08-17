@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
@@ -20,7 +18,8 @@
   export let currentPaymentStep: string;
   export let web3Modal: Web3Modal | null;
   export let persistRequest: boolean;
-
+  export let onPaymentSuccess: (request: any) => void;
+  export let onPaymentError: (error: string) => void;
   const COUNTDOWN_INTERVAL = 30;
 
   let amountInCrypto: number = 0;
@@ -194,14 +193,18 @@
             payerAddress: payerAddress,
             persistRequest,
           });
-          dispatch("paymentSuccess", request);
+
+          onPaymentSuccess(request);
+
           currentPaymentStep = "complete";
         } catch (err) {
           if (err instanceof Error) {
             const errorMessage = err.message.includes("ACTION_REJECTED")
               ? "Payment process was rejected by the user"
               : err.message;
-            dispatch("paymentError", errorMessage);
+
+            onPaymentError(errorMessage);
+
             error = errorMessage;
           }
         }

@@ -28,7 +28,6 @@ export interface PaymentWidgetProps {
  * - Supports multiple cryptocurrencies
  * - Handles transaction creation and management
  * - Provides real-time payment status updates
- * - Customizable appearance to match your application's design
  *
  * @param {PaymentWidgetProps} props - The component props
  * @returns {JSX.Element}

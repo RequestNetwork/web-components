@@ -29,7 +29,9 @@
   export let onError: (error: string) => void;
 
   let web3Modal: Web3Modal | null = null;
-  let currencyDetails = getSupportedCurrencies(supportedCurrencies);
+  let currencyDetails: ReturnType<typeof getSupportedCurrencies>;
+  $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
+
   let selectedCurrency: Currency | null = null;
   $: isConnected = false;
   $: isModalOpen = false;
@@ -150,8 +152,8 @@
         {selectedCurrency}
         {persistRequest}
         bind:currentPaymentStep
-        on:paymentSuccess={(event) => onPaymentSuccess(event.detail)}
-        on:paymentError={(event) => onError(event.detail)}
+        {onPaymentSuccess}
+        onPaymentError={onError}
       />
     {:else}
       <PaymentComplete />
@@ -178,6 +180,10 @@
     background: linear-gradient(180deg, #01503a 0%, #002b20 100%);
     border-radius: 20px;
     padding: 0;
+
+    @media (max-width: 600px) {
+      width: 100%;
+    }
 
     &-header {
       padding: 30px;
