@@ -2,9 +2,14 @@
 
 <script lang="ts">
   import { Button } from "@requestnetwork/shared-components/button";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
+  import CurrencySelector from "./components/currency-selector.svelte";
+  import PaymentComplete from "./components/payment-complete.svelte";
+  import PaymentConfirmation from "./components/payment-confirmation.svelte";
+  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type {
     AmountInUSD,
     Currency,
@@ -14,10 +19,6 @@
   } from "./types";
   import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
-  import Modal from "@requestnetwork/shared-components/modal.svelte";
-  import CurrencySelector from "./components/currency-selector.svelte";
-  import PaymentConfirmation from "./components/payment-confirmation.svelte";
-  import PaymentComplete from "./components/payment-complete.svelte";
 
   export let sellerInfo: SellerInfo;
   export let productInfo: ProductInfo;
@@ -25,6 +26,7 @@
   export let supportedCurrencies: SupportedCurrencies;
   export let sellerAddress: string = "";
   export let persistRequest: boolean = true;
+  export let showRNBranding: boolean = true;
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;
 
@@ -204,6 +206,11 @@
     {/if}
   </Modal>
 </section>
+{#if showRNBranding}
+  <div class="rn-payment-widget-branding">
+    <PoweredBy />
+  </div>
+{/if}
 
 <style lang="scss">
   @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
@@ -224,6 +231,11 @@
     background: linear-gradient(180deg, #01503a 0%, #002b20 100%);
     border-radius: 20px;
     padding: 0;
+
+    &-branding {
+      display: flex;
+      justify-content: flex-end;
+    }
 
     @media (max-width: 600px) {
       width: 100%;
