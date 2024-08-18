@@ -39,7 +39,6 @@
 
   $: {
     if (isModalOpen && !isConnected) {
-      enableBodyScroll();
       isModalOpen = false;
       currentPaymentStep = "currency";
     }
@@ -59,6 +58,7 @@
       web3Modal.subscribeEvents(handleWeb3ModalEvents);
     }
   });
+
   function handleWeb3ModalEvents(newEvent: EventsControllerState) {
     if (newEvent.data.event === "MODAL_LOADED") {
       checkWalletState();
@@ -73,30 +73,26 @@
 
   let scrollPosition = 0;
 
-  function disableBodyScroll() {
-    scrollPosition = window.pageYOffset;
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollPosition}px`;
-    document.body.style.width = "100%";
+  function toggleBodyScroll(isDisabled: boolean) {
+    if (isDisabled) {
+      scrollPosition = window.pageYOffset;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollPosition}px`;
+      document.body.style.width = "100%";
+    } else {
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("position");
+      document.body.style.removeProperty("top");
+      document.body.style.removeProperty("width");
+      window.scrollTo(0, scrollPosition);
+    }
   }
 
-  function enableBodyScroll() {
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("position");
-    document.body.style.removeProperty("top");
-    document.body.style.removeProperty("width");
-    window.scrollTo(0, scrollPosition);
-  }
-
-  $: if (isModalOpen) {
-    disableBodyScroll();
-  } else {
-    enableBodyScroll();
-  }
+  $: toggleBodyScroll(isModalOpen);
 
   onDestroy(() => {
-    enableBodyScroll();
+    toggleBodyScroll(false);
   });
 
   function checkWalletState() {
