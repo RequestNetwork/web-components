@@ -11,6 +11,7 @@ import {
   approveErc20,
   payRequest,
 } from "@requestnetwork/payment-processor";
+import { chains } from "./chains";
 
 export const prepareRequestParameters = ({
   currency,
@@ -89,14 +90,59 @@ export const handleRequestPayment = async ({
   payerAddress: string;
   persistRequest: boolean;
 }) => {
+  let ethersProvider: providers.Web3Provider;
+  let targetChain: (typeof chains)[0];
+
+  const initializeProvider = async () => {
+    ethersProvider = new providers.Web3Provider(walletProvider);
+    const targetNetwork = requestParameters.requestInfo.currency.network;
+    const chain = getChainFromNetwork(targetNetwork);
+    if (!chain) {
+      throw new Error(`Unsupported network: ${targetNetwork}`);
+    }
+    targetChain = chain;
+  };
+
+  const ensureCorrectNetwork = async () => {
+    const currentChainId = await ethersProvider
+      .getNetwork()
+      .then((net) => net.chainId);
+
+    if (currentChainId !== targetChain.chainId) {
+      try {
+        await ethersProvider.send("wallet_switchEthereumChain", [
+          { chainId: utils.hexValue(targetChain.chainId) },
+        ]);
+      } catch (switchError: any) {
+        if (switchError.code === 4902) {
+          try {
+            await ethersProvider.send("wallet_addEthereumChain", [
+              getNetworkParams(targetChain),
+            ]);
+          } catch (addError) {
+            throw new Error(
+              `Failed to add and switch to the required network: ${targetChain.name}`
+            );
+          }
+        } else {
+          throw new Error(
+            `Failed to switch to the required network: ${targetChain.name}`
+          );
+        }
+      }
+      await initializeProvider();
+    }
+  };
+
   const isERC20 =
     requestParameters.requestInfo.currency.type ===
     Types.RequestLogic.CURRENCY.ERC20;
 
-  const ethersProvider = new providers.Web3Provider(walletProvider);
+  await initializeProvider();
+  await ensureCorrectNetwork();
 
   const web3SignatureProvider = new Web3SignatureProvider(
-    ethersProvider.provider
+    ethersProvider!.provider
   );
 
   const inMemoryRequestNetwork = new RequestNetwork({
@@ -110,7 +156,7 @@ export const handleRequestPayment = async ({
   const inMemoryRequest =
     await inMemoryRequestNetwork.createRequest(requestParameters);
 
-  const signer = await ethersProvider.getSigner();
+  const signer = await ethersProvider!.getSigner();
   if (isERC20) {
     const requestData = inMemoryRequest.inMemoryInfo?.requestData!;
     const tokenAddress = requestData.currencyInfo.value;
@@ -126,7 +172,7 @@ export const handleRequestPayment = async ({
       request: inMemoryRequest.inMemoryInfo?.requestData!,
       address: payerAddress,
       providerOptions: {
-        provider: ethersProvider,
+        provider: ethersProvider!,
       },
     });
 
@@ -167,3 +213,26 @@ export const handleRequestPayment = async ({
 
   return inMemoryRequest;
 };
+
+function getChainFromNetwork(network: string): (typeof chains)[0] | undefined {
+  const networkLower = network.toLowerCase();
+  return chains.find(
+    (chain) =>
+      chain.name.toLowerCase() === networkLower ||
+      chain.currency.toLowerCase() === networkLower
+  );
+}
+
+function getNetworkParams(chain: (typeof chains)[0]): any {
+  return {
+    chainId: utils.hexValue(chain.chainId),
+    chainName: chain.name,
+    nativeCurrency: {
+      name: chain.currency,
+      symbol: chain.currency,
+      decimals: 18,
+    },
+    rpcUrls: [chain.rpcUrl],
+    blockExplorerUrls: [chain.explorerUrl],
+  };
+}
