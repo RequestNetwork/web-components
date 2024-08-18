@@ -45,6 +45,13 @@
     }
   }
 
+  $: {
+    if (!isModalOpen) {
+      selectedCurrency = null;
+      currentPaymentStep = "currency";
+    }
+  }
+
   onMount(() => {
     web3Modal = initWalletConnector();
 
