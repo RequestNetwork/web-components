@@ -10,7 +10,7 @@
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
 
-  function selectCurrency(currency: any) {
+  function selectCurrency(currency: Currency) {
     selectedCurrency = currency;
     currentPaymentStep = "confirmation";
   }

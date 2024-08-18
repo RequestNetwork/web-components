@@ -29,10 +29,10 @@ export function initializeCurrencyManager(
 }
 
 export function initializeCurrencyManagerWithCurrencyIDS(
-  curstomCurrencyIds: string[]
+  customCurrencyIds: string[]
 ): any {
   const currencies = CurrencyManager.getDefaultList().filter((currency) => {
-    return curstomCurrencyIds.includes(currency.id);
+    return customCurrencyIds.includes(currency.id);
   });
 
   return {

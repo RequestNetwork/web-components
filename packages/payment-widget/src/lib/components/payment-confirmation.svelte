@@ -58,9 +58,10 @@
       const rate = data.data.rates[lookupSymbol];
       exchangeRate = parseFloat(rate);
       amountInCrypto = amountInUSD * parseFloat(rate);
-      isLoadingPrice = false;
     } catch (error) {
-      console.error("Error fetching exchange rate:", error);
+      alert("Unable to fetch exchange rate. Please try again later");
+    } finally {
+      isLoadingPrice = false;
     }
   }
 
