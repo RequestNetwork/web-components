@@ -37,6 +37,14 @@
   $: isModalOpen = false;
   $: currentPaymentStep = "currency";
 
+  $: {
+    if (isModalOpen && !isConnected) {
+      enableBodyScroll();
+      isModalOpen = false;
+      currentPaymentStep = "currency";
+    }
+  }
+
   onMount(() => {
     web3Modal = initWalletConnector();
 
@@ -121,6 +129,10 @@
   <section class="rn-payment-widget-body">
     <h2>Pay with crypto</h2>
     <Button
+      disabled={!amountInUSD ||
+        !sellerAddress ||
+        amountInUSD === 0 ||
+        supportedCurrencies?.length === 0}
       on:click={() => {
         if (!isConnected) {
           web3Modal?.open();
@@ -140,9 +152,11 @@
   >
     {#if currentPaymentStep === "currency"}
       <CurrencySelector
+        {web3Modal}
         currencies={currencyDetails.currencies}
         bind:selectedCurrency
         bind:currentPaymentStep
+        bind:isConnected
       />
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
@@ -151,9 +165,10 @@
         {web3Modal}
         {selectedCurrency}
         {persistRequest}
-        bind:currentPaymentStep
         {onPaymentSuccess}
         onPaymentError={onError}
+        bind:currentPaymentStep
+        bind:isConnected
       />
     {:else}
       <PaymentComplete />

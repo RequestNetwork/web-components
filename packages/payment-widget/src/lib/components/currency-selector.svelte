@@ -1,10 +1,14 @@
 <script lang="ts">
+  import type { Web3Modal } from "@web3modal/ethers5";
   import { Currency } from "../types";
   import { NETWORK_LABEL } from "../utils/currencies";
+  import WalletInfo from "./wallet-info.svelte";
 
   export let currencies: Currency[];
   export let selectedCurrency: Currency | null = null;
   export let currentPaymentStep: string;
+  export let web3Modal: Web3Modal | null;
+  export let isConnected: boolean;
 
   function selectCurrency(currency: any) {
     selectedCurrency = currency;
@@ -13,6 +17,7 @@
 </script>
 
 <div class="currency-selector">
+  <WalletInfo {web3Modal} bind:isConnected />
   <h3>Select a Currency</h3>
   <div class="currency-list">
     {#each currencies as currency (currency.id)}

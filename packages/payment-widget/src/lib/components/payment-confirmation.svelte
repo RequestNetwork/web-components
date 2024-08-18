@@ -2,7 +2,8 @@
   import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
-  import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
+  import CopyIcon from "@requestnetwork/shared-icons/copy-icon.svelte";
+  import { chains } from "../utils/chains";
   import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
   import { NETWORK_LABEL } from "../utils/currencies";
@@ -11,12 +12,14 @@
     handleRequestPayment,
     prepareRequestParameters,
   } from "../utils/request";
+  import WalletInfo from "./wallet-info.svelte";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
   export let sellerAddress: string;
   export let currentPaymentStep: string;
   export let web3Modal: Web3Modal | null;
+  export let isConnected: boolean;
   export let persistRequest: boolean;
   export let onPaymentSuccess: (request: any) => void;
   export let onPaymentError: (error: string) => void;
@@ -101,9 +104,17 @@
     const trimmedDecimal = decimalPart.replace(/0+$/, "");
     return trimmedDecimal ? `${wholePart}.${trimmedDecimal}` : wholePart;
   }
+
+  function getExplorerUrl(network: string, address: string): string {
+    const chain = chains.find(
+      (chain) => chain.name.toLowerCase() === network.toLowerCase()
+    );
+    return chain ? `${chain.explorerUrl}/address/${address}` : "#";
+  }
 </script>
 
 <div class="payment-confirmation">
+  <WalletInfo {web3Modal} bind:isConnected />
   <h3>Confirm Payment</h3>
   <div class="payment-confirmation-amount-info">
     <div>
@@ -119,9 +130,21 @@
       >
     </div>
   </div>
-  <div class="payment-confirmation-tab">
+  <div class="payment-confirmation-tab payment-confirmation-seller-address">
     <h4>Payment to</h4>
-    <span>{formatAddress(sellerAddress, 10, 10)}</span>
+    <a
+      href={getExplorerUrl(selectedCurrency.network, sellerAddress)}
+      target="_blank"
+    >
+      <span>{sellerAddress}</span>
+    </a>
+    <button
+      on:click={() => {
+        navigator.clipboard.writeText(sellerAddress);
+      }}
+    >
+      <CopyIcon />
+    </button>
   </div>
   <div class="payment-confirmation-tab">
     <h4>Payment network</h4>
@@ -233,6 +256,23 @@
     width: 100%;
     gap: 16px;
 
+    .payment-confirmation-seller-address {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 12px;
+
+      button {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
     &-amount-info {
       display: flex;
       align-items: center;
