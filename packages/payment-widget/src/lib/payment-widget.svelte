@@ -236,6 +236,7 @@
           display: flex;
           flex-direction: column;
           gap: 16px;
+          max-width: 70%;
 
           h2 {
             color: white;
@@ -247,6 +248,7 @@
             color: #d9d9d9;
             font-size: 16px;
             font-weight: 400;
+            word-wrap: break-word;
           }
         }
 
