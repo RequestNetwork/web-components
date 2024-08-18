@@ -30,9 +30,11 @@
 
   let web3Modal: Web3Modal | null = null;
   let currencyDetails: ReturnType<typeof getSupportedCurrencies>;
-  $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
-
+  let isCheckingConnection = false;
   let selectedCurrency: Currency | null = null;
+  let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+  $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
   $: isConnected = false;
   $: isModalOpen = false;
   $: currentPaymentStep = "currency";
@@ -51,11 +53,34 @@
     }
   }
 
+  async function checkConnectionStatus() {
+    if (isCheckingConnection) return;
+    isCheckingConnection = true;
+
+    const modalConnected = web3Modal?.getIsConnected() ?? false;
+
+    isConnected = modalConnected;
+    isCheckingConnection = false;
+  }
+
+  function startConnectionCheck() {
+    if (connectionCheckInterval) return;
+    connectionCheckInterval = setInterval(checkConnectionStatus, 500);
+  }
+
+  function stopConnectionCheck() {
+    if (connectionCheckInterval) {
+      clearInterval(connectionCheckInterval);
+      connectionCheckInterval = null;
+    }
+  }
+
   onMount(() => {
     web3Modal = initWalletConnector();
 
     if (web3Modal) {
       web3Modal.subscribeEvents(handleWeb3ModalEvents);
+      startConnectionCheck();
     }
   });
 
@@ -92,6 +117,7 @@
   $: toggleBodyScroll(isModalOpen);
 
   onDestroy(() => {
+    stopConnectionCheck();
     toggleBodyScroll(false);
   });
 
