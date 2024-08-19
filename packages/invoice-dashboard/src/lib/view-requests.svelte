@@ -9,6 +9,9 @@
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
+  import { toast } from "svelte-sonner";
 
   // Icons
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
@@ -16,6 +19,7 @@
   import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
   import ChevronRight from "@requestnetwork/shared-icons/chevron-right.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
+  import Download from "@requestnetwork/shared-icons/download.svelte";
 
   // Types
   import type { IConfig } from "@requestnetwork/shared-types";
@@ -30,7 +34,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { Types } from "@requestnetwork/request-client.js";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { debounce, formatAddress } from "../utils";
+  import { debounce, exportToPDF, formatAddress } from "../utils";
   import { CurrencyManager } from "@requestnetwork/currency";
 
   export let config: IConfig;
@@ -412,6 +416,7 @@
                   </i>
                 </div>
               </th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -484,6 +489,32 @@
                       ?.symbol}
                   </td>
                   <td> {checkStatus(request)}</td>
+                  <td
+                    ><Tooltip text="Download PDF">
+                      <Download
+                        onClick={async () => {
+                          try {
+                            await exportToPDF(
+                              request,
+                              currencyManager.fromAddress(
+                                request?.currencyInfo?.value
+                              ),
+                              config.logo
+                            );
+                          } catch (error) {
+                            toast.error(`Failed to export PDF`, {
+                              description: `${error}`,
+                              action: {
+                                label: "X",
+                                onClick: () => console.info("Close"),
+                              },
+                            });
+                            console.error("Failed to export PDF:", error);
+                          }
+                        }}
+                      />
+                    </Tooltip></td
+                  >
                 </tr>
               {/each}
             {/if}
@@ -551,6 +582,7 @@
     </div>
   {/if}
   <PoweredBy />
+  <Toaster />
 </div>
 
 <style>
