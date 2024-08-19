@@ -15,6 +15,7 @@
     "build:form": "turbo run build --filter=@requestnetwork/create-invoice-form",
     "build:dashboard": "turbo run build --filter=@requestnetwork/invoice-dashboard",
     "build:stakeholder": "turbo run build --filter=@requestnetwork/add-stakeholder",
+    "build:payment-widget": "turbo run build --filter=@requestnetwork/payment-widget",
     "link:all": "for d in packages/*; do (cd $d && npm link); done",
     "unlink:all": "for d in packages/*; do (cd $d && npm unlink); done"
   },
@@ -23,5 +24,9 @@
   },
   "author": "",
   "license": "MIT",
-  "packageManager": "npm@10.5.0"
+  "packageManager": "npm@10.5.0",
+  "dependencies": {
+    "@requestnetwork/currency": "^0.18.0",
+    "bits-ui": "^0.21.12"
+  }
 }

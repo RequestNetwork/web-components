@@ -1,3 +1,7 @@
 node_modules
+.env
+*.tgz
 .DS_Store
 .turbo
+dist
+.svelte-kit

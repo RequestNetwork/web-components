@@ -27,3 +27,16 @@ export function initializeCurrencyManager(
 
   return new CurrencyManager(currenciesToUse);
 }
+
+export function initializeCurrencyManagerWithCurrencyIDS(
+  customCurrencyIds: string[]
+): any {
+  const currencies = CurrencyManager.getDefaultList().filter((currency) => {
+    return customCurrencyIds.includes(currency.id);
+  });
+
+  return {
+    currencyManager: new CurrencyManager(currencies),
+    currencies,
+  };
+}
