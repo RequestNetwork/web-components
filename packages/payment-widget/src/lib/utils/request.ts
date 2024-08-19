@@ -1,16 +1,17 @@
 import {
+  approveErc20,
+  hasErc20Approval,
+  hasSufficientFunds,
+  payRequest,
+} from "@requestnetwork/payment-processor";
+import {
   RequestNetwork,
   Types,
   Utils,
 } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
+import { providers, utils } from "ethers";
 import type { Currency } from "../types";
-import { Contract, providers, utils } from "ethers";
-import {
-  hasSufficientFunds,
-  approveErc20,
-  payRequest,
-} from "@requestnetwork/payment-processor";
 import { chains } from "./chains";
 
 export const prepareRequestParameters = ({
@@ -165,14 +166,6 @@ export const handleRequestPayment = async ({
   const signer = await ethersProvider!.getSigner();
   if (isERC20) {
     const requestData = inMemoryRequest.inMemoryInfo?.requestData!;
-    const tokenAddress = requestData.currencyInfo.value;
-    const amount = requestData.expectedAmount;
-
-    const erc20Contract = new Contract(
-      tokenAddress,
-      ["function allowance(address,address) view returns (uint256)"],
-      signer
-    );
 
     const _hasSufficientFunds = await hasSufficientFunds({
       request: inMemoryRequest.inMemoryInfo?.requestData!,
@@ -186,12 +179,13 @@ export const handleRequestPayment = async ({
       throw new Error("Insufficient funds");
     }
 
-    const currentAllowance = await erc20Contract.allowance(
+    const _hasApproval = await hasErc20Approval(
+      requestData,
       payerAddress,
-      payerAddress
+      ethersProvider!
     );
 
-    if (currentAllowance.lt(amount)) {
+    if (!_hasApproval) {
       const _approve = await approveErc20(
         inMemoryRequest.inMemoryInfo?.requestData!,
         signer
