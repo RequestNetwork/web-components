@@ -14,6 +14,7 @@ export interface PaymentWidgetProps {
   sellerAddress: string;
   persistRequest?: boolean;
   showRNBranding?: boolean;
+  builderId?: string;
   onPaymentSuccess?: (request: any) => void;
   onError?: (error: string) => void;
 }

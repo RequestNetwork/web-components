@@ -21,6 +21,7 @@
   export let currentPaymentStep: PaymentStep;
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
+  export let builderId: string;
   export let persistRequest: boolean;
   export let onPaymentSuccess: (request: any) => void;
   export let onPaymentError: (error: string) => void;
@@ -204,6 +205,8 @@
             amountInCrypto,
             exchangeRate,
             amountInUSD,
+            builderId,
+            createdWith: window.location.hostname,
           });
 
           const request = await handleRequestPayment({

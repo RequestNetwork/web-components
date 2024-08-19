@@ -20,6 +20,8 @@ export const prepareRequestParameters = ({
   amountInCrypto,
   exchangeRate,
   amountInUSD,
+  createdWith,
+  builderId,
 }: {
   currency: Currency;
   sellerAddress: string;
@@ -27,6 +29,8 @@ export const prepareRequestParameters = ({
   amountInCrypto: number;
   exchangeRate: number;
   amountInUSD: number;
+  builderId: string;
+  createdWith: string;
 }) => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
   const currencyValue = isERC20 ? currency.address : "eth";
@@ -71,6 +75,8 @@ export const prepareRequestParameters = ({
       },
       exchangeRate: exchangeRate.toString(),
       amountInUSD: amountInUSD.toString(),
+      createdWith,
+      builderId,
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,

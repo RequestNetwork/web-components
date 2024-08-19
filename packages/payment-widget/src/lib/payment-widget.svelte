@@ -28,6 +28,7 @@
   export let sellerAddress: string = "";
   export let persistRequest: boolean = true;
   export let showRNBranding: boolean = true;
+  export let builderId: string = "";
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;
 
@@ -199,6 +200,7 @@
         {selectedCurrency}
         {persistRequest}
         {onPaymentSuccess}
+        {builderId}
         onPaymentError={onError}
         bind:currentPaymentStep
         bind:isConnected
