@@ -95,7 +95,7 @@
     clearInterval(intervalId);
   });
 
-  function formatCryptoAmount(amount: number): string {
+  function trimTrailingDecimalZeros(amount: number): string {
     const stringAmount = amount.toString();
     const [wholePart, decimalPart] = stringAmount.split(".");
 
@@ -127,7 +127,7 @@
     <div>
       <div>{currencySymbol}</div>
       <span
-        >{formatCryptoAmount(parseFloat(amountInCrypto.toFixed(6)))}
+        >{trimTrailingDecimalZeros(parseFloat(amountInCrypto.toFixed(6)))}
         {currencySymbol}</span
       >
     </div>
@@ -154,7 +154,7 @@
   </div>
   <div class="payment-confirmation-tab">
     <h4>Total</h4>
-    <span>{formatCryptoAmount(amountInCrypto)} {currencySymbol}</span>
+    <span>{trimTrailingDecimalZeros(amountInCrypto)} {currencySymbol}</span>
   </div>
 
   {#if !isPaying}
