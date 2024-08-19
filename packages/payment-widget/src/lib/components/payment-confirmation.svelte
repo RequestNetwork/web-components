@@ -1,17 +1,18 @@
 <script lang="ts">
-  import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
-  import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
   import CopyIcon from "@requestnetwork/shared-icons/copy-icon.svelte";
-  import { chains } from "../utils/chains";
+  import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
+  import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
+  import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
   import type { Currency } from "../types";
+  import { chains } from "../utils/chains";
   import { NETWORK_LABEL } from "../utils/currencies";
-  import type { Web3Modal } from "@web3modal/ethers5";
   import {
     handleRequestPayment,
     prepareRequestParameters,
   } from "../utils/request";
+  import Spinner from "./spinner.svelte";
   import WalletInfo from "./wallet-info.svelte";
 
   export let selectedCurrency: Currency;
@@ -233,7 +234,12 @@
         isPaying = false;
       }}
     >
-      {isPaying ? "Processing payment..." : "Pay"}
+      {#if isPaying}
+        <Spinner size="small" color="white" />
+        <span>Processing payment...</span>
+      {:else}
+        <span>Pay</span>
+      {/if}
     </button>
   </div>
 </div>
@@ -364,6 +370,7 @@
         outline: none;
         width: 100%;
         padding: 8px 16px;
+        gap: 8px;
 
         &:hover {
           background-color: rgba($color: #0bb489, $alpha: 0.8);

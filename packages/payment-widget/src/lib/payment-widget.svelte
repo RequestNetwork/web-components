@@ -37,6 +37,7 @@
   let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
+
   $: isConnected = false;
   $: isModalOpen = false;
   $: currentPaymentStep = "currency";
