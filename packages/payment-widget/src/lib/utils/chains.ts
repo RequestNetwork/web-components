@@ -90,4 +90,11 @@ export const chains = [
     explorerUrl: "https://basescan.org",
     rpcUrl: "https://mainnet.base.org",
   },
+  {
+    chainId: 5000,
+    name: "Mantle",
+    currency: "MNT",
+    explorerUrl: "https://explorer.mantle.xyz",
+    rpcUrl: "https://mantle.drpc.org",
+  },
 ];
