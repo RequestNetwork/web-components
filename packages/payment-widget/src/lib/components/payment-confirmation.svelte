@@ -5,7 +5,7 @@
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
-  import type { Currency } from "../types";
+  import type { Currency, PaymentStep } from "../types";
   import { chains } from "../utils/chains";
   import { NETWORK_LABEL } from "../utils/currencies";
   import {
@@ -18,7 +18,7 @@
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
   export let sellerAddress: string;
-  export let currentPaymentStep: string;
+  export let currentPaymentStep: PaymentStep;
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
   export let persistRequest: boolean;
@@ -58,7 +58,7 @@
       const lookupSymbol = symbolMap[symbolCurrency] || symbolCurrency;
       const rate = data.data.rates[lookupSymbol];
       exchangeRate = parseFloat(rate);
-      amountInCrypto = amountInUSD * parseFloat(rate);
+      amountInCrypto = amountInUSD * exchangeRate;
     } catch (error) {
       alert("Unable to fetch exchange rate. Please try again later");
     } finally {

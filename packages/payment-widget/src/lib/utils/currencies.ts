@@ -52,9 +52,9 @@ export const CURRENCY_ID = {
 } as const;
 
 export const NETWORK_LABEL = {
-  mainnet: "Ethereum mainnet ",
+  mainnet: "Ethereum",
   matic: "Polygon",
-  sepolia: "Sepolia testnet",
+  sepolia: "Sepolia",
   celo: "Celo",
   fantom: "Fantom",
   bsc: "Binance Smart Chain",

@@ -26,3 +26,5 @@ export type Currency = {
   type: "ERC20" | "ETH";
   name?: string;
 };
+
+export type PaymentStep = "currency" | "confirmation" | "complete";

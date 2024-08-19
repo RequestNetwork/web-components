@@ -13,6 +13,7 @@
   import type {
     AmountInUSD,
     Currency,
+    PaymentStep,
     ProductInfo,
     SellerInfo,
     SupportedCurrencies,
@@ -35,12 +36,12 @@
   let isCheckingConnection = false;
   let selectedCurrency: Currency | null = null;
   let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
+  let currentPaymentStep: PaymentStep = "currency";
 
   $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
 
   $: isConnected = false;
   $: isModalOpen = false;
-  $: currentPaymentStep = "currency";
 
   $: {
     if (isModalOpen && !isConnected) {
