@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Web3Modal } from "@web3modal/ethers5";
-
+  import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean = false;
 
@@ -21,15 +21,11 @@
       address = "";
     }
   }
-
-  function formatAddress(addr: string): string {
-    return `${addr.slice(0, 6)}...${addr.slice(-8)}`;
-  }
 </script>
 
 <div class="wallet-info">
   {#if isConnected}
-    <span class="address">{formatAddress(address)}</span>
+    <span class="address">{formatAddress(address, 6, 8)}</span>
     <button class="disconnect-btn" on:click={disconnectWallet}
       >Disconnect</button
     >
