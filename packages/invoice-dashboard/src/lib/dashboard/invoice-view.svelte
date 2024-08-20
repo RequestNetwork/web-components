@@ -39,7 +39,11 @@
   export let isRequestPayed: boolean;
 
   let network = request?.currencyInfo?.network || "mainnet";
-  let currency = currencyManager.fromAddress(request?.currencyInfo?.value);
+  // FIXME: Use a non deprecated function
+  let currency = currencyManager.fromStorageCurrency(
+    request?.currencyInfo.value,
+    request?.currencyInfo.network
+  );
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -99,7 +103,11 @@
   $: {
     wallet = wallet;
     network = request?.currencyInfo?.network || "mainnet";
-    currency = currencyManager.fromAddress(request?.currencyInfo?.value);
+    // FIXME: Use a non deprecated function
+    currency = currencyManager.from(
+      request?.currencyInfo.value,
+      request?.currencyInfo.network
+    );
   }
 
   const checkInvoice = async () => {
