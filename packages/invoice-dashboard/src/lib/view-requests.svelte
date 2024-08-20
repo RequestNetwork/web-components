@@ -86,6 +86,7 @@
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: signer,
       });
+
       requests = requestsData
         ?.map((request) => request.getData())
         .sort((a, b) => b.timestamp - a.timestamp);
@@ -482,11 +483,17 @@
                   <td>
                     {formatUnits(
                       BigInt(request.expectedAmount),
-                      currencyManager.fromAddress(request.currencyInfo.value)
-                        ?.decimals ?? 18
+                      // FIXME: Use a non deprecated function
+                      currencyManager.from(
+                        request.currencyInfo.value,
+                        request.currencyInfo.network
+                      )?.decimals ?? 18
                     )}
-                    {currencyManager.fromAddress(request.currencyInfo.value)
-                      ?.symbol}
+                    <!-- FIXME: Use a non deprecated function -->
+                    {currencyManager.from(
+                      request.currencyInfo.value,
+                      request.currencyInfo.network
+                    )?.symbol}
                   </td>
                   <td> {checkStatus(request)}</td>
                   <td
@@ -496,8 +503,10 @@
                           try {
                             await exportToPDF(
                               request,
-                              currencyManager.fromAddress(
-                                request?.currencyInfo?.value
+                              // FIXME: Use a non deprecated function
+                              currencyManager.from(
+                                request.currencyInfo.value,
+                                request.currencyInfo.network
                               ),
                               config.logo
                             );
