@@ -2,7 +2,7 @@ import { chains } from "./chains";
 import { createWeb3Modal, defaultConfig } from "@web3modal/ethers5";
 
 export const initWalletConnector = () => {
-  const projectId = import.meta.env.WEB3MODAL_PROJECT_ID;
+  const projectId = import.meta.env.VITE_WEB3MODAL_PROJECT_ID;
 
   const metadata = {
     name: "Request Checkout",

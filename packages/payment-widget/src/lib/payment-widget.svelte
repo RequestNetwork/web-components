@@ -194,6 +194,8 @@
       />
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
+        sellerName={sellerInfo.name}
+        productName={productInfo.name}
         {amountInUSD}
         {sellerAddress}
         {web3Modal}
