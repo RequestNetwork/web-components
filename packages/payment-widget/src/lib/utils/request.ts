@@ -197,7 +197,7 @@ export const handleRequestPayment = async ({
     await inMemoryRequestNetwork.createRequest(requestParameters);
 
   const signer = await ethersProvider!.getSigner();
-  const confirmationBlocks = getConfirmations(targetChain!.chainId);
+  const confirmationBlocks = 1;
   if (isERC20) {
     const requestData = inMemoryRequest.inMemoryInfo?.requestData!;
 
@@ -270,19 +270,6 @@ function getChainFromNetwork(network: string): (typeof chains)[0] | undefined {
       );
   }
 }
-
-const getConfirmations = (chainId: number): number => {
-  switch (chainId) {
-    case 137: // Polygon
-      return 15;
-    case 56: // Binance Smart Chain
-    case 43114: // Avalanche
-    case 250: // Fantom
-      return 5;
-    default:
-      return 2;
-  }
-};
 
 function getNetworkParams(chain: (typeof chains)[0]): any {
   return {
