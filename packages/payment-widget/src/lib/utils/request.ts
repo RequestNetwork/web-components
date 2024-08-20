@@ -23,6 +23,8 @@ export const prepareRequestParameters = ({
   amountInUSD,
   createdWith,
   builderId,
+  productName,
+  sellerName,
 }: {
   currency: Currency;
   sellerAddress: string;
@@ -32,10 +34,14 @@ export const prepareRequestParameters = ({
   amountInUSD: number;
   builderId: string;
   createdWith: string;
+  productName: string | undefined;
+  sellerName: string | undefined;
 }) => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
   const currencyValue = isERC20 ? currency.address : "eth";
-
+  const amount = utils
+    .parseUnits(amountInCrypto.toFixed(currency.decimals), currency.decimals)
+    .toString();
   return {
     requestInfo: {
       currency: {
@@ -43,9 +49,7 @@ export const prepareRequestParameters = ({
         value: currencyValue,
         network: currency.network,
       },
-      expectedAmount: utils
-        .parseUnits(amountInCrypto.toString(), currency.decimals)
-        .toString(),
+      expectedAmount: amount,
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: sellerAddress,
@@ -69,15 +73,44 @@ export const prepareRequestParameters = ({
       },
     },
     contentData: {
-      paymentCurrency: {
-        type: currency.type,
-        value: currencyValue,
-        network: currency.network,
+      meta: {
+        format: "rnf_invoice",
+        version: "0.0.3",
       },
-      exchangeRate: exchangeRate.toString(),
-      amountInUSD: amountInUSD.toString(),
-      createdWith,
-      builderId,
+      creationDate: new Date().toISOString(),
+      invoiceNumber: "rn-checkout",
+      note: `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}`,
+      invoiceItems: [
+        {
+          name: productName || "",
+          quantity: 1,
+          unitPrice: amount,
+          discount: "0",
+          tax: {
+            type: "percentage",
+            amount: "0",
+          },
+          currency: currencyValue,
+        },
+      ],
+
+      paymentTerms: {
+        dueDate: new Date().toISOString(),
+      },
+      sellerInfo: {
+        businessName: sellerName || undefined,
+      },
+      miscellaneous: {
+        exchangeRate: exchangeRate.toString(),
+        amountInUSD: amountInUSD.toString(),
+        createdWith,
+        builderId,
+        paymentCurrency: {
+          type: currency.type,
+          value: currencyValue,
+          network: currency.network,
+        },
+      },
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -217,11 +250,25 @@ export const handleRequestPayment = async ({
 
 function getChainFromNetwork(network: string): (typeof chains)[0] | undefined {
   const networkLower = network.toLowerCase();
-  return chains.find(
-    (chain) =>
-      chain.name.toLowerCase() === networkLower ||
-      chain.currency.toLowerCase() === networkLower
-  );
+  switch (networkLower) {
+    case "mainnet":
+    case "ethereum":
+      return chains.find((chain) => chain.name.toLowerCase() === "ethereum");
+    case "bsc":
+    case "binance smart chain":
+      return chains.find(
+        (chain) => chain.name.toLowerCase() === "binance smart chain"
+      );
+    case "zksyncera":
+    case "zksync era":
+      return chains.find((chain) => chain.name.toLowerCase() === "zksync era");
+    default:
+      return chains.find(
+        (chain) =>
+          chain.name.toLowerCase() === networkLower ||
+          chain.currency.toLowerCase() === networkLower
+      );
+  }
 }
 
 const getConfirmations = (chainId: number): number => {

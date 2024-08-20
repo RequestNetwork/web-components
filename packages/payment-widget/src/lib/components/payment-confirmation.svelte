@@ -17,6 +17,8 @@
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
+  export let sellerName: string | undefined;
+  export let productName: string | undefined;
   export let sellerAddress: string;
   export let currentPaymentStep: PaymentStep;
   export let web3Modal: Web3Modal | null;
@@ -200,6 +202,8 @@
         try {
           const requestParameters = prepareRequestParameters({
             currency: selectedCurrency,
+            productName,
+            sellerName,
             sellerAddress,
             payerAddress,
             amountInCrypto,
