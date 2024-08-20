@@ -40,7 +40,7 @@
 
   let network = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
-  let currency = currencyManager.fromStorageCurrency(
+  let currency = currencyManager.from(
     request?.currencyInfo.value,
     request?.currencyInfo.network
   );
