@@ -20,6 +20,10 @@
       "svelte": "./dist/index.js",
       "require": "./dist/web-component.umd.cjs",
       "default": "./dist/web-component.js"
+    },
+    "./react": {
+      "types": "./dist/react/InvoiceDashboard.d.ts",
+      "default": "./dist/react/InvoiceDashboard.jsx"
     }
   },
   "files": [
@@ -27,18 +31,27 @@
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*"
   ],
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
+  },
   "dependencies": {
     "@requestnetwork/payment-detection": "0.43.1-next.2043",
     "@requestnetwork/payment-processor": "0.45.1-next.2043",
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
     "ethers": "^5.7.2",
     "svelte-sonner": "^0.3.27",
-    "viem": "^2.9.15"
+    "viem": "^2.9.15",
+    "vite-plugin-node-polyfills": "^0.22.0"
   },
   "devDependencies": {
     "@sveltejs/package": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^2.5.2",
     "@tailwindcss/typography": "^0.5.13",
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "svelte": "^4.0.5",
     "svelte-check": "^3.6.0",
     "tslib": "^2.4.1",

@@ -20,6 +20,10 @@
       "svelte": "./dist/index.js",
       "require": "./dist/web-component.umd.cjs",
       "default": "./dist/web-component.js"
+    },
+    "./react": {
+      "types": "./dist/react/CreateInvoiceForm.d.ts",
+      "default": "./dist/react/CreateInvoiceForm.jsx"
     }
   },
   "files": [
