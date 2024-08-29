@@ -1,16 +1,11 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
   define: {
     global: "globalThis",
   },
   plugins: [
-    nodePolyfills({
-      include: ["buffer", "crypto"],
-      exclude: ["http", "stream", "zlib", "assert"],
-    }),
     svelte({
       compilerOptions: {
         customElement: true,
