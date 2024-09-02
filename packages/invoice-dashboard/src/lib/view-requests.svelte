@@ -53,7 +53,12 @@
   let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
-  let activeRequest: Types.IRequestDataWithEvents | undefined;
+  let activeRequest:
+    | (Types.IRequestDataWithEvents & {
+        formattedAmount: string;
+        currencySymbol: string;
+      })
+    | undefined;
   let currencyManager: CurrencyManager;
 
   let columns = {
@@ -194,6 +199,34 @@
     currentPage * itemsPerPage
   );
 
+  $: processedRequests = paginatedRequests?.map(
+    (
+      request
+    ): Types.IRequestDataWithEvents & {
+      formattedAmount: string;
+      currencySymbol: string;
+    } => {
+      const currencyInfo =
+        request.currencyInfo.type === Types.RequestLogic.CURRENCY.ETH
+          ? currencyManager.getNativeCurrency(
+              request.currencyInfo.type,
+              request.currencyInfo.network!
+            )
+          : currencyManager.fromAddress(
+              request.currencyInfo.value,
+              request.currencyInfo.network
+            );
+      return {
+        ...request,
+        formattedAmount: formatUnits(
+          BigInt(request.expectedAmount),
+          currencyInfo?.decimals ?? 18
+        ),
+        currencySymbol: currencyInfo!.symbol,
+      };
+    }
+  );
+
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       currentPage = page;
@@ -237,7 +270,10 @@
 
   const handleRequestSelect = (
     e: Event,
-    request: Types.IRequestDataWithEvents
+    request: Types.IRequestDataWithEvents & {
+      formattedAmount: string;
+      currencySymbol: string;
+    }
   ) => {
     activeRequest = request;
   };
@@ -421,8 +457,8 @@
             </tr>
           </thead>
           <tbody>
-            {#if paginatedRequests}
-              {#each paginatedRequests as request}
+            {#if processedRequests}
+              {#each processedRequests as request}
                 <tr
                   class="row"
                   on:click={(e) => handleRequestSelect(e, request)}
@@ -481,19 +517,8 @@
                     </td>
                   {/if}
                   <td>
-                    {formatUnits(
-                      BigInt(request.expectedAmount),
-                      // FIXME: Use a non deprecated function
-                      currencyManager.from(
-                        request.currencyInfo.value,
-                        request.currencyInfo.network
-                      )?.decimals ?? 18
-                    )}
-                    <!-- FIXME: Use a non deprecated function -->
-                    {currencyManager.from(
-                      request.currencyInfo.value,
-                      request.currencyInfo.network
-                    )?.symbol}
+                    {request.formattedAmount}
+                    {request.currencySymbol}
                   </td>
                   <td> {checkStatus(request)}</td>
                   <td
