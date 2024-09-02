@@ -1,49 +1,43 @@
 <script lang="ts">
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import {
+    approveErc20,
+    hasErc20Approval,
+    payRequest,
+  } from "@requestnetwork/payment-processor";
   import {
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
-  import {
-    payRequest,
-    approveErc20,
-    hasErc20Approval,
-  } from "@requestnetwork/payment-processor";
-  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { toast } from "svelte-sonner";
-
   // Components
-  import Button from "@requestnetwork/shared-components/button.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
-
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
-
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-
   // Types
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
-  import { walletClientToSigner, exportToPDF } from "../../utils";
-  import { formatUnits } from "viem";
   import { onMount } from "svelte";
+  import { formatUnits } from "viem";
+  import { exportToPDF, walletClientToSigner } from "../../utils";
+  import { getCurrencyFromManager } from "../../utils/getCurrency";
 
   export let config;
   export let wallet: WalletState | undefined;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let request: Types.IRequestDataWithEvents | undefined;
+  export let request: Types.IRequestDataWithEvents;
   export let currencyManager: any;
   export let isRequestPayed: boolean;
 
   let network = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
-  let currency = currencyManager.from(
-    request?.currencyInfo.value,
-    request?.currencyInfo.network
-  );
+  let currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -104,10 +98,7 @@
     wallet = wallet;
     network = request?.currencyInfo?.network || "mainnet";
     // FIXME: Use a non deprecated function
-    currency = currencyManager.from(
-      request?.currencyInfo.value,
-      request?.currencyInfo.network
-    );
+    currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
   }
 
   const checkInvoice = async () => {
@@ -205,8 +196,17 @@
   function getNetworkIdFromNetworkName(network: string): string {
     const networkIds: { [key: string]: string } = {
       mainnet: "0x1",
-      sepolia: "0xaa36a7",
       matic: "0x89",
+      bsc: "0x38",
+      xdai: "0x64",
+      avalanche: "0xa86a",
+      optimism: "0xa",
+      moonbeam: "0x504",
+      sepolia: "0xaa36a7",
+      fantom: "0xfa",
+      mantle: "0x1388",
+      zksyncera: "0x144",
+      base: "0x2105",
     };
     return networkIds[network];
   }
