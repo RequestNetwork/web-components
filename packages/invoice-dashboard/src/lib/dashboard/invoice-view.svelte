@@ -119,7 +119,12 @@
       );
       signer = walletClientToSigner(wallet);
       requestData = singleRequest?.getData();
-      approved = await checkApproval(requestData, signer);
+
+      if (requestData.currencyInfo.type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, signer);
+      } else {
+        approved = true;
+      }
       isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
       loading = false;
     } catch (err: any) {

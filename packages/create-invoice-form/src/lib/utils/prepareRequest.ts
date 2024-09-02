@@ -40,7 +40,10 @@ export const prepareRequestParams = ({
     timestamp: Utils.getCurrentTimestampInSecond(),
   },
   paymentNetwork: {
-    id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
+    id:
+      currency.type === Types.RequestLogic.CURRENCY.ETH
+        ? Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+        : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
     parameters: {
       paymentNetworkName: currency.network,
       paymentAddress: formData.payeeAddress,
