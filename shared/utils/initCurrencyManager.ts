@@ -45,6 +45,8 @@ const defaultCurrencyIds = [
   "fUSDC-sepolia",
 ];
 
+import { Types } from "@requestnetwork/request-client.js";
+
 export function initializeCurrencyManager(
   customCurrencies: any[]
 ): CurrencyManager {
@@ -59,6 +61,22 @@ export function initializeCurrencyManager(
   if (customCurrencies.length > 0) {
     currenciesToUse.push(...customCurrencies);
   }
+
+  // Filter out duplicates based on a unique identifier
+  currenciesToUse = currenciesToUse.filter(
+    (currency, index, self) =>
+      index ===
+      self.findIndex((t) => {
+        if (currency.type === Types.RequestLogic.CURRENCY.ETH) {
+          return t.type === currency.type && t.network === currency.network;
+        } else if (currency.type === Types.RequestLogic.CURRENCY.ERC20) {
+          return (
+            t.network === currency.network &&
+            t.address?.toLowerCase() === currency.address?.toLowerCase()
+          );
+        }
+      })
+  );
 
   return new CurrencyManager(currenciesToUse);
 }
