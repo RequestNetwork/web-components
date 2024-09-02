@@ -18,108 +18,112 @@ export const prepareRequestParams = ({
   currency,
   formData,
   invoiceTotals,
-}: IRequestParams): Types.ICreateRequestParameters => ({
-  requestInfo: {
-    currency: {
-      type: currency.type,
-      value: currency.address,
-      network: currency.network,
-    },
-    expectedAmount: parseUnits(
-      invoiceTotals.totalAmount.toFixed(2),
-      currency.decimals
-    ).toString(),
-    payee: {
-      type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: formData.creatorId,
-    },
-    payer: {
-      type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: formData.payerAddress,
-    },
-    timestamp: Utils.getCurrentTimestampInSecond(),
-  },
-  paymentNetwork: {
-    id:
-      currency.type === Types.RequestLogic.CURRENCY.ETH
-        ? Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
-        : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
-    parameters: {
-      paymentNetworkName: currency.network,
-      paymentAddress: formData.payeeAddress,
-      feeAddress: zeroAddress,
-      feeAmount: "0",
-    },
-  },
-  contentData: {
-    meta: {
-      format: "rnf_invoice",
-      version: "0.0.3",
-    },
-    miscellaneous:
-      formData.miscellaneous.labels.length > 0
-        ? formData.miscellaneous
-        : undefined,
-    creationDate: new Date(formData.issuedOn).toISOString(),
-    invoiceNumber: formData.invoiceNumber,
-    note: formData.note.length > 0 ? formData.note : undefined,
-    invoiceItems: formData.items.map((item) => ({
-      name: item.description,
-      quantity: Number(item.quantity),
-      unitPrice: parseUnits(
-        item.unitPrice.toString(),
+}: IRequestParams): Types.ICreateRequestParameters => {
+  const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
+
+  return {
+    requestInfo: {
+      currency: {
+        type: currency.type,
+        value: isERC20 ? currency.address : "eth",
+        network: currency.network,
+      },
+      expectedAmount: parseUnits(
+        invoiceTotals.totalAmount.toFixed(2),
         currency.decimals
       ).toString(),
-      discount: parseUnits(
-        item.discount.toString(),
-        currency.decimals
-      ).toString(),
-      tax: {
-        type: "percentage",
-        amount: item.tax.amount.toString(),
+      payee: {
+        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+        value: formData.creatorId,
       },
-      currency: currency.address,
-    })),
-    paymentTerms: {
-      dueDate: new Date(formData.dueDate).toISOString(),
-    },
-    buyerInfo: {
-      firstName: formData?.buyerInfo?.firstName || undefined,
-      lastName: formData?.buyerInfo?.lastName || undefined,
-      address: {
-        "country-name":
-          formData?.buyerInfo?.address?.["country-name"] || undefined,
-        locality: formData?.buyerInfo?.address?.locality || undefined,
-        "postal-code":
-          formData?.buyerInfo?.address?.["postal-code"] || undefined,
-        region: formData?.buyerInfo?.address?.region || undefined,
-        "street-address":
-          formData?.buyerInfo?.address?.["street-address"] || undefined,
+      payer: {
+        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+        value: formData.payerAddress,
       },
-      businessName: formData?.buyerInfo?.businessName || undefined,
-      taxRegistration: formData?.buyerInfo?.taxRegistration || undefined,
-      email: formData?.buyerInfo?.email || undefined,
+      timestamp: Utils.getCurrentTimestampInSecond(),
     },
-    sellerInfo: {
-      firstName: formData?.sellerInfo?.firstName || undefined,
-      lastName: formData?.sellerInfo?.lastName || undefined,
-      address: {
-        "country-name":
-          formData?.sellerInfo?.address?.["country-name"] || undefined,
-        locality: formData?.sellerInfo?.address?.locality || undefined,
-        "postal-code":
-          formData?.sellerInfo?.address?.["postal-code"] || undefined,
-        region: formData?.sellerInfo?.address?.region || undefined,
-        "street-address":
-          formData?.sellerInfo?.address?.["street-address"] || undefined,
+    paymentNetwork: {
+      id:
+        currency.type === Types.RequestLogic.CURRENCY.ETH
+          ? Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+          : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
+      parameters: {
+        paymentNetworkName: currency.network,
+        paymentAddress: formData.payeeAddress,
+        feeAddress: zeroAddress,
+        feeAmount: "0",
       },
-      businessName: formData?.sellerInfo?.businessName || undefined,
-      taxRegistration: formData?.sellerInfo?.taxRegistration || undefined,
-      email: formData?.sellerInfo?.email || undefined,
     },
-  },
-  signer: {
-    type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-    value: signer,
-  },
-});
+    contentData: {
+      meta: {
+        format: "rnf_invoice",
+        version: "0.0.3",
+      },
+      miscellaneous:
+        formData.miscellaneous.labels.length > 0
+          ? formData.miscellaneous
+          : undefined,
+      creationDate: new Date(formData.issuedOn).toISOString(),
+      invoiceNumber: formData.invoiceNumber,
+      note: formData.note.length > 0 ? formData.note : undefined,
+      invoiceItems: formData.items.map((item) => ({
+        name: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: parseUnits(
+          item.unitPrice.toString(),
+          currency.decimals
+        ).toString(),
+        discount: parseUnits(
+          item.discount.toString(),
+          currency.decimals
+        ).toString(),
+        tax: {
+          type: "percentage",
+          amount: item.tax.amount.toString(),
+        },
+        currency: isERC20 ? currency.address : currency.symbol,
+      })),
+      paymentTerms: {
+        dueDate: new Date(formData.dueDate).toISOString(),
+      },
+      buyerInfo: {
+        firstName: formData?.buyerInfo?.firstName || undefined,
+        lastName: formData?.buyerInfo?.lastName || undefined,
+        address: {
+          "country-name":
+            formData?.buyerInfo?.address?.["country-name"] || undefined,
+          locality: formData?.buyerInfo?.address?.locality || undefined,
+          "postal-code":
+            formData?.buyerInfo?.address?.["postal-code"] || undefined,
+          region: formData?.buyerInfo?.address?.region || undefined,
+          "street-address":
+            formData?.buyerInfo?.address?.["street-address"] || undefined,
+        },
+        businessName: formData?.buyerInfo?.businessName || undefined,
+        taxRegistration: formData?.buyerInfo?.taxRegistration || undefined,
+        email: formData?.buyerInfo?.email || undefined,
+      },
+      sellerInfo: {
+        firstName: formData?.sellerInfo?.firstName || undefined,
+        lastName: formData?.sellerInfo?.lastName || undefined,
+        address: {
+          "country-name":
+            formData?.sellerInfo?.address?.["country-name"] || undefined,
+          locality: formData?.sellerInfo?.address?.locality || undefined,
+          "postal-code":
+            formData?.sellerInfo?.address?.["postal-code"] || undefined,
+          region: formData?.sellerInfo?.address?.region || undefined,
+          "street-address":
+            formData?.sellerInfo?.address?.["street-address"] || undefined,
+        },
+        businessName: formData?.sellerInfo?.businessName || undefined,
+        taxRegistration: formData?.sellerInfo?.taxRegistration || undefined,
+        email: formData?.sellerInfo?.email || undefined,
+      },
+    },
+    signer: {
+      type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+      value: signer,
+    },
+  };
+};
