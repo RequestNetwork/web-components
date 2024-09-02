@@ -459,9 +459,7 @@
     </div>
   </div>
   {#if unsupportedNetwork}
-    <div class="unsupported-network">
-      Unsupported payment network: pn-eth-fee-proxy-contract
-    </div>
+    <div class="unsupported-network">Unsupported payment network!</div>
   {/if}
 </div>
 
