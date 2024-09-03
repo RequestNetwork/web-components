@@ -521,10 +521,9 @@
                           try {
                             await exportToPDF(
                               request,
-                              // FIXME: Use a non deprecated function
-                              currencyManager.from(
-                                request.currencyInfo.value,
-                                request.currencyInfo.network
+                              getCurrencyFromManager(
+                                request.currencyInfo,
+                                currencyManager
                               ),
                               config.logo
                             );
