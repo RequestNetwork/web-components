@@ -90,7 +90,7 @@ export const prepareRequestParameters = ({
             type: "percentage",
             amount: "0",
           },
-          currency: currencyValue,
+          currency: isERC20 ? currency.address : currency.symbol,
         },
       ],
 
