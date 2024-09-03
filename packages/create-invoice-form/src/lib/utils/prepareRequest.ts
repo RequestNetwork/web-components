@@ -29,7 +29,7 @@ export const prepareRequestParams = ({
         network: currency.network,
       },
       expectedAmount: parseUnits(
-        invoiceTotals.totalAmount.toFixed(2),
+        invoiceTotals.totalAmount.toString(),
         currency.decimals
       ).toString(),
       payee: {
