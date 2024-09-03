@@ -12,6 +12,7 @@
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type {
     AmountInUSD,
+    BuyerInfo,
     Currency,
     PaymentStep,
     ProductInfo,
@@ -20,7 +21,9 @@
   } from "./types";
   import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
+  import BuyerInfoForm from "./components/buyer-info-form.svelte";
 
+  // Props
   export let sellerInfo: SellerInfo;
   export let productInfo: ProductInfo;
   export let amountInUSD: AmountInUSD;
@@ -31,14 +34,23 @@
   export let builderId: string = "";
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;
+  export let buyerInfo: BuyerInfo | undefined = undefined;
+  export let enableBuyerInfo: boolean = true;
+  export let invoiceNumber: string | undefined = undefined;
 
+  // State
   let web3Modal: Web3Modal | null = null;
   let currencyDetails: ReturnType<typeof getSupportedCurrencies>;
   let isCheckingConnection = false;
   let selectedCurrency: Currency | null = null;
   let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
   let currentPaymentStep: PaymentStep = "currency";
+  let currentBuyerInfo: BuyerInfo = buyerInfo || {
+    address: {},
+  };
+  let scrollPosition = 0;
 
+  // Effects
   $: currencyDetails = getSupportedCurrencies(supportedCurrencies);
 
   $: isConnected = false;
@@ -58,6 +70,9 @@
     }
   }
 
+  $: toggleBodyScroll(isModalOpen);
+
+  // Methods
   async function checkConnectionStatus() {
     if (isCheckingConnection) return;
     isCheckingConnection = true;
@@ -80,15 +95,6 @@
     }
   }
 
-  onMount(() => {
-    web3Modal = initWalletConnector();
-
-    if (web3Modal) {
-      web3Modal.subscribeEvents(handleWeb3ModalEvents);
-      startConnectionCheck();
-    }
-  });
-
   function handleWeb3ModalEvents(newEvent: EventsControllerState) {
     if (newEvent.data.event === "MODAL_LOADED") {
       checkWalletState();
@@ -100,8 +106,6 @@
       checkWalletState();
     }
   }
-
-  let scrollPosition = 0;
 
   function toggleBodyScroll(isDisabled: boolean) {
     if (isDisabled) {
@@ -119,16 +123,32 @@
     }
   }
 
-  $: toggleBodyScroll(isModalOpen);
+  function checkWalletState() {
+    isConnected = web3Modal?.getIsConnected() ?? false;
+  }
+
+  function handleCurrencySelection() {
+    if (enableBuyerInfo) {
+      currentPaymentStep = "buyer-info";
+    } else {
+      currentPaymentStep = "confirmation";
+    }
+  }
+
+  // Lifecycles
+  onMount(() => {
+    web3Modal = initWalletConnector();
+
+    if (web3Modal) {
+      web3Modal.subscribeEvents(handleWeb3ModalEvents);
+      startConnectionCheck();
+    }
+  });
 
   onDestroy(() => {
     stopConnectionCheck();
     toggleBodyScroll(false);
   });
-
-  function checkWalletState() {
-    isConnected = web3Modal?.getIsConnected() ?? false;
-  }
 </script>
 
 <section class="rn-payment-widget">
@@ -189,13 +209,18 @@
         {web3Modal}
         currencies={currencyDetails.currencies}
         bind:selectedCurrency
-        bind:currentPaymentStep
         bind:isConnected
+        onCurrencySelected={handleCurrencySelection}
+      />
+    {:else if currentPaymentStep === "buyer-info"}
+      <BuyerInfoForm
+        bind:currentPaymentStep
+        bind:buyerInfo={currentBuyerInfo}
       />
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
-        sellerName={sellerInfo.name}
-        productName={productInfo.name}
+        {enableBuyerInfo}
+        {productInfo}
         {amountInUSD}
         {sellerAddress}
         {web3Modal}
@@ -206,6 +231,9 @@
         onPaymentError={onError}
         bind:currentPaymentStep
         bind:isConnected
+        {sellerInfo}
+        buyerInfo={currentBuyerInfo}
+        {invoiceNumber}
       />
     {:else}
       <PaymentComplete />
