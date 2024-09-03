@@ -83,6 +83,7 @@ export const prepareRequestParameters = ({
       },
       creationDate: new Date().toISOString(),
       invoiceNumber: invoiceNumber || "receipt",
+      note: `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}`,
       sellerInfo: {
         email: sellerInfo?.email || undefined,
         firstName: sellerInfo?.firstName || undefined,
