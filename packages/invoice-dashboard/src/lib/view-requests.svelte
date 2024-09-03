@@ -5,37 +5,35 @@
 <script lang="ts">
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
-  import Input from "@requestnetwork/shared-components/input.svelte";
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
-  import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
+  import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
-  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   import { toast } from "svelte-sonner";
-
   // Icons
-  import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
   import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
   import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
   import ChevronRight from "@requestnetwork/shared-icons/chevron-right.svelte";
-  import Search from "@requestnetwork/shared-icons/search.svelte";
+  import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
-
+  import Search from "@requestnetwork/shared-icons/search.svelte";
   // Types
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
-
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
 
+  import { CurrencyManager } from "@requestnetwork/currency";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { Types } from "@requestnetwork/request-client.js";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { Drawer, InvoiceView } from "./dashboard";
-  import { Types } from "@requestnetwork/request-client.js";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { debounce, exportToPDF, formatAddress } from "../utils";
-  import { CurrencyManager } from "@requestnetwork/currency";
+  import { getCurrencyFromManager } from "../utils/getCurrency";
+  import { Drawer, InvoiceView } from "./dashboard";
 
   export let config: IConfig;
   export let wallet: WalletState;
@@ -53,7 +51,12 @@
   let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
-  let activeRequest: Types.IRequestDataWithEvents | undefined;
+  let activeRequest:
+    | (Types.IRequestDataWithEvents & {
+        formattedAmount: string;
+        currencySymbol: string;
+      })
+    | undefined;
   let currencyManager: CurrencyManager;
 
   let columns = {
@@ -194,6 +197,29 @@
     currentPage * itemsPerPage
   );
 
+  $: processedRequests = paginatedRequests?.map(
+    (
+      request
+    ): Types.IRequestDataWithEvents & {
+      formattedAmount: string;
+      currencySymbol: string;
+    } => {
+      const currencyInfo = getCurrencyFromManager(
+        request.currencyInfo,
+        currencyManager
+      );
+
+      return {
+        ...request,
+        formattedAmount: formatUnits(
+          BigInt(request.expectedAmount),
+          currencyInfo?.decimals ?? 18
+        ),
+        currencySymbol: currencyInfo!.symbol,
+      };
+    }
+  );
+
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       currentPage = page;
@@ -237,7 +263,10 @@
 
   const handleRequestSelect = (
     e: Event,
-    request: Types.IRequestDataWithEvents
+    request: Types.IRequestDataWithEvents & {
+      formattedAmount: string;
+      currencySymbol: string;
+    }
   ) => {
     activeRequest = request;
   };
@@ -421,8 +450,8 @@
             </tr>
           </thead>
           <tbody>
-            {#if paginatedRequests}
-              {#each paginatedRequests as request}
+            {#if processedRequests}
+              {#each processedRequests as request}
                 <tr
                   class="row"
                   on:click={(e) => handleRequestSelect(e, request)}
@@ -481,19 +510,8 @@
                     </td>
                   {/if}
                   <td>
-                    {formatUnits(
-                      BigInt(request.expectedAmount),
-                      // FIXME: Use a non deprecated function
-                      currencyManager.from(
-                        request.currencyInfo.value,
-                        request.currencyInfo.network
-                      )?.decimals ?? 18
-                    )}
-                    <!-- FIXME: Use a non deprecated function -->
-                    {currencyManager.from(
-                      request.currencyInfo.value,
-                      request.currencyInfo.network
-                    )?.symbol}
+                    {request.formattedAmount}
+                    {request.currencySymbol}
                   </td>
                   <td> {checkStatus(request)}</td>
                   <td

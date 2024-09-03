@@ -47,6 +47,8 @@ export const CURRENCY_ID = {
   "ETH-OPTIMISM_OPTIMISM": "ETH-optimism-optimism",
   MNT_MANTLE: "MNT-mantle",
   "ETH-SEPOLIA_SEPOLIA": "ETH-sepolia-sepolia",
+  FUSDT_SEPOLIA: "fUSDT-sepolia",
+  FUSDC_SEPOLIA: "fUSDC-sepolia",
   "ETH-ZKSYNC_ZKSYNCERA": "ETH-zksync-zksyncera",
   "ETH-BASE_BASE": "ETH-base-base",
 } as const;
