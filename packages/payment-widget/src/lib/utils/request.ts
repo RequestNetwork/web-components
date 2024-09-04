@@ -11,7 +11,7 @@ import {
 } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
 import { providers, utils } from "ethers";
-import type { Currency } from "../types";
+import type { BuyerInfo, Currency, ProductInfo, SellerInfo } from "../types";
 import { chains } from "./chains";
 
 export const prepareRequestParameters = ({
@@ -23,8 +23,10 @@ export const prepareRequestParameters = ({
   amountInUSD,
   createdWith,
   builderId,
-  productName,
-  sellerName,
+  productInfo,
+  sellerInfo,
+  buyerInfo,
+  invoiceNumber,
 }: {
   currency: Currency;
   sellerAddress: string;
@@ -34,14 +36,17 @@ export const prepareRequestParameters = ({
   amountInUSD: number;
   builderId: string;
   createdWith: string;
-  productName: string | undefined;
-  sellerName: string | undefined;
+  productInfo: ProductInfo | undefined;
+  sellerInfo: SellerInfo;
+  buyerInfo: BuyerInfo;
+  invoiceNumber?: string;
 }) => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
   const currencyValue = isERC20 ? currency.address : "eth";
   const amount = utils
     .parseUnits(amountInCrypto.toFixed(currency.decimals), currency.decimals)
     .toString();
+
   return {
     requestInfo: {
       currency: {
@@ -69,7 +74,6 @@ export const prepareRequestParameters = ({
         paymentAddress: sellerAddress,
         feeAddress: "0x0000000000000000000000000000000000000000",
         feeAmount: "0",
-        tokenAddress: currencyValue,
       },
     },
     contentData: {
@@ -78,11 +82,43 @@ export const prepareRequestParameters = ({
         version: "0.0.3",
       },
       creationDate: new Date().toISOString(),
-      invoiceNumber: "rn-checkout",
+      invoiceNumber: invoiceNumber || "receipt",
       note: `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}`,
+      sellerInfo: {
+        email: sellerInfo?.email || undefined,
+        firstName: sellerInfo?.firstName || undefined,
+        lastName: sellerInfo?.lastName || undefined,
+        businessName: sellerInfo?.businessName || undefined,
+        phone: sellerInfo?.phone || undefined,
+        address: sellerInfo?.address
+          ? {
+              streetAddress: sellerInfo.address["street-address"] || undefined,
+              locality: sellerInfo.address.locality || undefined,
+              postalCode: sellerInfo.address["postal-code"] || undefined,
+              country: sellerInfo.address["country-name"] || undefined,
+            }
+          : undefined,
+        taxRegistration: sellerInfo?.taxRegistration || undefined,
+      },
+      buyerInfo: {
+        email: buyerInfo?.email || undefined,
+        firstName: buyerInfo?.firstName || undefined,
+        lastName: buyerInfo?.lastName || undefined,
+        businessName: buyerInfo?.businessName || undefined,
+        phone: buyerInfo?.phone || undefined,
+        address: buyerInfo?.address
+          ? {
+              streetAddress: buyerInfo.address["street-address"] || undefined,
+              locality: buyerInfo.address.locality || undefined,
+              postalCode: buyerInfo.address["postal-code"] || undefined,
+              country: buyerInfo.address["country-name"] || undefined,
+            }
+          : undefined,
+        taxRegistration: buyerInfo?.taxRegistration || undefined,
+      },
       invoiceItems: [
         {
-          name: productName || "",
+          name: productInfo?.name || "Unnamed product",
           quantity: 1,
           unitPrice: amount,
           discount: "0",
@@ -93,12 +129,8 @@ export const prepareRequestParameters = ({
           currency: isERC20 ? currency.address : currency.symbol,
         },
       ],
-
       paymentTerms: {
         dueDate: new Date().toISOString(),
-      },
-      sellerInfo: {
-        businessName: sellerName || undefined,
       },
       miscellaneous: {
         exchangeRate: exchangeRate.toString(),

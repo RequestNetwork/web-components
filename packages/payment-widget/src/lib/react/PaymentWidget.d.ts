@@ -4,6 +4,7 @@ import type {
   ProductInfo,
   AmountInUSD,
   SupportedCurrencies,
+  BuyerInfo,
 } from "../types";
 
 export interface PaymentWidgetProps {
@@ -17,6 +18,9 @@ export interface PaymentWidgetProps {
   builderId?: string;
   onPaymentSuccess?: (request: any) => void;
   onError?: (error: string) => void;
+  buyerInfo?: BuyerInfo;
+  enableBuyerInfo?: boolean;
+  invoiceNumber?: string;
 }
 
 /**
@@ -30,6 +34,7 @@ export interface PaymentWidgetProps {
  * - Supports multiple cryptocurrencies
  * - Handles transaction creation and management
  * - Provides real-time payment status updates
+ * - Supports full invoice information
  *
  * @param {PaymentWidgetProps} props - The component props
  * @returns {JSX.Element}
@@ -38,7 +43,15 @@ export interface PaymentWidgetProps {
  * <PaymentWidget
  *   sellerInfo={{
  *     logo: 'https://example.com/logo.png',
- *     name: 'Example Store'
+ *     name: 'Example Store',
+ *     email: 'store@example.com',
+ *     address: {
+ *       'street-address': '123 Main St',
+ *       locality: 'Anytown',
+ *       region: 'State',
+ *       'country-name': 'Country',
+ *       'postal-code': '12345'
+ *     }
  *   }}
  *   productInfo={{
  *     name: 'Digital Art Collection',
@@ -49,6 +62,8 @@ export interface PaymentWidgetProps {
  *   sellerAddress="0x1234567890123456789012345678901234567890"
  *   supportedCurrencies={['ETH_MAINNET', 'USDC_MAINNET', 'USDC_MATIC']}
  *   persistRequest={true}
+ *   enableBuyerInfo={true}
+ *   invoiceNumber="INV-001"
  *   onPaymentSuccess={(request) => {
  *     console.log(request);
  *   }}

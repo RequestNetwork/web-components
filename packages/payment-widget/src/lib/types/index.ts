@@ -1,9 +1,36 @@
 import type { CURRENCY_ID, NETWORK_LABEL } from "../utils/currencies";
 
-export type SellerInfo = {
+export interface Address {
+  "street-address"?: string;
+  locality?: string;
+  region?: string;
+  "country-name"?: string;
+  "postal-code"?: string;
+}
+
+export interface SellerInfo {
   logo?: string;
   name?: string;
-};
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  phone?: string;
+  address?: Address;
+  taxRegistration?: string;
+  companyRegistration?: string;
+}
+
+export interface BuyerInfo {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  phone?: string;
+  address?: Address;
+  taxRegistration?: string;
+  companyRegistration?: string;
+}
 
 export type ProductInfo = {
   name?: string;
@@ -27,4 +54,8 @@ export type Currency = {
   name?: string;
 };
 
-export type PaymentStep = "currency" | "confirmation" | "complete";
+export type PaymentStep =
+  | "currency"
+  | "buyer-info"
+  | "confirmation"
+  | "complete";

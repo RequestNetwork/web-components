@@ -5,7 +5,13 @@
   import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
-  import type { Currency, PaymentStep } from "../types";
+  import type {
+    Currency,
+    PaymentStep,
+    SellerInfo,
+    BuyerInfo,
+    ProductInfo,
+  } from "../types";
   import { chains } from "../utils/chains";
   import { NETWORK_LABEL } from "../utils/currencies";
   import {
@@ -17,16 +23,20 @@
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
-  export let sellerName: string | undefined;
-  export let productName: string | undefined;
+  export let sellerInfo: SellerInfo;
+  export let buyerInfo: BuyerInfo;
+  export let productInfo: ProductInfo | undefined;
   export let sellerAddress: string;
   export let currentPaymentStep: PaymentStep;
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
   export let builderId: string;
   export let persistRequest: boolean;
+  export let enableBuyerInfo: boolean;
   export let onPaymentSuccess: (request: any) => void;
   export let onPaymentError: (error: string) => void;
+  export let invoiceNumber: string | undefined;
+
   const COUNTDOWN_INTERVAL = 30;
 
   let amountInCrypto: number = 0;
@@ -182,7 +192,11 @@
   <div class="button-group">
     <button
       on:click={() => {
-        currentPaymentStep = "currency";
+        if (enableBuyerInfo) {
+          currentPaymentStep = "buyer-info";
+        } else {
+          currentPaymentStep = "currency";
+        }
       }}
       disabled={isPaying}
       class="btn btn-secondary">Back</button
@@ -202,15 +216,17 @@
         try {
           const requestParameters = prepareRequestParameters({
             currency: selectedCurrency,
-            productName,
-            sellerName,
-            sellerAddress,
+            productInfo,
+            sellerInfo,
+            buyerInfo,
             payerAddress,
             amountInCrypto,
             exchangeRate,
             amountInUSD,
             builderId,
             createdWith: window.location.hostname,
+            invoiceNumber,
+            sellerAddress,
           });
 
           const request = await handleRequestPayment({

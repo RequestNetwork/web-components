@@ -6,13 +6,12 @@
 
   export let currencies: Currency[];
   export let selectedCurrency: Currency | null = null;
-  export let currentPaymentStep: PaymentStep;
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean;
+  export let onCurrencySelected: () => void;
 
   function selectCurrency(currency: Currency) {
     selectedCurrency = currency;
-    currentPaymentStep = "confirmation";
   }
 </script>
 
@@ -43,16 +42,20 @@
       </button>
     {/each}
   </div>
+  <button
+    class="btn"
+    disabled={!selectedCurrency}
+    on:click={onCurrencySelected}
+  >
+    Next
+  </button>
 </div>
 
 <style lang="scss">
   @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
-  body {
-    font-family: "Montserrat", sans-serif;
-  }
-
   .currency-selector {
+    font-family: "Montserrat", sans-serif;
     width: 100%;
     color: #333;
 
@@ -65,6 +68,7 @@
     .currency-list {
       max-height: 300px;
       overflow-y: auto;
+      margin-bottom: 20px;
 
       &::-webkit-scrollbar {
         width: 6px;
@@ -135,6 +139,32 @@
         font-size: 14px;
         color: #666;
       }
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    cursor: pointer;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: #0bb489;
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 8px 16px;
+    gap: 8px;
+
+    &:hover:not(:disabled) {
+      background-color: darken(#0bb489, 10%);
+    }
+
+    &:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
   }
 </style>
