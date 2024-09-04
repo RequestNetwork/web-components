@@ -45,9 +45,7 @@
   let selectedCurrency: Currency | null = null;
   let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
   let currentPaymentStep: PaymentStep = "currency";
-  let currentBuyerInfo: BuyerInfo = buyerInfo || {
-    address: {},
-  };
+
   let scrollPosition = 0;
 
   // Effects
@@ -55,6 +53,9 @@
 
   $: isConnected = false;
   $: isModalOpen = false;
+  $: currentBuyerInfo = buyerInfo || {
+    address: {},
+  };
 
   $: {
     if (isModalOpen && !isConnected) {
@@ -71,6 +72,16 @@
   }
 
   $: toggleBodyScroll(isModalOpen);
+
+  $: {
+    if (buyerInfo) {
+      currentBuyerInfo = buyerInfo;
+    } else {
+      currentBuyerInfo = {
+        address: {},
+      };
+    }
+  }
 
   // Methods
   async function checkConnectionStatus() {
