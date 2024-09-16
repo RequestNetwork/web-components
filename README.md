@@ -1,5 +1,3 @@
-<!-- @format -->
-
 # Request Network Web Components
 
 ## Introduction
@@ -13,13 +11,14 @@ The components are built using Svelte but compiled to [Web Components](https://o
 
 Usage depends on the component. See packages/\<package>/README.md
 
-| Component                                                                     | NPM Package                                                                                                                                              |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@requestnetwork/add-stakeholder](packages/add-stakeholder/README.md)         | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder)         |
+| Component | NPM Package |
+| --- | --- |
+| [@requestnetwork/add-stakeholder](packages/add-stakeholder/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder.svg)](https://badge.fury.io/js/%40requestnetwork%2Fadd-stakeholder) |
 | [@requestnetwork/create-invoice-form](packages/create-invoice-form/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form.svg)](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form) |
-| [@requestnetwork/invoice-dashboard](packages/invoice-dashboard/README.md)     | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard.svg)](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget)        |
-| [@requestnetwork/payment-widget](packages/payment-widget/README.md)           | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget.svg)](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget)           |
-| [@requestnetwork/shared](packages/shared/README.md)                           | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fshared.svg)](https://badge.fury.io/js/%40requestnetwork%2Fshared)                           |
+| [@requestnetwork/invoice-dashboard](packages/invoice-dashboard/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard.svg)](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard) |
+| [@requestnetwork/payment-widget](packages/payment-widget/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget.svg)](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget) |
+| [@requestnetwork/shared](packages/shared/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fshared.svg)](https://badge.fury.io/js/%40requestnetwork%2Fshared) |
+
 
 ## Developing
 
