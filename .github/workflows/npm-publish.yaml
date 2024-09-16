@@ -17,6 +17,7 @@ jobs:
           - '@requestnetwork/add-stakeholder'
           - '@requestnetwork/create-invoice-form'
           - '@requestnetwork/invoice-dashboard'
+          - '@requestnetwork/payment-widget'
     steps:
       - name: Checkout repository 🛎️
         uses: actions/checkout@v4
