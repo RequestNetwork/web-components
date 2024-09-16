@@ -497,8 +497,8 @@
                         <span
                           >{formatAddress(
                             currentTab === "Pay"
-                              ? request.payee?.value ?? ""
-                              : request.payer?.value ?? ""
+                              ? (request.payee?.value ?? "")
+                              : (request.payer?.value ?? "")
                           )}</span
                         >
                         <Copy
@@ -624,6 +624,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: "Montserrat", sans-serif;
+    color-scheme: light;
   }
 
   .main-table {
