@@ -1,3 +1,5 @@
+# @format
+
 name: release-if-necessary
 
 on:
@@ -12,9 +14,9 @@ jobs:
     strategy:
       matrix:
         package:
-          - "@requestnetwork/add-stakeholder"
-          - "@requestnetwork/create-invoice-form"
-          - "@requestnetwork/invoice-dashboard"
+          - '@requestnetwork/add-stakeholder'
+          - '@requestnetwork/create-invoice-form'
+          - '@requestnetwork/invoice-dashboard'
     steps:
       - name: Checkout repository 🛎️
         uses: actions/checkout@v4
@@ -22,8 +24,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies 📥
         run: npm ci
@@ -39,14 +41,9 @@ jobs:
           echo "is-release-needed=$IS_RELEASE_NEEDED"
           echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
 
-      - name: Setup .npmrc file to publish to npm 📝
-        if: steps.is-release-needed.outputs.is-release-needed == 'true'
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.REQUEST_BOT_NPM_TOKEN }}" > ~/.npmrc
-
       - name: Publish package on NPM 📦
         if: steps.is-release-needed.outputs.is-release-needed == 'true'
         run: |
-          npm config set registry https://registry.npmjs.org
-          npm whoami || { echo "Failed to identify npm user."; exit 1; }
-          npm config get registry || { echo "Failed to get npm registry."; exit 1; }
           npm publish --workspace=${{ matrix.package }} --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
