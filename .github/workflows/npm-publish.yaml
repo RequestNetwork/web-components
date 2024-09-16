@@ -48,3 +48,4 @@ jobs:
           npm publish --workspace=${{ matrix.package }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
+          VITE_WEB3MODAL_PROJECT_ID: ${{ secrets.VITE_WEB3MODAL_PROJECT_ID }}
