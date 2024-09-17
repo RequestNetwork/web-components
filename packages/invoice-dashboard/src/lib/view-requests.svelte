@@ -58,6 +58,8 @@
       })
     | undefined;
   let currencyManager: CurrencyManager;
+  let previousWalletAddress: string | undefined;
+  let previousNetwork: string | undefined;
 
   let columns = {
     issuedAt: false,
@@ -82,44 +84,41 @@
   });
 
   const getRequests = async () => {
-    try {
-      loading = true;
+    if (!wallet || !requestNetwork) return;
 
+    loading = true;
+    try {
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: signer,
+        value: wallet?.accounts[0]?.address,
       });
-
       requests = requestsData
         ?.map((request) => request.getData())
         .sort((a, b) => b.timestamp - a.timestamp);
-
-      loading = false;
     } catch (error) {
-      loading = false;
       console.error("Failed to fetch requests:", error);
+    } finally {
+      loading = false;
     }
   };
 
   const getOneRequest = async (activeRequest: any) => {
     try {
+      if (!activeRequest) return;
       loading = true;
-
       const _request = await requestNetwork?.fromRequestId(
         activeRequest?.requestId!
       );
-
       requests = requests?.filter(
         (request) => request.requestId !== activeRequest.requestId
       );
       requests = [...requests, _request.getData()].sort(
         (a, b) => b.timestamp - a.timestamp
       );
-
-      loading = false;
     } catch (error) {
-      loading = false;
       console.error("Failed to fetch request:", error);
+    } finally {
+      loading = false;
     }
   };
 
@@ -133,7 +132,23 @@
   let currentPage = 1;
   let totalPages = 1;
 
-  $: wallet, getRequests();
+  $: {
+    const currentWalletAddress = wallet?.accounts[0]?.address;
+    const currentNetwork = wallet?.chains[0]?.id;
+
+    if (
+      currentWalletAddress &&
+      currentWalletAddress !== previousWalletAddress
+    ) {
+      getRequests();
+      previousWalletAddress = currentWalletAddress;
+    }
+
+    if (currentNetwork && currentNetwork !== previousNetwork) {
+      previousNetwork = currentNetwork;
+    }
+  }
+
   $: wallet, (activeRequest = undefined);
 
   $: {
