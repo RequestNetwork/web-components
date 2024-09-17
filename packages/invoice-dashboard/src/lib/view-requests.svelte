@@ -142,14 +142,14 @@
     ) {
       getRequests();
       previousWalletAddress = currentWalletAddress;
+
+      activeRequest = undefined;
     }
 
     if (currentNetwork && currentNetwork !== previousNetwork) {
       previousNetwork = currentNetwork;
     }
   }
-
-  $: wallet, (activeRequest = undefined);
 
   $: {
     if (sortColumn && sortOrder) {
