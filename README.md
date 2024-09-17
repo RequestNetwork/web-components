@@ -38,6 +38,9 @@ npm run build
 # Link packages to be used locally
 npm run link:all
 
+# Link react and react-dom from the project directory where the web components are used
+ npm link <project>/node_modules/react <project>/node_modules/react-dom
+
 # Navigate to your project directory where the web components are used
 cd <project>
 

@@ -31,7 +31,7 @@
   import { Types } from "@requestnetwork/request-client.js";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { debounce, exportToPDF, formatAddress } from "../utils";
+  import { capitalize, debounce, exportToPDF, formatAddress } from "../utils";
   import { getCurrencyFromManager } from "../utils/getCurrency";
   import { Drawer, InvoiceView } from "./dashboard";
 
@@ -276,11 +276,13 @@
   };
 
   const checkStatus = (request: any) => {
-    switch (request?.balance?.balance >= request?.expectedAmount) {
+    switch (request?.balance?.balance > 0) {
       case true:
-        return "Paid";
+        return request?.balance?.balance >= request?.expectedAmount
+          ? "Paid"
+          : "Partially Paid";
       default:
-        return "Created";
+        return capitalize(request?.state);
     }
   };
 </script>
