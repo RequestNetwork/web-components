@@ -35,14 +35,18 @@ npm install
 # Build all packages locally
 npm run build
 
-# Link packages to be used locally
-npm run link:all
+# Link local web-component packages into your app
+npm run link:all --app-path=/path/to/app
+## Examples
+npm run link:all --app-path=../invoicing-template
+npm run link:all --app-path=../rn-checkout
 
 # Navigate to your project directory where the web components are used
 cd <project>
 
 # Use local packages instead of the deployed ones
 npm link @requestnetwork/create-invoice-form @requestnetwork/invoice-dashboard
+npm link @requestnetwork/payment-widget
 ```
 
 Further details specific to the component can be found in the relevant
