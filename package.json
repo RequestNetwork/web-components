@@ -16,8 +16,9 @@
     "build:dashboard": "turbo run build --filter=@requestnetwork/invoice-dashboard",
     "build:stakeholder": "turbo run build --filter=@requestnetwork/add-stakeholder",
     "build:payment-widget": "turbo run build --filter=@requestnetwork/payment-widget",
-    "link:react": "npm link ../invoicing-template/node_modules/react ../invoicing-template/node_modules/react-dom",
-    "link:all": "npm run link:react && for d in packages/*; do (cd $d && npm link); done",
+    "echo": "echo $npm_config_app_path/node_modules/react",
+    "link:react": "npm link $npm_config_app_path/node_modules/react $npm_config_app_path/node_modules/react-dom",
+    "link:all": "npm run link:react --app-path=$npm_config_app_path && for d in packages/*; do (cd $d && npm link); done",
     "unlink:all": "for d in packages/*; do (cd $d && npm unlink); done"
   },
   "devDependencies": {
