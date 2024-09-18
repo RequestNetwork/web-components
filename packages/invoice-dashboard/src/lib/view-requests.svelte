@@ -85,8 +85,8 @@
 
   const getRequests = async () => {
     if (!wallet || !requestNetwork) return;
-
     loading = true;
+
     try {
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -103,9 +103,10 @@
   };
 
   const getOneRequest = async (activeRequest: any) => {
+    if (!activeRequest) return;
+    loading = true;
+
     try {
-      if (!activeRequest) return;
-      loading = true;
       const _request = await requestNetwork?.fromRequestId(
         activeRequest?.requestId!
       );
