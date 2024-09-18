@@ -8,8 +8,17 @@
   let className: $$Props["class"] = undefined;
   export let builders: $$Props["builders"] = [];
   export { className as class };
+  export let onClick: (event: MouseEvent) => void = () => {};
+  export let preventDefault: boolean = true;
 
   $: classes = ["rn-btn", className].filter(Boolean).join(" ");
+
+  function handleClick(event: MouseEvent) {
+    if (preventDefault) {
+      event.preventDefault();
+    }
+    onClick(event);
+  }
 </script>
 
 <ButtonPrimitive.Root
@@ -17,7 +26,7 @@
   class={classes}
   type="button"
   {...$$restProps}
-  on:click
+  on:click={handleClick}
   on:keydown
 >
   <slot />
