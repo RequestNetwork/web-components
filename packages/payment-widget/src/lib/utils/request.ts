@@ -10,7 +10,7 @@ import {
   Utils,
 } from "@requestnetwork/request-client.js";
 import { Web3SignatureProvider } from "@requestnetwork/web3-signature";
-import { providers, utils } from "ethers";
+import { constants, providers, utils } from "ethers";
 import type { BuyerInfo, Currency, ProductInfo, SellerInfo } from "../types";
 import { chains } from "./chains";
 
@@ -27,6 +27,9 @@ export const prepareRequestParameters = ({
   sellerInfo,
   buyerInfo,
   invoiceNumber,
+  feeAddress,
+  feeAmountInUSD,
+  feeAmountInCrypto,
 }: {
   currency: Currency;
   sellerAddress: string;
@@ -40,12 +43,21 @@ export const prepareRequestParameters = ({
   sellerInfo: SellerInfo;
   buyerInfo: BuyerInfo;
   invoiceNumber?: string;
+  feeAddress: string;
+  feeAmountInUSD: number;
+  feeAmountInCrypto: number;
 }) => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
   const currencyValue = isERC20 ? currency.address : "eth";
   const amount = utils
     .parseUnits(amountInCrypto.toFixed(currency.decimals), currency.decimals)
     .toString();
+
+  let note = `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}. `;
+
+  if (feeAddress !== constants.AddressZero && feeAmountInUSD) {
+    note += `Fee of ${feeAmountInUSD} USD and ${feeAmountInCrypto} ${currency.symbol} was paid by the buyer to ${feeAddress}.`;
+  }
 
   return {
     requestInfo: {
@@ -72,8 +84,13 @@ export const prepareRequestParameters = ({
       parameters: {
         paymentNetworkName: currency.network,
         paymentAddress: sellerAddress,
-        feeAddress: "0x0000000000000000000000000000000000000000",
-        feeAmount: "0",
+        feeAddress: feeAddress,
+        feeAmount: utils
+          .parseUnits(
+            feeAmountInCrypto.toFixed(currency.decimals),
+            currency.decimals
+          )
+          .toString(),
       },
     },
     contentData: {
@@ -83,7 +100,7 @@ export const prepareRequestParameters = ({
       },
       creationDate: new Date().toISOString(),
       invoiceNumber: invoiceNumber || "receipt",
-      note: `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}`,
+      note: note,
       sellerInfo: {
         email: sellerInfo?.email || undefined,
         firstName: sellerInfo?.firstName || undefined,
@@ -136,6 +153,9 @@ export const prepareRequestParameters = ({
         exchangeRate: exchangeRate.toString(),
         amountInUSD: amountInUSD.toString(),
         createdWith,
+        feeAddress,
+        feeAmountInUSD,
+        feeAmountInCrypto,
         builderId,
         paymentCurrency: {
           type: currency.type,

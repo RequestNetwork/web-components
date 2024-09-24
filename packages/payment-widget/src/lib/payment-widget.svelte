@@ -22,6 +22,7 @@
   import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
   import BuyerInfoForm from "./components/buyer-info-form.svelte";
+  import { ethers } from "ethers";
 
   // Props
   export let sellerInfo: SellerInfo;
@@ -37,6 +38,8 @@
   export let buyerInfo: BuyerInfo | undefined = undefined;
   export let enableBuyerInfo: boolean = true;
   export let invoiceNumber: string | undefined = undefined;
+  export let feeAddress: string = ethers.constants.AddressZero;
+  export let feeAmountInUSD: number = 0;
 
   // State
   let web3Modal: Web3Modal | null = null;
@@ -230,6 +233,8 @@
       />
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
+        {feeAddress}
+        {feeAmountInUSD}
         {enableBuyerInfo}
         {productInfo}
         {amountInUSD}

@@ -20,6 +20,7 @@
   } from "../utils/request";
   import Spinner from "./spinner.svelte";
   import WalletInfo from "./wallet-info.svelte";
+  import { ethers } from "ethers";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
@@ -36,6 +37,8 @@
   export let onPaymentSuccess: (request: any) => void;
   export let onPaymentError: (error: string) => void;
   export let invoiceNumber: string | undefined;
+  export let feeAddress: string;
+  export let feeAmountInUSD: number;
 
   const COUNTDOWN_INTERVAL = 30;
 
@@ -44,9 +47,11 @@
   let intervalId: NodeJS.Timeout;
   let exchangeRate: number = 0;
   let error: string = "";
+  let feeAmountInCrypto: number = 0;
 
   $: isLoadingPrice = true;
   $: isPaying = false;
+  $: totalPayment = amountInCrypto + feeAmountInCrypto;
 
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
@@ -72,6 +77,7 @@
       const rate = data.data.rates[lookupSymbol];
       exchangeRate = parseFloat(rate);
       amountInCrypto = amountInUSD * exchangeRate;
+      feeAmountInCrypto = feeAmountInUSD * exchangeRate;
     } catch (error) {
       alert("Unable to fetch exchange rate. Please try again later");
     } finally {
@@ -161,13 +167,38 @@
       <CopyIcon />
     </button>
   </div>
+  {#if feeAddress !== ethers.constants.AddressZero && feeAmountInUSD > 0}
+    <div class="payment-confirmation-tab">
+      <h4>Fee to</h4>
+      <a
+        href={getExplorerUrl(selectedCurrency.network, feeAddress)}
+        target="_blank"
+      >
+        <span>{feeAddress}</span>
+      </a>
+      <button
+        on:click={() => {
+          navigator.clipboard.writeText(feeAddress);
+        }}
+      >
+        <CopyIcon />
+      </button>
+    </div>
+    <div class="payment-confirmation-tab">
+      <h4>Fee Amount</h4>
+      <span>
+        ${feeAmountInUSD} USD / {trimTrailingDecimalZeros(feeAmountInCrypto)}
+        {currencySymbol}
+      </span>
+    </div>
+  {/if}
   <div class="payment-confirmation-tab">
     <h4>Payment network</h4>
     <span>{NETWORK_LABEL[selectedCurrency.network]}</span>
   </div>
   <div class="payment-confirmation-tab">
     <h4>Total</h4>
-    <span>{trimTrailingDecimalZeros(amountInCrypto)} {currencySymbol}</span>
+    <span>{trimTrailingDecimalZeros(totalPayment)} {currencySymbol}</span>
   </div>
 
   {#if !isPaying}
@@ -216,11 +247,14 @@
         try {
           const requestParameters = prepareRequestParameters({
             currency: selectedCurrency,
+            feeAddress,
+            feeAmountInUSD,
+            feeAmountInCrypto,
             productInfo,
             sellerInfo,
             buyerInfo,
             payerAddress,
-            amountInCrypto,
+            amountInCrypto: totalPayment,
             exchangeRate,
             amountInUSD,
             builderId,
