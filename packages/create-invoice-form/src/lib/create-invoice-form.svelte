@@ -8,7 +8,7 @@
   // Utils
   import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import { getCurrencySupportedNetworksForConversion, initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
 
   // Components
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -18,6 +18,7 @@
   import { InvoiceForm, InvoiceView } from "./invoice";
   import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { Types } from "@requestnetwork/request-client.js";
 
   export let config: IConfig;
   export let signer: string = "";
@@ -34,20 +35,22 @@
     const networkSet = new Set<string>();
 
     currencyManager.knownCurrencies.forEach((currency: any) => {
-      networkSet.add(currency.network);
+      if(currency.network) {
+        networkSet.add(currency.network);
+      }
     });
 
     return Array.from(networkSet);
   };
 
-  let networks = extractUniqueNetworkNames();
+  let networks: (string | undefined)[] = extractUniqueNetworkNames();
 
   let network = networks[0];
 
   const handleNetworkChange = (network: string) => {
     if (network) {
       const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: any) => currency.network === network
+        (currency: any) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === network
       );
 
       network = network;
@@ -61,10 +64,24 @@
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: any) => currency.network === network
+    (currency: any) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === network
   );
 
-  let currency = defaultCurrencies[0];
+  let currency = defaultCurrencies.filter(
+    (currency: any) => currency.type !== Types.RequestLogic.CURRENCY.ISO4217
+  )[0];
+  let invoiceCurrency = defaultCurrencies[0];
+
+  const handleInvoiceCurrencyChange = (value: string) => {
+    invoiceCurrency = value;
+    
+    if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+
+      networks = getCurrencySupportedNetworksForConversion(invoiceCurrency.hash, currencyManager);
+    } else {
+      networks = extractUniqueNetworkNames();
+    }
+  };
 
   const handleCurrencyChange = (value: string) => {
     currency = value;
@@ -174,6 +191,7 @@
       bind:defaultCurrencies
       bind:payeeAddressError
       bind:clientAddressError
+      {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}
@@ -181,7 +199,9 @@
     <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
+        {invoiceCurrency}
         {currency}
+        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}

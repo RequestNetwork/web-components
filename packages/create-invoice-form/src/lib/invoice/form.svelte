@@ -17,10 +17,12 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import { Types } from '@requestnetwork/request-client.js';
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;
+  export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
 
   export let handleNetworkChange: (chainId: string) => void;
@@ -306,6 +308,16 @@
             </div>
           </Accordion>
         </div>
+
+        <Dropdown
+          {config}
+          placeholder="Select invoice currency (labeling)"
+          options={defaultCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
+          }))}
+          onchange={handleInvoiceCurrencyChange}
+        />
         <Dropdown
           {config}
           placeholder="Select payment chain"
@@ -317,13 +329,14 @@
           })}
           onchange={handleNetworkChange}
         />
-
         <Dropdown
           {config}
           placeholder="Select a currency"
-          options={defaultCurrencies.map((currency) => ({
+          options={defaultCurrencies.filter(
+            (currency) => currency.type !== Types.RequestLogic.CURRENCY.ISO4217
+          ).map((currency) => ({
             value: currency,
-            label: `${currency.symbol} (${currency.network})`,
+            label: `${currency.symbol} (${currency?.network})`,
           }))}
           onchange={handleCurrencyChange}
         />

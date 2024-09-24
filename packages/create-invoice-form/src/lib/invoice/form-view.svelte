@@ -18,7 +18,9 @@
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency = defaultCurrencies[0];
+  export let currency = {};
+  export let invoiceCurrency = {};
+  export let network = "";
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -164,10 +166,14 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency.network[0].toUpperCase() + currency.network.slice(1)}
+      {network.toUpperCase() + network.slice(1)}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
+      {invoiceCurrency.symbol}
+    </p>
+    <p class="invoice-section-title">
+      <span>Currency</span>
       {currency.symbol}
       ({currency.network})
     </p>

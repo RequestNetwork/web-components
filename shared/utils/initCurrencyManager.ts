@@ -1,6 +1,21 @@
 import { CurrencyManager } from "@requestnetwork/currency";
 
 const defaultCurrencyIds = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CHF",
+  "SGD",
+  "AUD",
+  "BRL",
+  "CAD",
+  "INR",
+  "JPY",
+  "KRW",
+  "IDR",
+  "NZD",
+  "TRY",
+  "CNY",
   "FAU-sepolia",
   "USDC-mainnet",
   "USDT-mainnet",
@@ -46,6 +61,7 @@ const defaultCurrencyIds = [
 ];
 
 import { Types } from "@requestnetwork/request-client.js";
+import { formattedCurrencyConversionPairs } from './currencyConversionPairs'
 
 export function initializeCurrencyManager(
   customCurrencies: any[]
@@ -58,7 +74,7 @@ export function initializeCurrencyManager(
 
   currenciesToUse = defaultCurrencies;
 
-  if (customCurrencies.length > 0) {
+  if (customCurrencies?.length > 0) {
     currenciesToUse.push(...customCurrencies);
   }
 
@@ -74,11 +90,13 @@ export function initializeCurrencyManager(
             t.network === currency.network &&
             t.address?.toLowerCase() === currency.address?.toLowerCase()
           );
+        } else if (currency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+          return t.type === currency.type && t.symbol === currency.symbol;
         }
       })
   );
 
-  return new CurrencyManager(currenciesToUse);
+  return new CurrencyManager(currenciesToUse, {}, formattedCurrencyConversionPairs);
 }
 
 export function initializeCurrencyManagerWithCurrencyIDS(
@@ -89,7 +107,15 @@ export function initializeCurrencyManagerWithCurrencyIDS(
   });
 
   return {
-    currencyManager: new CurrencyManager(currencies),
+    currencyManager: new CurrencyManager(currencies, {}, formattedCurrencyConversionPairs),
     currencies,
   };
 }
+
+export const getCurrencySupportedNetworksForConversion = (currencyHash: string, currencyManager: any) : (string | undefined)[] => {
+ return Object.keys(currencyManager.conversionPairs).map((network) => {
+    if (currencyManager.conversionPairs[network][currencyHash]) {
+      return network;
+    }
+   }).filter((network) => network);
+} 
