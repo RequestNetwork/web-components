@@ -13,14 +13,16 @@
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { Types } from '@requestnetwork/request-client.js';
 
   export let defaultCurrencies;
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency = {};
+  export let currency = defaultCurrencies.filter(
+    (currency: any) => currency.type !== Types.RequestLogic.CURRENCY.ISO4217
+  )[0];
   export let invoiceCurrency = {};
-  export let network = "";
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -166,7 +168,7 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {network.toUpperCase() + network.slice(1)}
+      {currency.network[0].toUpperCase() + currency.network.slice(1)}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>

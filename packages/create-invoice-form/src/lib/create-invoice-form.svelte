@@ -55,7 +55,9 @@
 
       network = network;
       defaultCurrencies = newCurrencies;
-      currency = newCurrencies[0];
+      currency = newCurrencies.filter(
+    (currency: any) => currency.type !== Types.RequestLogic.CURRENCY.ISO4217
+  )[0];
     }
   };
 
@@ -149,6 +151,7 @@
     const requestCreateParameters = prepareRequestParams({
       signer,
       formData,
+      invoiceCurrency,
       currency,
       invoiceTotals,
     });
@@ -201,7 +204,6 @@
         config={activeConfig}
         {invoiceCurrency}
         {currency}
-        {network}
         bind:formData
         bind:canSubmit
         {invoiceTotals}

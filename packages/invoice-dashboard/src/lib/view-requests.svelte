@@ -34,6 +34,7 @@
   import { capitalize, debounce, exportToPDF, formatAddress } from "../utils";
   import { getCurrencyFromManager } from "../utils/getCurrency";
   import { Drawer, InvoiceView } from "./dashboard";
+  import { getPaymentNetworkExtension } from '@requestnetwork/payment-detection';
 
   export let config: IConfig;
   export let wallet: WalletState;
@@ -225,13 +226,28 @@
         currencyManager
       );
 
+      let paymentCurrencies = [currencyInfo]
+
+      const paymentNetworkExtension = getPaymentNetworkExtension(request);
+      
+      if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
+        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens.map(
+          (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
+        );
+      } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
+        paymentCurrencies = [currencyManager.getNativeCurrency(
+         Types.RequestLogic.CURRENCY.ETH,
+          paymentNetworkExtension?.values?.network
+        )];
+      }
+
       return {
         ...request,
         formattedAmount: formatUnits(
           BigInt(request.expectedAmount),
-          currencyInfo?.decimals ?? 18
+          paymentCurrencies[0]?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo!.symbol,
+        currencySymbol: paymentCurrencies[0]?.symbol!,
       };
     }
   );

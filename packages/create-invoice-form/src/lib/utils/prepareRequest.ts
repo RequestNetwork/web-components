@@ -1,8 +1,10 @@
 import { Types, Utils } from "@requestnetwork/request-client.js";
 import type { CustomFormData } from "@requestnetwork/shared-types";
+import { get } from 'svelte/store'
 import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
+  invoiceCurrency: any;
   currency: any;
   formData: CustomFormData;
   invoiceTotals: {
@@ -13,20 +15,73 @@ interface IRequestParams {
   signer: string;
 }
 
+const getPaymentNetwork = (invoiceCurrency: any, currency: any, formData: CustomFormData) => {
+  if (
+    invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
+    currency.type === Types.RequestLogic.CURRENCY.ETH
+  ) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY,
+      parameters: {
+        network: currency.network,
+        paymentAddress: formData.payeeAddress,
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    };
+  } else if (
+    invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
+    currency.type === Types.RequestLogic.CURRENCY.ERC20
+  ) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY,
+      parameters: {
+        network: currency.network,
+        paymentAddress: formData.payeeAddress,
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+        acceptedTokens: [currency.address],
+      },
+    };
+  } else if (currency.type === Types.RequestLogic.CURRENCY.ETH) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT,
+      parameters: {
+        paymentNetworkName: currency.network,
+        paymentAddress: formData.payeeAddress,
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    }
+  } else {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
+      parameters: {
+        paymentNetworkName: currency.network,
+        paymentAddress: formData.payeeAddress,
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    }
+  }
+};
+
 export const prepareRequestParams = ({
   signer,
+  invoiceCurrency,
   currency,
   formData,
   invoiceTotals,
 }: IRequestParams): Types.ICreateRequestParameters => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
+  const isERC20InvoiceCurrency = invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20;
 
   return {
     requestInfo: {
       currency: {
-        type: currency.type,
-        value: isERC20 ? currency.address : "eth",
-        network: currency.network,
+        type: invoiceCurrency.type,
+        value: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
+        network: invoiceCurrency.network,
       },
       expectedAmount: parseUnits(
         invoiceTotals.totalAmount.toString(),
@@ -42,18 +97,8 @@ export const prepareRequestParams = ({
       },
       timestamp: Utils.getCurrentTimestampInSecond(),
     },
-    paymentNetwork: {
-      id:
-        currency.type === Types.RequestLogic.CURRENCY.ETH
-          ? Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
-          : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
-      parameters: {
-        paymentNetworkName: currency.network,
-        paymentAddress: formData.payeeAddress,
-        feeAddress: zeroAddress,
-        feeAmount: "0",
-      },
-    },
+    paymentNetwork: getPaymentNetwork(invoiceCurrency, currency, formData),
+    paymentCurrency: isERC20 ? currency.address : currency.symbol,
     contentData: {
       meta: {
         format: "rnf_invoice",
@@ -71,17 +116,17 @@ export const prepareRequestParams = ({
         quantity: Number(item.quantity),
         unitPrice: parseUnits(
           item.unitPrice.toString(),
-          currency.decimals
+          invoiceCurrency.decimals
         ).toString(),
         discount: parseUnits(
           item.discount.toString(),
-          currency.decimals
+          invoiceCurrency.decimals
         ).toString(),
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),
         },
-        currency: isERC20 ? currency.address : currency.symbol,
+        currency: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
       })),
       paymentTerms: {
         dueDate: new Date(formData.dueDate).toISOString(),

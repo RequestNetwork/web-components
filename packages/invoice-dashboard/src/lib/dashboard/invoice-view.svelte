@@ -2,7 +2,9 @@
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import {
     approveErc20,
+    approveErc20ForProxyConversion,
     hasErc20Approval,
+    hasErc20ApprovalForProxyConversion,
     payRequest,
   } from "@requestnetwork/payment-processor";
   import {
@@ -38,6 +40,7 @@
   let network = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
   let currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
+  let paymentCurrencies: any = [];
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -53,6 +56,7 @@
   let unsupportedNetwork = false;
   let correctChain =
     wallet?.chains[0].id === String(getNetworkIdFromNetworkName(network));
+  let paymentNetworkExtension: any = null;
 
   const generateDetailParagraphs = (info: any) => {
     return [
@@ -110,6 +114,20 @@
       );
       signer = walletClientToSigner(wallet);
       requestData = singleRequest?.getData();
+      paymentNetworkExtension = getPaymentNetworkExtension(requestData);
+
+      if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
+        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens.map(
+          (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
+        );
+      } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
+        paymentCurrencies = [currencyManager.getNativeCurrency(
+         Types.RequestLogic.CURRENCY.ETH,
+          paymentNetworkExtension?.values?.network
+        )];
+      } else {
+        paymentCurrencies = [currency];
+      }
 
       if (requestData.currencyInfo.type === Types.RequestLogic.CURRENCY.ERC20) {
         approved = await checkApproval(requestData, signer);
@@ -119,6 +137,7 @@
       isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
       loading = false;
     } catch (err: any) {
+      console.log("Error while checking invoice: ", err);
       loading = false;
       if (String(err).includes("Unsupported payment")) {
         unsupportedNetwork = true;
@@ -157,7 +176,17 @@
   };
 
   const checkApproval = async (requestData: any, signer: any) => {
-    return await hasErc20Approval(requestData!, address!, signer);
+    if (
+      paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        return await hasErc20Approval(requestData!, address!, signer)
+      } else if(paymentNetworkExtension?.id ===
+      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
+        return await hasErc20ApprovalForProxyConversion(requestData!, address!, requestData.currencyInfo.value, signer, requestData.expectedAmount);
+      } 
+      
+      return false;
   };
 
   async function approve() {
@@ -165,10 +194,15 @@
       loading = true;
 
       if (
-        getPaymentNetworkExtension(requestData!)?.id ===
+        paymentNetworkExtension?.id ===
         Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
       ) {
         const approvalTx = await approveErc20(requestData!, signer);
+        await approvalTx.wait(2);
+        approved = true;
+      } else if(paymentNetworkExtension?.id ===
+      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
+        const approvalTx = await approveErc20ForProxyConversion(requestData!, requestData.currencyInfo.value, signer);
         await approvalTx.wait(2);
         approved = true;
       }
@@ -291,11 +325,16 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {currency?.network || "-"}
+    {paymentCurrencies[0]?.network || "-"}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
     {currency?.symbol || "-"}
+  </h3>
+
+  <h3 class="invoice-info-payment">
+    <span style="font-weight: 500;">Currency:</span>
+    {paymentCurrencies[0]?.symbol || "-"}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
