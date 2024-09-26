@@ -44,6 +44,7 @@ export const getConversionRate = async ({
       }
     } catch (e) {
       console.error("Error getting chainlink rate", e);
+      throw e;
     }
   }
 };
