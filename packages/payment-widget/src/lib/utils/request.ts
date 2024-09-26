@@ -30,6 +30,7 @@ export const prepareRequestParameters = ({
   feeAddress,
   feeAmountInUSD,
   feeAmountInCrypto,
+  totalAmountInCrypto,
 }: {
   currency: Currency;
   sellerAddress: string;
@@ -46,17 +47,59 @@ export const prepareRequestParameters = ({
   feeAddress: string;
   feeAmountInUSD: number;
   feeAmountInCrypto: number;
+  totalAmountInCrypto: number;
 }) => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
   const currencyValue = isERC20 ? currency.address : "eth";
   const amount = utils
-    .parseUnits(amountInCrypto.toFixed(currency.decimals), currency.decimals)
+    .parseUnits(
+      totalAmountInCrypto.toFixed(currency.decimals),
+      currency.decimals
+    )
     .toString();
 
   let note = `Sale made with ${currency.symbol} on ${currency.network} for amount of ${amountInUSD} USD with an exchange rate of ${exchangeRate}. `;
 
   if (feeAddress !== constants.AddressZero && feeAmountInUSD) {
-    note += `Fee of ${feeAmountInUSD} USD and ${feeAmountInCrypto} ${currency.symbol} was paid by the buyer to ${feeAddress}.`;
+    note += `Fee of ${feeAmountInUSD} USD/${feeAmountInCrypto} ${currency.symbol} was paid by the buyer to ${feeAddress}.`;
+  }
+
+  const invoiceItems = [
+    {
+      name: productInfo?.name || "Unnamed product",
+      quantity: 1,
+      unitPrice: utils
+        .parseUnits(
+          amountInCrypto.toFixed(currency.decimals),
+          currency.decimals
+        )
+        .toString(),
+      discount: "0",
+      tax: {
+        type: "percentage",
+        amount: "0",
+      },
+      currency: isERC20 ? currency.address : currency.symbol,
+    },
+  ];
+
+  if (feeAmountInCrypto > 0) {
+    invoiceItems.push({
+      name: "Fee",
+      quantity: 1,
+      unitPrice: utils
+        .parseUnits(
+          feeAmountInCrypto.toFixed(currency.decimals),
+          currency.decimals
+        )
+        .toString(),
+      discount: "0",
+      tax: {
+        type: "percentage",
+        amount: "0",
+      },
+      currency: isERC20 ? currency.address : currency.symbol,
+    });
   }
 
   return {
@@ -133,19 +176,7 @@ export const prepareRequestParameters = ({
           : undefined,
         taxRegistration: buyerInfo?.taxRegistration || undefined,
       },
-      invoiceItems: [
-        {
-          name: productInfo?.name || "Unnamed product",
-          quantity: 1,
-          unitPrice: amount,
-          discount: "0",
-          tax: {
-            type: "percentage",
-            amount: "0",
-          },
-          currency: isERC20 ? currency.address : currency.symbol,
-        },
-      ],
+      invoiceItems,
       paymentTerms: {
         dueDate: new Date().toISOString(),
       },

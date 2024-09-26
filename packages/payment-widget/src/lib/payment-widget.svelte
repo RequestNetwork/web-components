@@ -196,7 +196,7 @@
 
   <section class="rn-payment-widget-body">
     <h2>Pay with crypto</h2>
-    <Button
+    <button
       disabled={!amountInUSD ||
         !sellerAddress ||
         amountInUSD === 0 ||
@@ -207,7 +207,7 @@
         } else {
           isModalOpen = true;
         }
-      }}>Pay</Button
+      }}>Pay</button
     >
   </section>
   <Modal
@@ -371,6 +371,41 @@
       margin: 0;
       height: 100%;
       border-radius: 0px 0px 20px 20px;
+
+      button {
+        display: inline-flex;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition-property: color, background-color, border-color,
+          text-decoration-color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        background-color: #0bb489;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        outline: none;
+
+        &:focus-visible {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          box-shadow: 0 0 0 2px var(--ring-color, #000);
+        }
+
+        &:disabled {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        &:hover {
+          background-color: rgba($color: #0bb489, $alpha: 0.8);
+        }
+      }
 
       h2 {
         color: black;
