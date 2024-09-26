@@ -8,19 +8,19 @@
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
-  import { Types } from '@requestnetwork/request-client.js';
 
   export let defaultCurrencies;
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency: any;
-  export let invoiceCurrency: any;
+  export let currency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -166,7 +166,7 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency? currency?.network[0]?.toUpperCase() + currency?.network?.slice(1): ""}
+      {currency?.network ? currency.network.charAt(0).toUpperCase() + currency.network.slice(1).toLowerCase() : ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>

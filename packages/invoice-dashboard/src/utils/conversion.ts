@@ -11,7 +11,7 @@ const MAX_SLIPPAGE_DEFAULT = 1.03;
 const MAX_SLIPPAGE_LOW_VOLATILITY = 1.01;
 export const lowVolatilityTokens = ["DAI", "USDC", "USDT"];
 
-export const getSlippageMargin = (currency: any) => {
+export const getSlippageMargin = (currency: CurrencyTypes.CurrencyInput) => {
   return lowVolatilityTokens.includes(currency.symbol)
     ? MAX_SLIPPAGE_LOW_VOLATILITY
     : MAX_SLIPPAGE_DEFAULT;

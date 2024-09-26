@@ -11,6 +11,7 @@
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   import { toast } from "svelte-sonner";
   // Components
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
@@ -38,10 +39,10 @@
   export let currencyManager: any;
   export let isRequestPayed: boolean;
 
-  let network = request?.currencyInfo?.network || "mainnet";
+  let network: string | undefined = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
-  let currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
-  let paymentCurrencies: any = [];
+  let currency: CurrencyTypes.CurrencyDefinition | undefined = getCurrencyFromManager(request.currencyInfo, currencyManager);
+  let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -118,7 +119,7 @@
       paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
       if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens.map(
+        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens?.map(
           (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
         );
       } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
@@ -132,7 +133,7 @@
 
       network = paymentCurrencies[0]?.network || "mainnet";
 
-      if (paymentCurrencies[0].type === Types.RequestLogic.CURRENCY.ERC20) {
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
         approved = await checkApproval(requestData, paymentCurrencies, signer);
       } else {
         approved = true;
@@ -204,7 +205,7 @@
         return await hasErc20Approval(requestData!, address!, signer)
       } else if(paymentNetworkExtension?.id ===
       Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        return await hasErc20ApprovalForProxyConversion(requestData!, address!, paymentCurrencies[0].address, signer, requestData.expectedAmount);
+        return await hasErc20ApprovalForProxyConversion(requestData!, address!, paymentCurrencies[0]?.address, signer, requestData.expectedAmount);
       } 
       
       return false;
@@ -223,7 +224,7 @@
         approved = true;
       } else if(paymentNetworkExtension?.id ===
       Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        const approvalTx = await approveErc20ForProxyConversion(requestData!, paymentCurrencies[0].address, signer);
+        const approvalTx = await approveErc20ForProxyConversion(requestData!, paymentCurrencies[0]?.address, signer);
         await approvalTx.wait(2);
         approved = true;
       }
@@ -499,7 +500,7 @@
           type="button"
           text="Switch Network"
           padding="px-[12px] py-[6px]"
-          onClick={() => switchNetworkIfNeeded(network)}
+          onClick={() => switchNetworkIfNeeded(network || "mainnet")}
         />
       {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
         <Button

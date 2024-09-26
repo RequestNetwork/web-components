@@ -19,6 +19,7 @@
   import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
   export let signer: string = "";
@@ -34,7 +35,7 @@
   const extractUniqueNetworkNames = (): string[] => {
     const networkSet = new Set<string>();
 
-    currencyManager.knownCurrencies.forEach((currency: any) => {
+    currencyManager.knownCurrencies.forEach((currency: CurrencyTypes.CurrencyDefinition) => {
       if(currency.network) {
         networkSet.add(currency.network);
       }
@@ -46,13 +47,13 @@
   let networks: (string | undefined)[] = extractUniqueNetworkNames();
 
   let network: any = undefined;
-  let currency: any = undefined;
-  let invoiceCurrency: any = undefined;
+  let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
+  let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
 
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
       const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: any) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === newNetwork
+        (currency: CurrencyTypes.CurrencyDefinition) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === newNetwork
       );
 
       network = newNetwork;
@@ -66,10 +67,10 @@
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: any) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === network
+    (currency: CurrencyTypes.CurrencyDefinition) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === network
   );
 
-  const handleInvoiceCurrencyChange = (value: string) => {
+  const handleInvoiceCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     invoiceCurrency = value;
     network = undefined;
     currency = undefined;
@@ -82,7 +83,7 @@
     }
   };
 
-  const handleCurrencyChange = (value: string) => {
+  const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
 

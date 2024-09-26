@@ -1,11 +1,11 @@
 import { Types, Utils } from "@requestnetwork/request-client.js";
 import type { CustomFormData } from "@requestnetwork/shared-types";
-import { get } from 'svelte/store'
 import { parseUnits, zeroAddress } from "viem";
+import { CurrencyTypes } from "@requestnetwork/types";
 
 interface IRequestParams {
-  invoiceCurrency: any;
-  currency: any;
+  invoiceCurrency: CurrencyTypes.CurrencyDefinition;
+  currency: CurrencyTypes.CurrencyDefinition;
   formData: CustomFormData;
   invoiceTotals: {
     amountWithoutTax: number;
@@ -15,7 +15,7 @@ interface IRequestParams {
   signer: string;
 }
 
-const getPaymentNetwork = (invoiceCurrency: any, currency: any, formData: CustomFormData) => {
+const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, currency: CurrencyTypes.CurrencyDefinition, formData: CustomFormData) => {
   if (
     invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
     currency.type === Types.RequestLogic.CURRENCY.ETH

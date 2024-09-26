@@ -1171,22 +1171,15 @@ export const currencyConversionPairs = {
  */
 
 export const convertToCurrencyManagerFormat = (currencyConversionPair) => {
-  return currencyConversionPair.reduce(
-    (a, v) => ({
-export const convertToCurrencyManagerFormat = (currencyConversionPair) => {
-  const result = {};
+  const result: any = {};
   for (const pair of currencyConversionPair) {
-    const outputs = {};
+    const outputs: any = {};
     for (const output of pair.outputs) {
       outputs[output] = 1;
     }
     result[pair.input] = outputs;
   }
   return result;
-};
-    }),
-    {},
-  );
 };
 
 /**

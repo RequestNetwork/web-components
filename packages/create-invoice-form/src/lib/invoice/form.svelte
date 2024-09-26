@@ -18,6 +18,7 @@
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
   import { Types } from '@requestnetwork/request-client.js';
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
@@ -31,8 +32,8 @@
   export let payeeAddressError = false;
   export let clientAddressError = false;
   export let currencyManager: any;
-  export let invoiceCurrency: any;
-  export let currency: any;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let currency: CurrencyTypes.CurrencyDefinition | undefined;
   export let network: any;
 
   let creatorId = "";
@@ -102,7 +103,7 @@
     }
   };
 
-  const filterSettlementCurrencies = (currency: any) => {
+  const filterSettlementCurrencies = (currency: CurrencyTypes.CurrencyDefinition) => {
     return invoiceCurrency? (
       invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 ?
       currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && currencyManager?.getConversionPath(invoiceCurrency, currency, currency.network)?.length > 0 :
