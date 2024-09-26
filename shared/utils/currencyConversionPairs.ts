@@ -1197,19 +1197,9 @@ export const convertToCurrencyManagerFormat = (currencyConversionPair: CurrencyC
 /**
  * Formatted currency conversion pairs for currency manager
  */
-export const formattedCurrencyConversionPairs = {
-  'arbitrum-one': convertToCurrencyManagerFormat(
-    currencyConversionPairs['arbitrum-one'],
-  ),
-  avalanche: convertToCurrencyManagerFormat(
-    currencyConversionPairs['avalanche'],
-  ),
-  base: convertToCurrencyManagerFormat(currencyConversionPairs['base']),
-  bsc: convertToCurrencyManagerFormat(currencyConversionPairs['bsc']),
-  mainnet: convertToCurrencyManagerFormat(currencyConversionPairs['mainnet']),
-  matic: convertToCurrencyManagerFormat(currencyConversionPairs['matic']),
-  moonbeam: convertToCurrencyManagerFormat(currencyConversionPairs['moonbeam']),
-  optimism: convertToCurrencyManagerFormat(currencyConversionPairs['optimism']),
-  sepolia: convertToCurrencyManagerFormat(currencyConversionPairs['sepolia']),
-  xdai: convertToCurrencyManagerFormat(currencyConversionPairs['xdai']),
-};
+export const formattedCurrencyConversionPairs = Object.fromEntries(
+  Object.entries(currencyConversionPairs).map(([network, pairs]) => [
+    network,
+    convertToCurrencyManagerFormat(pairs),
+  ]),
+);
