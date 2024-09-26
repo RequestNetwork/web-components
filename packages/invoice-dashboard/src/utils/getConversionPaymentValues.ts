@@ -43,7 +43,7 @@ export const amountToFixedDecimal = (
   decimals?: number,
 ) => {
   return toFixedDecimal(
-    parseFloat(formatUnits(BigNumber.from(amount), currency)),
+    Number.parseFloat(formatUnits(BigNumber.from(amount), currency)),
     decimals,
   );
 };
