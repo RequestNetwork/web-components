@@ -1,15 +1,16 @@
 <svelte:options customElement="payment-widget" />
 
 <script lang="ts">
-  import { Button } from "@requestnetwork/shared-components/button";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
+  import { ethers } from "ethers";
   import { onDestroy, onMount } from "svelte";
+  import BuyerInfoForm from "./components/buyer-info-form.svelte";
   import CurrencySelector from "./components/currency-selector.svelte";
   import PaymentComplete from "./components/payment-complete.svelte";
   import PaymentConfirmation from "./components/payment-confirmation.svelte";
-  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type {
     AmountInUSD,
     BuyerInfo,
@@ -21,8 +22,6 @@
   } from "./types";
   import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
-  import BuyerInfoForm from "./components/buyer-info-form.svelte";
-  import { ethers } from "ethers";
 
   // Props
   export let sellerInfo: SellerInfo;
