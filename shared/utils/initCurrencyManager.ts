@@ -113,9 +113,7 @@ export function initializeCurrencyManagerWithCurrencyIDS(
 }
 
 export const getCurrencySupportedNetworksForConversion = (currencyHash: string, currencyManager: any) : (string | undefined)[] => {
- return Object.keys(currencyManager.conversionPairs).map((network) => {
-    if (currencyManager.conversionPairs[network][currencyHash]) {
-      return network;
-    }
-   }).filter((network) => network);
+ return Object.keys(currencyManager.conversionPairs).filter((network) => 
+    currencyManager.conversionPairs[network][currencyHash]
+ );
 }
