@@ -19,10 +19,8 @@
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency = defaultCurrencies.filter(
-    (currency: any) => currency.type !== Types.RequestLogic.CURRENCY.ISO4217
-  )[0];
-  export let invoiceCurrency = {};
+  export let currency: any;
+  export let invoiceCurrency: any;
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -168,16 +166,15 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency.network[0].toUpperCase() + currency.network.slice(1)}
+      {currency? currency?.network[0]?.toUpperCase() + currency?.network?.slice(1): ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {invoiceCurrency.symbol}
+      {invoiceCurrency ? invoiceCurrency?.symbol: ""}
     </p>
     <p class="invoice-section-title">
-      <span>Currency</span>
-      {currency.symbol}
-      ({currency.network})
+      <span>Settlement Currency</span>
+      {currency? `${currency?.symbol} (${currency?.network})` : ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Type</span>
@@ -229,7 +226,7 @@
       >
         <span>Due: </span>
         <span
-          >{currency.symbol}
+          >{currency? currency?.symbol : ""}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >

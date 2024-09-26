@@ -220,34 +220,36 @@
     ): Types.IRequestDataWithEvents & {
       formattedAmount: string;
       currencySymbol: string;
+      paymentCurrencies: any[];
     } => {
       const currencyInfo = getCurrencyFromManager(
         request.currencyInfo,
         currencyManager
       );
 
-      let paymentCurrencies = [currencyInfo]
+      let paymentNetworkExtension = getPaymentNetworkExtension(request);
+      let paymentCurrencies = [currencyInfo];
 
-      const paymentNetworkExtension = getPaymentNetworkExtension(request);
-      
       if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
         paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens.map(
           (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
         );
       } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
         paymentCurrencies = [currencyManager.getNativeCurrency(
-         Types.RequestLogic.CURRENCY.ETH,
+        Types.RequestLogic.CURRENCY.ETH,
           paymentNetworkExtension?.values?.network
         )];
       }
+
 
       return {
         ...request,
         formattedAmount: formatUnits(
           BigInt(request.expectedAmount),
-          paymentCurrencies[0]?.decimals ?? 18
+          currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: paymentCurrencies[0]?.symbol!,
+        currencySymbol: currencyInfo!.symbol,
+        paymentCurrencies,
       };
     }
   );
@@ -559,6 +561,7 @@
                                 request.currencyInfo,
                                 currencyManager
                               ),
+                              request.paymentCurrencies,
                               config.logo
                             );
                           } catch (error) {

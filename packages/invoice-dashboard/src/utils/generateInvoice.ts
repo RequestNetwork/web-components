@@ -19,6 +19,7 @@ async function ensureHtml2PdfLoaded() {
 export const exportToPDF = async (
   invoice: any,
   currency: any,
+  paymentCurrencies: any[],
   logo: string
 ) => {
   await ensureHtml2PdfLoaded();
@@ -80,8 +81,9 @@ export const exportToPDF = async (
       </div>
       
       <div style="margin-bottom: 20px;">
-        <strong>Payment Chain:</strong> ${invoice.currencyInfo?.network || "-"}<br>
+        <strong>Payment Chain:</strong> ${paymentCurrencies[0]?.network || "-"}<br>
         <strong>Invoice Currency:</strong> ${invoice.currency || "-"}<br>
+        <strong>Settlement Currency:</strong> ${paymentCurrencies[0]?.symbol || "-"}<br>
         <strong>Invoice Type:</strong> Regular Invoice
       </div>
       

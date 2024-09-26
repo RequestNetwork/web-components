@@ -118,4 +118,4 @@ export const getCurrencySupportedNetworksForConversion = (currencyHash: string, 
       return network;
     }
    }).filter((network) => network);
-} 
+}

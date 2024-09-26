@@ -85,7 +85,7 @@ export const prepareRequestParams = ({
       },
       expectedAmount: parseUnits(
         invoiceTotals.totalAmount.toString(),
-        currency.decimals
+        invoiceCurrency.decimals
       ).toString(),
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,

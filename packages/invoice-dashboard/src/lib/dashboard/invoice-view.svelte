@@ -29,6 +29,7 @@
   import { formatUnits } from "viem";
   import { exportToPDF, walletClientToSigner } from "../../utils";
   import { getCurrencyFromManager } from "../../utils/getCurrency";
+  import { getConversionPaymentValues } from '../../utils/getConversionPaymentValues';
 
   export let config;
   export let wallet: WalletState | undefined;
@@ -129,8 +130,10 @@
         paymentCurrencies = [currency];
       }
 
-      if (requestData.currencyInfo.type === Types.RequestLogic.CURRENCY.ERC20) {
-        approved = await checkApproval(requestData, signer);
+      network = paymentCurrencies[0]?.network || "mainnet";
+
+      if (paymentCurrencies[0].type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, paymentCurrencies, signer);
       } else {
         approved = true;
       }
@@ -154,7 +157,25 @@
       );
 
       statuses = [...statuses, "Waiting for payment"];
-      const paymentTx = await payRequest(requestData, signer);
+
+      let paymentSettings = undefined;
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY || paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        const { conversion } = await getConversionPaymentValues({
+          baseAmount: requestData?.expectedAmount,
+          denominationCurrency: currency!,
+          selectedPaymentCurrency: paymentCurrencies[0]!,
+          currencyManager,
+          provider: signer,
+          fromAddress: address,
+        });
+        paymentSettings = conversion;
+      }
+
+      const paymentTx = await payRequest(requestData, signer, undefined, undefined, paymentSettings);
       await paymentTx.wait(2);
 
       statuses = [...statuses, "Payment detected"];
@@ -175,7 +196,7 @@
     }
   };
 
-  const checkApproval = async (requestData: any, signer: any) => {
+  const checkApproval = async (requestData: any, paymentCurrencies: any[], signer: any) => {
     if (
       paymentNetworkExtension?.id ===
         Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
@@ -183,7 +204,7 @@
         return await hasErc20Approval(requestData!, address!, signer)
       } else if(paymentNetworkExtension?.id ===
       Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        return await hasErc20ApprovalForProxyConversion(requestData!, address!, requestData.currencyInfo.value, signer, requestData.expectedAmount);
+        return await hasErc20ApprovalForProxyConversion(requestData!, address!, paymentCurrencies[0].address, signer, requestData.expectedAmount);
       } 
       
       return false;
@@ -202,7 +223,7 @@
         approved = true;
       } else if(paymentNetworkExtension?.id ===
       Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        const approvalTx = await approveErc20ForProxyConversion(requestData!, requestData.currencyInfo.value, signer);
+        const approvalTx = await approveErc20ForProxyConversion(requestData!, paymentCurrencies[0].address, signer);
         await approvalTx.wait(2);
         approved = true;
       }
@@ -278,7 +299,7 @@
       <Download
         onClick={async () => {
           try {
-            await exportToPDF(request, currency, config.logo);
+            await exportToPDF(request, currency, paymentCurrencies, config.logo);
           } catch (error) {
             toast.error(`Failed to export PDF`, {
               description: `${error}`,
@@ -333,7 +354,7 @@
   </h3>
 
   <h3 class="invoice-info-payment">
-    <span style="font-weight: 500;">Currency:</span>
+    <span style="font-weight: 500;">Settlement Currency:</span>
     {paymentCurrencies[0]?.symbol || "-"}
   </h3>
 
