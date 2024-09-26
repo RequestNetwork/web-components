@@ -20,6 +20,7 @@
   } from "../utils/request";
   import Spinner from "./spinner.svelte";
   import WalletInfo from "./wallet-info.svelte";
+  import { ethers } from "ethers";
 
   export let selectedCurrency: Currency;
   export let amountInUSD: number;
@@ -36,6 +37,8 @@
   export let onPaymentSuccess: (request: any) => void;
   export let onPaymentError: (error: string) => void;
   export let invoiceNumber: string | undefined;
+  export let feeAddress: string;
+  export let feeAmountInUSD: number;
 
   const COUNTDOWN_INTERVAL = 30;
 
@@ -44,9 +47,11 @@
   let intervalId: NodeJS.Timeout;
   let exchangeRate: number = 0;
   let error: string = "";
+  let feeAmountInCrypto: number = 0;
 
   $: isLoadingPrice = true;
   $: isPaying = false;
+  $: totalPayment = amountInCrypto + feeAmountInCrypto;
 
   const currencySymbol = selectedCurrency.symbol.includes(
     selectedCurrency.network
@@ -72,6 +77,7 @@
       const rate = data.data.rates[lookupSymbol];
       exchangeRate = parseFloat(rate);
       amountInCrypto = amountInUSD * exchangeRate;
+      feeAmountInCrypto = feeAmountInUSD * exchangeRate;
     } catch (error) {
       alert("Unable to fetch exchange rate. Please try again later");
     } finally {
@@ -145,29 +151,58 @@
       >
     </div>
   </div>
-  <div class="payment-confirmation-tab payment-confirmation-seller-address">
+  <div class="payment-confirmation-tab payment-confirmation-address">
     <h4>Payment to</h4>
-    <a
-      href={getExplorerUrl(selectedCurrency.network, sellerAddress)}
-      target="_blank"
-    >
-      <span>{sellerAddress}</span>
-    </a>
-    <button
-      on:click={() => {
-        navigator.clipboard.writeText(sellerAddress);
-      }}
-    >
-      <CopyIcon />
-    </button>
+    <div class="address-container">
+      <a
+        href={getExplorerUrl(selectedCurrency.network, sellerAddress)}
+        target="_blank"
+      >
+        <span>{sellerAddress}</span>
+      </a>
+      <button
+        on:click={() => {
+          navigator.clipboard.writeText(sellerAddress);
+        }}
+      >
+        <CopyIcon />
+      </button>
+    </div>
   </div>
+  {#if feeAddress !== ethers.constants.AddressZero && feeAmountInUSD > 0}
+    <div class="payment-confirmation-tab payment-confirmation-address">
+      <h4>Fee to</h4>
+      <div class="address-container">
+        <a
+          href={getExplorerUrl(selectedCurrency.network, feeAddress)}
+          target="_blank"
+        >
+          <span>{feeAddress}</span>
+        </a>
+        <button
+          on:click={() => {
+            navigator.clipboard.writeText(feeAddress);
+          }}
+        >
+          <CopyIcon />
+        </button>
+      </div>
+    </div>
+    <div class="payment-confirmation-tab">
+      <h4>Fee Amount</h4>
+      <span>
+        ${feeAmountInUSD} USD / {trimTrailingDecimalZeros(feeAmountInCrypto)}
+        {currencySymbol}
+      </span>
+    </div>
+  {/if}
   <div class="payment-confirmation-tab">
     <h4>Payment network</h4>
     <span>{NETWORK_LABEL[selectedCurrency.network]}</span>
   </div>
   <div class="payment-confirmation-tab">
     <h4>Total</h4>
-    <span>{trimTrailingDecimalZeros(amountInCrypto)} {currencySymbol}</span>
+    <span>{trimTrailingDecimalZeros(totalPayment)} {currencySymbol}</span>
   </div>
 
   {#if !isPaying}
@@ -216,11 +251,15 @@
         try {
           const requestParameters = prepareRequestParameters({
             currency: selectedCurrency,
+            feeAddress,
+            feeAmountInUSD,
+            feeAmountInCrypto,
             productInfo,
             sellerInfo,
             buyerInfo,
             payerAddress,
             amountInCrypto,
+            totalAmountInCrypto: totalPayment,
             exchangeRate,
             amountInUSD,
             builderId,
@@ -286,23 +325,6 @@
     width: 100%;
     gap: 16px;
 
-    .payment-confirmation-seller-address {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      font-size: 12px;
-
-      button {
-        background: none;
-        border: none;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
     &-amount-info {
       display: flex;
       align-items: center;
@@ -350,6 +372,49 @@
         color: black;
         font-weight: 500;
         font-size: 14px;
+      }
+
+      &.payment-confirmation-address {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        h4 {
+          margin: 0;
+        }
+
+        .address-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+
+          a {
+            flex-grow: 1;
+            text-decoration: none;
+            color: inherit;
+            font-size: 14px;
+
+            span {
+              display: inline-block;
+              width: 100%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+
+          button {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
       }
     }
 

@@ -21,6 +21,8 @@ export interface PaymentWidgetProps {
   buyerInfo?: BuyerInfo;
   enableBuyerInfo?: boolean;
   invoiceNumber?: string;
+  feeAddress?: string;
+  feeAmountInUSD?: number;
 }
 
 /**
@@ -70,6 +72,8 @@ export interface PaymentWidgetProps {
  *   onError={(error) => {
  *     console.error(error);
  *   }}
+ *   feeAddress="0x1234567890123456789012345678901234567890
+ *   feeAmountInUSD={22}
  * />
  */
 declare const PaymentWidget: React.FC<PaymentWidgetProps>;
