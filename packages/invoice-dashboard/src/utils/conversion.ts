@@ -30,7 +30,7 @@ export const getConversionRate = async ({
   to: CurrencyTypes.CurrencyDefinition;
   currencyManager?: CurrencyTypes.ICurrencyManager;
   provider?: providers.Provider;
-}) => {
+}): Promise<number | undefined> => {
   if (!isISO4217Currency(to) && currencyManager && provider) {
     const network = to.network as EvmChainName;
     try {
