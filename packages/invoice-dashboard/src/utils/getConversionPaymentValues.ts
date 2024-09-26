@@ -7,6 +7,24 @@ import { getConversionRate, getSlippageMargin } from './conversion'
 
 export type SlippageLevel = "safe" | "risky";
 
+interface ConversionPaymentValues {
+  conversion: {
+    currency: CurrencyTypes.ICurrency;
+    maxToSpend: string;
+    currencyManager: CurrencyManager;
+  };
+  slippageLevel: SlippageLevel;
+  totalAmountInPaymentCurrency: {
+    value: number;
+    currency: CurrencyTypes.CurrencyDefinition;
+  };
+  safeBalance: {
+    value: number;
+    currency: CurrencyTypes.CurrencyDefinition;
+  };
+  rate: string;
+}
+
 export const formatUnits = (
   amount: BigNumber,
   token: CurrencyTypes.CurrencyDefinition,
@@ -80,7 +98,7 @@ export const getConversionPaymentValues = async ({
   currencyManager: CurrencyManager;
   provider?: providers.Provider;
   fromAddress?: string;
-}): Promise<any | undefined> => {
+}): Promise<ConversionPaymentValues | undefined> => {
   const conversionRate = await getConversionRate({
     from: denominationCurrency,
     to: selectedPaymentCurrency,
