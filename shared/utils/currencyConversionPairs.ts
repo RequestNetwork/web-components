@@ -1163,6 +1163,18 @@ export const currencyConversionPairs = {
   ],
 };
 
+
+interface CurrencyConversionPair {
+  input: string;
+  outputs: string[];
+}
+
+interface FormattedCurrencyConversionPair {
+  [input: string]: {
+    [output: string]: number;
+  };
+}
+
 /**
  * Converts currency conversion pair to currency manager format
  *
@@ -1170,10 +1182,10 @@ export const currencyConversionPairs = {
  * @returns formatted currency conversion pair for currency manager
  */
 
-export const convertToCurrencyManagerFormat = (currencyConversionPair) => {
-  const result: any = {};
+export const convertToCurrencyManagerFormat = (currencyConversionPair: CurrencyConversionPair[]): FormattedCurrencyConversionPair => {
+  const result: FormattedCurrencyConversionPair = {};
   for (const pair of currencyConversionPair) {
-    const outputs: any = {};
+    const outputs: { [output: string]: number } = {};
     for (const output of pair.outputs) {
       outputs[output] = 1;
     }

@@ -34,6 +34,7 @@ export const getChainlinkRate = async (
       decimals: result.decimals.toString().length - 1,
     };
   } catch (e) {
+    console.error('Error fetching Chainlink rate:', e);
     return null;
   }
 };
