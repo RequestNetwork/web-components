@@ -1,15 +1,16 @@
 <svelte:options customElement="payment-widget" />
 
 <script lang="ts">
-  import { Button } from "@requestnetwork/shared-components/button";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
+  import { ethers } from "ethers";
   import { onDestroy, onMount } from "svelte";
+  import BuyerInfoForm from "./components/buyer-info-form.svelte";
   import CurrencySelector from "./components/currency-selector.svelte";
   import PaymentComplete from "./components/payment-complete.svelte";
   import PaymentConfirmation from "./components/payment-confirmation.svelte";
-  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import type {
     AmountInUSD,
     BuyerInfo,
@@ -21,7 +22,6 @@
   } from "./types";
   import { getSupportedCurrencies } from "./utils/currencies";
   import { initWalletConnector } from "./utils/walletConnector";
-  import BuyerInfoForm from "./components/buyer-info-form.svelte";
 
   // Props
   export let sellerInfo: SellerInfo;
@@ -37,6 +37,8 @@
   export let buyerInfo: BuyerInfo | undefined = undefined;
   export let enableBuyerInfo: boolean = true;
   export let invoiceNumber: string | undefined = undefined;
+  export let feeAddress: string = ethers.constants.AddressZero;
+  export let feeAmountInUSD: number = 0;
 
   // State
   let web3Modal: Web3Modal | null = null;
@@ -193,7 +195,7 @@
 
   <section class="rn-payment-widget-body">
     <h2>Pay with crypto</h2>
-    <Button
+    <button
       disabled={!amountInUSD ||
         !sellerAddress ||
         amountInUSD === 0 ||
@@ -204,7 +206,7 @@
         } else {
           isModalOpen = true;
         }
-      }}>Pay</Button
+      }}>Pay</button
     >
   </section>
   <Modal
@@ -230,6 +232,8 @@
       />
     {:else if selectedCurrency && currentPaymentStep === "confirmation"}
       <PaymentConfirmation
+        {feeAddress}
+        {feeAmountInUSD}
         {enableBuyerInfo}
         {productInfo}
         {amountInUSD}
@@ -366,6 +370,41 @@
       margin: 0;
       height: 100%;
       border-radius: 0px 0px 20px 20px;
+
+      button {
+        display: inline-flex;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition-property: color, background-color, border-color,
+          text-decoration-color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        background-color: #0bb489;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        outline: none;
+
+        &:focus-visible {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          box-shadow: 0 0 0 2px var(--ring-color, #000);
+        }
+
+        &:disabled {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        &:hover {
+          background-color: rgba($color: #0bb489, $alpha: 0.8);
+        }
+      }
 
       h2 {
         color: black;
