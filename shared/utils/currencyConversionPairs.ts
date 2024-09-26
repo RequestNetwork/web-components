@@ -1173,8 +1173,17 @@ export const currencyConversionPairs = {
 export const convertToCurrencyManagerFormat = (currencyConversionPair) => {
   return currencyConversionPair.reduce(
     (a, v) => ({
-      ...a,
-      [v.input]: v.outputs.reduce((a, v) => ({ ...a, [v]: 1 }), {}),
+export const convertToCurrencyManagerFormat = (currencyConversionPair) => {
+  const result = {};
+  for (const pair of currencyConversionPair) {
+    const outputs = {};
+    for (const output of pair.outputs) {
+      outputs[output] = 1;
+    }
+    result[pair.input] = outputs;
+  }
+  return result;
+};
     }),
     {},
   );
