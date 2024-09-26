@@ -74,7 +74,7 @@ export const prepareRequestParams = ({
   invoiceTotals,
 }: IRequestParams): Types.ICreateRequestParameters => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
-  const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
+  const isERC20InvoiceCurrency = invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20;
   return {
     requestInfo: {
       currency: {
