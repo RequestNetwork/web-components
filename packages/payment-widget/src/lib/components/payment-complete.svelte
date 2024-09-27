@@ -53,6 +53,8 @@
       {/if}
       {#if enableRequestScanLink && createdRequest}
         <a
+          target="_blank"
+          rel="noopener noreferrer"
           href={`https://scan.request.network/request/${createdRequest.requestId}`}
         >
           View on Request Scan
