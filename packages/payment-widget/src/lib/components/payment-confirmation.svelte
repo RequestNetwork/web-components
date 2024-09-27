@@ -39,6 +39,7 @@
   export let invoiceNumber: string | undefined;
   export let feeAddress: string;
   export let feeAmountInUSD: number;
+  export let createdRequest: any;
 
   const COUNTDOWN_INTERVAL = 30;
 
@@ -274,6 +275,8 @@
             payerAddress: payerAddress,
             persistRequest,
           });
+
+          createdRequest = request;
 
           if (onPaymentSuccess) {
             onPaymentSuccess(request);

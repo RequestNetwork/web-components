@@ -276,7 +276,7 @@ export const handleRequestPayment = async ({
     skipPersistence: true,
   });
 
-  const inMemoryRequest =
+  let inMemoryRequest =
     await inMemoryRequestNetwork.createRequest(requestParameters);
 
   const signer = await ethersProvider!.getSigner();
@@ -326,6 +326,14 @@ export const handleRequestPayment = async ({
 
   if (persistRequest) {
     await persistingRequestNetwork.persistRequest(inMemoryRequest);
+  }
+
+  if (inMemoryRequest?.inMemoryInfo?.requestData) {
+    inMemoryRequest.inMemoryInfo.requestData = {
+      ...inMemoryRequest.inMemoryInfo.requestData,
+      payer: requestParameters.requestInfo.payer,
+      payee: requestParameters.requestInfo.payee,
+    };
   }
 
   return inMemoryRequest;

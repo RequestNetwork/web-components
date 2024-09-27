@@ -25,14 +25,16 @@
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
+  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
 
   import { CurrencyManager } from "@requestnetwork/currency";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { capitalize, debounce, exportToPDF, formatAddress } from "../utils";
-  import { getCurrencyFromManager } from "../utils/getCurrency";
+  import { capitalize, debounce, formatAddress } from "../utils";
+
   import { Drawer, InvoiceView } from "./dashboard";
 
   export let config: IConfig;
@@ -515,8 +517,8 @@
                         <span
                           >{formatAddress(
                             currentTab === "Pay"
-                              ? (request.payee?.value ?? "")
-                              : (request.payer?.value ?? "")
+                              ? request.payee?.value ?? ""
+                              : request.payer?.value ?? ""
                           )}</span
                         >
                         <Copy

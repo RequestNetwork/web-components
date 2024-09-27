@@ -23,6 +23,8 @@ export interface PaymentWidgetProps {
   invoiceNumber?: string;
   feeAddress?: string;
   feeAmountInUSD?: number;
+  enablePdfReceipt?: boolean;
+  enableRequestScanLink?: boolean;
 }
 
 /**
