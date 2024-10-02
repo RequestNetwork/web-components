@@ -325,7 +325,7 @@
         <Dropdown
           {config}
           selectedValue={ invoiceCurrency? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}` : undefined}
-          placeholder="Select invoice currency (labeling)"
+          placeholder="Invoice currency (labeling)"
           options={defaultCurrencies.map((currency) => ({
             value: currency,
             label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
@@ -334,7 +334,7 @@
         />
         <Dropdown
           {config}
-          placeholder="Select payment chain"
+          placeholder="Payment chain"
           selectedValue={network}
           options={networks.map((networkItem) => {
             return {
@@ -346,7 +346,7 @@
         />
         <Dropdown
           {config}
-          placeholder="Select a settlement currency"
+          placeholder="Settlement currency"
           selectedValue={currency? `${currency.symbol} (${currency?.network})`: undefined}
           options={defaultCurrencies.filter(
             (currency) => filterSettlementCurrencies(currency)
