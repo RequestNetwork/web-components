@@ -75,7 +75,7 @@ export const exportToPDF = async (
     <body>
     <div id="invoice" style="max-width: 680px; margin: 0 auto; padding: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: start;">
-        ${logo ? `<img src="${logo}" alt="Logo" style="width: 50px; height: 50px;">` : ""}
+        ${logo && logo.length > 0 ? `<img src="${logo}" alt="Logo" style="width: 50px; height: 50px;">` : ""}
         <div style="text-align: right;">
           <p>Issued on ${formatDate(invoice.contentData?.creationDate)}</p>
           <p>Payment due by ${formatDate(invoice.contentData?.paymentTerms?.dueDate)}</p>

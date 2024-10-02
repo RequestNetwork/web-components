@@ -7,7 +7,7 @@
   export let createdRequest: any;
   export let enablePdfReceipt: boolean = true;
   export let enableRequestScanLink: boolean = true;
-  export let sellerLogo: string | undefined;
+  export let sellerLogo: string = "";
 
   async function handleDownloadReceipt() {
     if (createdRequest) {
@@ -19,7 +19,7 @@
         await exportToPDF(
           currencyData,
           getCurrencyFromManager(currencyData.currencyInfo, currencyManager),
-          sellerLogo!
+          sellerLogo
         );
       } catch (error) {
         console.error("Error downloading receipt:", error);
