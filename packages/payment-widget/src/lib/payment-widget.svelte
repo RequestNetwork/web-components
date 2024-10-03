@@ -39,6 +39,8 @@
   export let invoiceNumber: string | undefined = undefined;
   export let feeAddress: string = ethers.constants.AddressZero;
   export let feeAmountInUSD: number = 0;
+  export let enablePdfReceipt: boolean = true;
+  export let enableRequestScanLink: boolean = true;
 
   // State
   let web3Modal: Web3Modal | null = null;
@@ -47,7 +49,7 @@
   let selectedCurrency: Currency | null = null;
   let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
   let currentPaymentStep: PaymentStep = "currency";
-
+  let createdRequest: any;
   let scrollPosition = 0;
 
   // Effects
@@ -246,12 +248,18 @@
         onPaymentError={onError}
         bind:currentPaymentStep
         bind:isConnected
+        bind:createdRequest
         {sellerInfo}
         buyerInfo={currentBuyerInfo}
         {invoiceNumber}
       />
     {:else}
-      <PaymentComplete />
+      <PaymentComplete
+        {createdRequest}
+        {enablePdfReceipt}
+        {enableRequestScanLink}
+        sellerLogo={sellerInfo.logo}
+      />
     {/if}
   </Modal>
 </section>
