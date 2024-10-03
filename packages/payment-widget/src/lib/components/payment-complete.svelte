@@ -3,6 +3,8 @@
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
+  import { toast } from "svelte-sonner";
 
   export let createdRequest: any;
   export let enablePdfReceipt: boolean = true;
@@ -22,12 +24,19 @@
           sellerLogo
         );
       } catch (error) {
-        console.error("Error downloading receipt:", error);
+        toast.error(`Failed to export PDF`, {
+          description: `${error}`,
+          action: {
+            label: "X",
+            onClick: () => console.info("Close"),
+          },
+        });
       }
     }
   }
 </script>
 
+<Toaster />
 <div class="payment-complete" transition:fade={{ duration: 300 }}>
   <div class="checkmark-container">
     <svg
