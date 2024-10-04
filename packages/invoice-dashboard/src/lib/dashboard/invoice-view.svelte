@@ -23,14 +23,15 @@
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
+  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   // Types
   import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { exportToPDF, walletClientToSigner } from "../../utils";
-  import { getCurrencyFromManager } from "../../utils/getCurrency";
   import { getConversionPaymentValues } from '../../utils/getConversionPaymentValues';
+  import { walletClientToSigner } from "../../utils";
 
   export let config;
   export let wallet: WalletState | undefined;
