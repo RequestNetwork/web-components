@@ -336,7 +336,7 @@
           {config}
           placeholder="Payment chain"
           selectedValue={network}
-          options={networks.map((networkItem) => {
+          options={networks.filter((networkItem) => networkItem).map((networkItem) => {
             return {
               value: networkItem,
               label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
