@@ -2,13 +2,12 @@ import React from "react";
 import type { IConfig } from "@requestnetwork/shared-types";
 import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 import type { RequestNetwork } from "@requestnetwork/request-client.js";
-import { Currency } from "../types";
-
+import { CurrencyTypes } from "@requestnetwork/types";
 export interface InvoiceDashboardProps {
   config: IConfig;
   wallet: WalletState | null;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies: Currency[];
+  currencies: CurrencyTypes.CurrencyDefinition[];
 }
 /**
  * InvoiceDashboard is a React component that integrates with the Request Network to manage and display invoices.

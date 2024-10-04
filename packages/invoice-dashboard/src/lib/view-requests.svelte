@@ -36,6 +36,8 @@
   import { capitalize, debounce, formatAddress } from "../utils";
 
   import { Drawer, InvoiceView } from "./dashboard";
+  import { getPaymentNetworkExtension } from '@requestnetwork/payment-detection';
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
   export let wallet: WalletState;
@@ -221,11 +223,29 @@
     ): Types.IRequestDataWithEvents & {
       formattedAmount: string;
       currencySymbol: string;
+      paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[];
     } => {
       const currencyInfo = getCurrencyFromManager(
         request.currencyInfo,
         currencyManager
       );
+
+      let paymentNetworkExtension = getPaymentNetworkExtension(request);
+      let paymentCurrencies = [currencyInfo];
+
+      if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
+        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens?.map(
+          (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
+        );
+      } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
+          const network = paymentNetworkExtension?.values?.network ?? "mainnet";
+
+          paymentCurrencies = [currencyManager.getNativeCurrency(
+          Types.RequestLogic.CURRENCY.ETH,
+          network
+        )];
+      }
+
 
       return {
         ...request,
@@ -234,6 +254,7 @@
           currencyInfo?.decimals ?? 18
         ),
         currencySymbol: currencyInfo!.symbol,
+        paymentCurrencies,
       };
     }
   );
@@ -545,6 +566,7 @@
                                 request.currencyInfo,
                                 currencyManager
                               ),
+                              request.paymentCurrencies,
                               config.logo
                             );
                           } catch (error) {
