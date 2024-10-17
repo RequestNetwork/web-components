@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { toast } from "svelte-sonner";
+  import type { GetAccountReturnType } from "@wagmi/core";
   import {
     approveErc20,
     hasErc20Approval,
@@ -9,7 +10,7 @@
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
-  import { toast } from "svelte-sonner";
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   // Components
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -27,7 +28,7 @@
   import { getEthersSigner } from "../../utils";
 
   export let config;
-  export let account: any;
+  export let account: GetAccountReturnType;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents;
   export let currencyManager: any;

@@ -3,6 +3,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
+  import { getAccount, watchAccount } from "@wagmi/core";
+  import type { Config as WagmiConfig } from "wagmi";
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
@@ -20,22 +22,20 @@
   import Download from "@requestnetwork/shared-icons/download.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
   // Types
+  import type { GetAccountReturnType } from "@wagmi/core";
+  import { Types } from "@requestnetwork/request-client.js";
   import type { IConfig } from "@requestnetwork/shared-types";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-
   import { CurrencyManager } from "@requestnetwork/currency";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { Types } from "@requestnetwork/request-client.js";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
-  import { getAccount, getClient } from "@wagmi/core";
-  import type { Config as WagmiConfig } from "wagmi";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -46,7 +46,7 @@
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let account: any;
+  let account: GetAccountReturnType;
 
   let loading = false;
   let searchQuery = "";
@@ -79,6 +79,19 @@
   $: {
     if (wagmiConfig) {
       account = getAccount(wagmiConfig);
+    }
+  }
+
+  $: {
+    if (account) {
+      watchAccount(wagmiConfig, {
+        onChange(data) {
+          if (data.address !== account?.address) {
+            account = data;
+            getRequests();
+          }
+        },
+      });
     }
   }
 
