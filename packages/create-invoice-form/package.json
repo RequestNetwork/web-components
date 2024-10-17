@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.5.2",
+    "@wagmi/core": "^2.13.8",
     "svelte": "^4.0.5",
     "svelte-check": "^3.6.0",
     "typescript": "^5.0.0",

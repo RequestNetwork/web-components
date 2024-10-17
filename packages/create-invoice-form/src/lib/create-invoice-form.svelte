@@ -18,12 +18,14 @@
   import { InvoiceForm, InvoiceView } from "./invoice";
   import { getInitialFormData, prepareRequestParams } from "./utils";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { getAccount } from "@wagmi/core";
 
   export let config: IConfig;
-  export let signer: string = "";
+  export let wagmiConfig: any;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: any;
 
+  let account: any;
   let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
@@ -77,7 +79,13 @@
   };
 
   $: {
-    formData.creatorId = signer;
+    if (wagmiConfig) {
+      account = getAccount(wagmiConfig);
+    }
+  }
+
+  $: {
+    formData.creatorId = account?.address as string;
     invoiceTotals = calculateInvoiceTotals(formData.items);
   }
 
@@ -130,7 +138,7 @@
     formData.miscellaneous.createdWith = window.location.hostname;
 
     const requestCreateParameters = prepareRequestParams({
-      signer,
+      address: account?.address,
       formData,
       currency,
       invoiceTotals,

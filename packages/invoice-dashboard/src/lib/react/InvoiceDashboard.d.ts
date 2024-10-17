@@ -3,10 +3,11 @@ import type { IConfig } from "@requestnetwork/shared-types";
 import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 import type { RequestNetwork } from "@requestnetwork/request-client.js";
 import { Currency } from "../types";
+import { Config as WagmiConfig } from "wagmi";
 
 export interface InvoiceDashboardProps {
   config: IConfig;
-  wallet: WalletState | null;
+  wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
   currencies: Currency[];
 }
@@ -23,7 +24,7 @@ export interface InvoiceDashboardProps {
  * @example
  * <InvoiceDashboard
  *   config={config}
- *   wallet={wallet}
+ *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
  *   currencies={currencies}
  * />

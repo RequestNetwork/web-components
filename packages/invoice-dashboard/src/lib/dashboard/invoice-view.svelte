@@ -22,19 +22,17 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-  // Types
-  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
-
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { walletClientToSigner } from "../../utils";
+  import { getEthersSigner } from "../../utils";
 
   export let config;
-  export let wallet: WalletState | undefined;
+  export let account: any;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents;
   export let currencyManager: any;
   export let isRequestPayed: boolean;
+  export let wagmiConfig: any;
 
   let network = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
@@ -45,15 +43,16 @@
   let requestData: any = null;
   let signer: any = null;
   let approved = false;
-  let address = wallet?.accounts?.[0]?.address;
+  let address = account.address;
   let firstItems: any;
   let otherItems: any;
   let sellerInfo: { label: string; value: string }[] = [];
   let buyerInfo: { label: string; value: string }[] = [];
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
+  let hexStringChain = "0x" + account.chainId.toString(16);
   let correctChain =
-    wallet?.chains[0].id === String(getNetworkIdFromNetworkName(network));
+    hexStringChain === String(getNetworkIdFromNetworkName(network));
 
   const generateDetailParagraphs = (info: any) => {
     return [
@@ -96,7 +95,7 @@
   $: request, checkInvoice();
 
   $: {
-    wallet = wallet;
+    account = account;
     network = request?.currencyInfo?.network || "mainnet";
     // FIXME: Use a non deprecated function
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
@@ -109,7 +108,9 @@
       const singleRequest = await requestNetwork?.fromRequestId(
         request!.requestId
       );
-      signer = walletClientToSigner(wallet);
+
+      signer = await getEthersSigner(wagmiConfig);
+
       requestData = singleRequest?.getData();
 
       if (requestData.currencyInfo.type === Types.RequestLogic.CURRENCY.ERC20) {
@@ -183,11 +184,9 @@
   async function switchNetworkIfNeeded(network: string) {
     try {
       const targetNetworkId = String(getNetworkIdFromNetworkName(network));
-      await wallet?.provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: targetNetworkId }],
-      });
-      signer = walletClientToSigner(wallet);
+      await account.connector.switchChain({ chainId: Number(targetNetworkId) });
+      signer = await getEthersSigner(wagmiConfig);
+
       correctChain = true;
     } catch (err) {
       console.error("Something went wrong while switching networks: ", err);

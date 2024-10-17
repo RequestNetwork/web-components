@@ -21,7 +21,6 @@
   import Search from "@requestnetwork/shared-icons/search.svelte";
   // Types
   import type { IConfig } from "@requestnetwork/shared-types";
-  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
@@ -34,18 +33,20 @@
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
-
   import { Drawer, InvoiceView } from "./dashboard";
+  import { getAccount, getClient } from "@wagmi/core";
+  import type { Config as WagmiConfig } from "wagmi";
 
   export let config: IConfig;
-  export let wallet: WalletState;
+  export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: any = [];
 
-  let signer = "";
+  let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
+  let account: any;
 
   let loading = false;
   let searchQuery = "";
@@ -76,7 +77,13 @@
   let sortColumn = "timestamp";
 
   $: {
-    signer = wallet?.accounts[0]?.address;
+    if (wagmiConfig) {
+      account = getAccount(wagmiConfig);
+    }
+  }
+
+  $: {
+    signer = account?.address;
   }
 
   $: isRequestPayed, getOneRequest(activeRequest);
@@ -86,13 +93,13 @@
   });
 
   const getRequests = async () => {
-    if (!wallet || !requestNetwork) return;
+    if (!account?.address || !requestNetwork) return;
     loading = true;
 
     try {
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: wallet?.accounts[0]?.address,
+        value: account?.address,
       });
       requests = requestsData
         ?.map((request) => request.getData())
@@ -115,7 +122,7 @@
       requests = requests?.filter(
         (request) => request.requestId !== activeRequest.requestId
       );
-      requests = [...requests, _request.getData()].sort(
+      requests = [...requests, _request?.getData()].sort(
         (a, b) => b.timestamp - a.timestamp
       );
     } catch (error) {
@@ -136,8 +143,8 @@
   let totalPages = 1;
 
   $: {
-    const currentWalletAddress = wallet?.accounts[0]?.address;
-    const currentNetwork = wallet?.chains[0]?.id;
+    const currentWalletAddress = account?.address;
+    const currentNetwork = account?.chainId?.toString();
 
     if (
       currentWalletAddress &&
@@ -184,9 +191,9 @@
     if (
       currentTab === "All" ||
       (currentTab === "Get Paid" &&
-        request.payee?.value?.toLowerCase() === signer.toLowerCase()) ||
+        request.payee?.value?.toLowerCase() === signer?.toLowerCase()) ||
       (currentTab === "Pay" &&
-        request.payer?.value?.toLowerCase() === signer.toLowerCase())
+        request.payer?.value?.toLowerCase() === signer?.toLowerCase())
     ) {
       const invoiceMatches = request.contentData?.invoiceNumber
         ?.toString()
@@ -517,8 +524,8 @@
                         <span
                           >{formatAddress(
                             currentTab === "Pay"
-                              ? request.payee?.value ?? ""
-                              : request.payer?.value ?? ""
+                              ? (request.payee?.value ?? "")
+                              : (request.payer?.value ?? "")
                           )}</span
                         >
                         <Copy
@@ -572,7 +579,8 @@
         >
           {#if activeRequest !== undefined}
             <InvoiceView
-              {wallet}
+              {account}
+              {wagmiConfig}
               bind:isRequestPayed
               {requestNetwork}
               {currencyManager}
