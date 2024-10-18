@@ -32,7 +32,7 @@
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
@@ -46,7 +46,7 @@
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let account: GetAccountReturnType;
+  let account: GetAccountReturnType = wagmiConfig && getAccount(wagmiConfig);
 
   let loading = false;
   let searchQuery = "";
@@ -83,16 +83,30 @@
   }
 
   $: {
-    if (account) {
-      watchAccount(wagmiConfig, {
-        onChange(data) {
-          if (data.address !== account?.address) {
-            account = data;
-            getRequests();
-          }
-        },
+    if (account?.address) {
+      tick().then(() => {
+        getRequests();
       });
     }
+  }
+
+  $: {
+    watchAccount(wagmiConfig, {
+      onChange(data) {
+        if (data?.address !== account?.address) {
+          account = data;
+
+          if (account?.address) {
+            getRequests();
+          } else {
+            requests = [];
+            activeRequest = undefined;
+            previousWalletAddress = undefined;
+            previousNetwork = undefined;
+          }
+        }
+      },
+    });
   }
 
   $: {
@@ -126,7 +140,6 @@
 
   const getOneRequest = async (activeRequest: any) => {
     if (!activeRequest) return;
-    loading = true;
 
     try {
       const _request = await requestNetwork?.fromRequestId(
@@ -140,16 +153,8 @@
       );
     } catch (error) {
       console.error("Failed to fetch request:", error);
-    } finally {
-      loading = false;
     }
   };
-
-  $: {
-    if (requests && loading) {
-      loading = false;
-    }
-  }
 
   const itemsPerPage = 10;
   let currentPage = 1;
