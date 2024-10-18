@@ -114,7 +114,7 @@
   });
 
   onDestroy(() => {
-    if (unwatchAccount) unwatchAccount();
+    if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
   $: {

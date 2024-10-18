@@ -20,59 +20,33 @@ npm install @requestnetwork/invoice-dashboard
 
 ### Usage in React
 
-> **⚠️ WARNING:** For NextJS 14.x , ensure you have the following configuration :
->
-> #### [next.config.js](https://github.com/RequestNetwork/invoicing-template/blob/main/next.config.mjs)
->
-> ```javascript
-> /** @type {import('next').NextConfig} */
-> const nextConfig = {
->   reactStrictMode: true,
->   swcMinify: false,
-> };
-> ```
-
-> **⚠️ WARNING:** To use the Invoice Dashboard in a React application, you must _dynamically_ import `@requestnetwork/invoice-dashboard` and use the component in your JSX file.
->
-> ```tsx
-> import("@requestnetwork/invoice-dashboard");
-> ```
-
-> **⚠️ WARNING:** The Invoice Dashboard component is currently only compatible with [Web3 Onboard](https://onboard.blocknative.com/) because it takes a `WalletState` as a prop. Future iterations will allow for other wallet connectors.
-
 #### [invoice-dashboard.tsx](https://github.com/RequestNetwork/invoicing-template/blob/main/pages/index.tsx)
 
-Configure the invoice-dashboard web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See [StackOverflow](https://stackoverflow.com/a/55480022) for details.
+You can directly pass props into the invoice-dashboard web component without needing to create references or use workarounds.
 
 ```tsx
-import("@requestnetwork/invoice-dashboard");
-import { useEffect, useRef } from "react";
+import Head from "next/head";
 import { config } from "@/utils/config";
 import { useAppContext } from "@/utils/context";
-import { InvoiceDashboardProps } from "@/types";
-import { useConnectWallet } from "@web3-onboard/react";
+import { currencies } from "@/utils/currencies";
+import { rainbowKitConfig as wagmiConfig } from "@/utils/connectWallet";
+import InvoiceDashboard from "@requestnetwork/invoice-dashboard/react";
 
-export default function InvoiceDashboard() {
-  const [{ wallet }] = useConnectWallet();
+export default function InvoiceDashboardPage() {
   const { requestNetwork } = useAppContext();
-  const dashboardRef = useRef<InvoiceDashboardProps>(null);
-
-  useEffect(() => {
-    if (dashboardRef.current) {
-      dashboardRef.current.config = config;
-
-      if (wallet && requestNetwork) {
-        dashboardRef.current.wallet = wallet;
-        dashboardRef.current.requestNetwork = requestNetwork;
-        dashboardRef.current.currencies = currencies;
-      }
-    }
-  }, [wallet, requestNetwork]);
 
   return (
     <>
+      <Head>
+        <title>Request Invoicing</title>
+      </Head>
       <div className="container m-auto  w-[100%]">
-        <invoice-dashboard ref={dashboardRef} />
+        <InvoiceDashboard
+          config={config}
+          currencies={currencies}
+          requestNetwork={requestNetwork}
+          wagmiConfig={wagmiConfig}
+        />
       </div>
     </>
   );
@@ -106,6 +80,12 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 };
 ```
 
+#### [wagmiConfig.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/wagmiConfig.ts)
+
+The wagmiConfig file configures wallet connections for the InvoiceDashboard component, using RainbowKit and supporting various wallets and blockchains.
+
+For more details see [Wagmi Docs](https://wagmi.sh/react/api/WagmiProvider#config)
+
 #### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/config.ts)
 
 Use the config object to pass additional configuration options to the invoice dashboard component.
@@ -133,27 +113,27 @@ export const config: IConfig = {
 
 ## Features
 
-| Feature                                          | Status |
-| ------------------------------------------------ | ------ |
-| ERC20 Payment                                    | ✅     |
-| rnf_invoice format 0.3.0                         | ✅     |
-| Configure Logo and Colors                        | ✅     |
-| Minimal Chains and Currencies                    | ✅     |
-| Support Wallet Connectors other than Web3Onboard | ❌     |
-| Accept Request                                   | ❌     |
-| Cancel Request                                   | ❌     |
-| Add Stakeholder                                  | ❌     |
-| Native Payment                                   | ❌     |
-| Conversion Payment                               | ❌     |
-| Batch Payment                                    | ❌     |
-| Declarative Payment                              | ❌     |
-| Swap-to-Pay Payment                              | ❌     |
-| Swap-to-Conversion Payment                       | ❌     |
-| Escrow Payment                                   | ❌     |
-| Improved UI and UX                               | ❌     |
-| More Chains and Currencies                       | ❌     |
-| More Configuration Options                       | ❌     |
-| Attachments                                      | ❌     |
+| Feature                              | Status |
+| ------------------------------------ | ------ |
+| ERC20 Payment                        | ✅     |
+| rnf_invoice format 0.3.0             | ✅     |
+| Configure Logo and Colors            | ✅     |
+| Minimal Chains and Currencies        | ✅     |
+| Compatible with all Wagmi connectors | ✅     |
+| Accept Request                       | ❌     |
+| Cancel Request                       | ❌     |
+| Add Stakeholder                      | ❌     |
+| Native Payment                       | ❌     |
+| Conversion Payment                   | ❌     |
+| Batch Payment                        | ❌     |
+| Declarative Payment                  | ❌     |
+| Swap-to-Pay Payment                  | ❌     |
+| Swap-to-Conversion Payment           | ❌     |
+| Escrow Payment                       | ❌     |
+| Improved UI and UX                   | ❌     |
+| More Chains and Currencies           | ❌     |
+| More Configuration Options           | ❌     |
+| Attachments                          | ❌     |
 
 ## Chains and Currencies
 
