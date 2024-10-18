@@ -1,9 +1,9 @@
 import React from "react";
+import { Config as WagmiConfig } from "@wagmi/core";
 import type { IConfig } from "@requestnetwork/shared-types";
 import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 import type { RequestNetwork } from "@requestnetwork/request-client.js";
 import { Currency } from "../types";
-import { Config as WagmiConfig } from "wagmi";
 
 export interface InvoiceDashboardProps {
   config: IConfig;

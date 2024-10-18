@@ -84,7 +84,7 @@
   }
 
   $: {
-    formData.creatorId = account?.address as string;
+    formData.creatorId = (account?.address ?? "") as string;
     invoiceTotals = calculateInvoiceTotals(formData.items);
   }
 

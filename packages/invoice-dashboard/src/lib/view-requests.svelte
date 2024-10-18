@@ -4,7 +4,6 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <script lang="ts">
   import { getAccount, watchAccount } from "@wagmi/core";
-  import type { Config as WagmiConfig } from "wagmi";
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
@@ -22,7 +21,11 @@
   import Download from "@requestnetwork/shared-icons/download.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
   // Types
-  import type { GetAccountReturnType } from "@wagmi/core";
+  import type {
+    GetAccountReturnType,
+    Config as WagmiConfig,
+    WatchAccountReturnType,
+  } from "@wagmi/core";
   import { Types } from "@requestnetwork/request-client.js";
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
@@ -32,7 +35,7 @@
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
@@ -90,12 +93,13 @@
     }
   }
 
-  $: {
-    watchAccount(wagmiConfig, {
+  let unwatchAccount: WatchAccountReturnType | undefined;
+
+  onMount(() => {
+    unwatchAccount = watchAccount(wagmiConfig, {
       onChange(data) {
         if (data?.address !== account?.address) {
           account = data;
-
           if (account?.address) {
             getRequests();
           } else {
@@ -107,7 +111,11 @@
         }
       },
     });
-  }
+  });
+
+  onDestroy(() => {
+    if (unwatchAccount) unwatchAccount();
+  });
 
   $: {
     signer = account?.address;

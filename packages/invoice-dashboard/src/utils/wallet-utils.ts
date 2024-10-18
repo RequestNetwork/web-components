@@ -29,7 +29,10 @@ export async function getEthersSigner(
   config: Config,
   { chainId }: { chainId?: number } = {}
 ) {
-  const client = await getConnectorClient(config, { chainId });
-
-  return clientToSigner(client);
+  try {
+    const client = await getConnectorClient(config, { chainId });
+    return clientToSigner(client);
+  } catch (e) {
+    console.log("Failed to obtain client from getConnectorClient");
+  }
 }
