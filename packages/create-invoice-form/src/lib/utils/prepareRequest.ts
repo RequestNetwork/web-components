@@ -10,11 +10,11 @@ interface IRequestParams {
     totalTaxAmount: number;
     totalAmount: number;
   };
-  signer: string;
+  address: `0x${string}` | undefined;
 }
 
 export const prepareRequestParams = ({
-  signer,
+  address,
   currency,
   formData,
   invoiceTotals,
@@ -123,7 +123,7 @@ export const prepareRequestParams = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: signer,
+      value: address as string,
     },
   };
 };

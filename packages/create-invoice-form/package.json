@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/create-invoice-form",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -33,7 +33,8 @@
   ],
   "dependencies": {
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
-    "viem": "^2.9.15"
+    "viem": "^2.9.15",
+    "@wagmi/core": "^2.13.8"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.5.2",

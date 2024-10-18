@@ -48,7 +48,7 @@ const defaultCurrencyIds = [
 import { Types } from "@requestnetwork/request-client.js";
 
 export function initializeCurrencyManager(
-  customCurrencies: any[]
+  customCurrencies: any[] = []
 ): CurrencyManager {
   let currenciesToUse: any[];
 

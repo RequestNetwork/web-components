@@ -20,57 +20,35 @@ npm install @requestnetwork/create-invoice-form
 
 ### Usage in React
 
-> **⚠️ WARNING:** For NextJS 14.x , ensure you have the following configuration :
->
-> #### [next.config.js](https://github.com/RequestNetwork/invoicing-template/blob/main/next.config.mjs)
->
-> ```javascript
-> /** @type {import('next').NextConfig} */
-> const nextConfig = {
->   reactStrictMode: true,
->   swcMinify: false,
-> };
-> ```
-
-> **⚠️ WARNING:** To use the Create Invoice Form in a React application, you must _dynamically_ import `@requestnetwork/create-invoice-form` and use the component in your JSX file.
->
-> ```tsx
-> import("@requestnetwork/create-invoice-form");
-> ```
-
-> **ℹ️ INFO:** The following example uses [Web3 Onboard](https://onboard.blocknative.com/) to connect a wallet but you can use any wallet connection method you prefer.
-
 #### [create-invoice.tsx](https://github.com/RequestNetwork/invoicing-template/blob/main/pages/create-invoice.tsx)
 
-Configure the create-invoice-form web component by creating a reference to it, setting its properties, and passing the reference as a prop. It's not possible to pass objects into a web component as props directly. See [StackOverflow](https://stackoverflow.com/a/55480022) for details .
+You can directly pass props into the create-invoice-form web component without needing to create references or use workarounds.
 
 ```tsx
-import("@requestnetwork/create-invoice-form");
-import { useEffect, useRef } from "react";
+import Head from "next/head";
 import { config } from "@/utils/config";
 import { useAppContext } from "@/utils/context";
-import { CreateInvoiceFormProps } from "@/types";
+import { currencies } from "@/utils/currencies";
+import { rainbowKitConfig as wagmiConfig } from "@/utils/wagmiConfig";
+import CreateInvoiceForm from "@requestnetwork/create-invoice-form/react";
 
-export default function CreateInvoiceForm() {
-  const formRef = useRef<CreateInvoiceFormProps>(null);
-  const { wallet, requestNetwork } = useAppContext();
-
-  useEffect(() => {
-    if (formRef.current) {
-      formRef.current.config = config;
-
-      if (wallet && requestNetwork) {
-        formRef.current.signer = wallet.accounts[0].address;
-        formRef.current.requestNetwork = requestNetwork;
-        formRef.current.currencies = currencies;
-      }
-    }
-  }, [wallet, requestNetwork]);
+export default function CreateInvoice() {
+  const { requestNetwork } = useAppContext();
 
   return (
-    <div className="container m-auto  w-[100%]">
-      <create-invoice-form ref={formRef} />
-    </div>
+    <>
+      <Head>
+        <title>Request Invoicing - Create an Invoice</title>
+      </Head>
+      <div className="container m-auto  w-[100%]">
+        <CreateInvoiceForm
+          config={config}
+          currencies={currencies}
+          wagmiConfig={wagmiConfig}
+          requestNetwork={requestNetwork}
+        />
+      </div>
+    </>
   );
 }
 ```
@@ -102,6 +80,12 @@ export const initializeRequestNetwork = (setter: any, walletClient: any) => {
 };
 ```
 
+#### [wagmiConfig.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/wagmiConfig.ts)
+
+The wagmiConfig file configures wallet connections for the InvoiceDashboard component, using RainbowKit and supporting various wallets and blockchains.
+
+For more details see [Wagmi Docs](https://wagmi.sh/react/api/WagmiProvider#config)
+
 #### [config.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/config.ts)
 
 Use the config object to pass additional configuration options to the create invoice form component.
@@ -129,25 +113,25 @@ export const config: IConfig = {
 
 ## Features
 
-| Feature                                          | Status |
-| ------------------------------------------------ | ------ |
-| ERC20 Request                                    | ✅     |
-| rnf_invoice format 0.3.0                         | ✅     |
-| Configure Logo and Colors                        | ✅     |
-| Minimal Chains and Currencies                    | ✅     |
-| Support Wallet Connectors other than Web3Onboard | ❌     |
-| Native Request                                   | ❌     |
-| Conversion Request                               | ❌     |
-| Swap-to-Pay Request                              | ❌     |
-| Swap-to-Conversion Request                       | ❌     |
-| Escrow Request                                   | ❌     |
-| Improved UI and UX                               | ❌     |
-| Auto-increment Invoice Number                    | ❌     |
-| Client Address List                              | ❌     |
-| Payment Recipient Address List                   | ❌     |
-| More Chains and Currencies                       | ❌     |
-| More Configuration Options                       | ❌     |
-| Attachments                                      | ❌     |
+| Feature                              | Status |
+| ------------------------------------ | ------ |
+| ERC20 Request                        | ✅     |
+| rnf_invoice format 0.3.0             | ✅     |
+| Configure Logo and Colors            | ✅     |
+| Minimal Chains and Currencies        | ✅     |
+| Compatible with all Wagmi connectors | ✅     |
+| Native Request                       | ❌     |
+| Conversion Request                   | ❌     |
+| Swap-to-Pay Request                  | ❌     |
+| Swap-to-Conversion Request           | ❌     |
+| Escrow Request                       | ❌     |
+| Improved UI and UX                   | ❌     |
+| Auto-increment Invoice Number        | ❌     |
+| Client Address List                  | ❌     |
+| Payment Recipient Address List       | ❌     |
+| More Chains and Currencies           | ❌     |
+| More Configuration Options           | ❌     |
+| Attachments                          | ❌     |
 
 ## Chains and Currencies
 
