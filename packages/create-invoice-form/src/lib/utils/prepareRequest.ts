@@ -59,25 +59,23 @@ export const prepareRequestParams = ({
         format: "rnf_invoice",
         version: "0.0.3",
       },
-      miscellaneous: {
-        labels: formData.miscellaneous.labels || undefined,
-        builderId: formData.miscellaneous.builderId || undefined,
-        createdWith: formData.miscellaneous.createdWith || undefined,
-      },
+      miscellaneous:
+        formData.miscellaneous.labels.length > 0
+          ? formData.miscellaneous
+          : undefined,
       creationDate: new Date(formData.issuedOn).toISOString(),
       invoiceNumber: formData.invoiceNumber,
       note: formData.note.length > 0 ? formData.note : undefined,
-      invoiceItems: formData.items.map((item) => ({
-        name: item.description,
+      invoiceItems: formData.invoiceItems.map((item) => ({
+        name: item.name,
         quantity: Number(item.quantity),
         unitPrice: parseUnits(
           item.unitPrice.toString(),
           currency.decimals
         ).toString(),
-        discount: parseUnits(
-          item.discount.toString(),
-          currency.decimals
-        ).toString(),
+        discount:
+          item.discount &&
+          parseUnits(item.discount.toString(), currency.decimals).toString(),
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),

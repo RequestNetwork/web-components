@@ -84,11 +84,11 @@
 
     if (typeof itemIndex === "number") {
       if (fieldName === "tax") {
-        (formData.items[itemIndex] as any)[fieldName].amount = value;
+        (formData.invoiceItems[itemIndex] as any)[fieldName].amount = value;
         return;
       }
 
-      (formData.items[itemIndex] as any)[fieldName] = value;
+      (formData.invoiceItems[itemIndex] as any)[fieldName] = value;
     } else {
       if (id in formData) {
         (formData as any)[id] = value;
@@ -98,21 +98,22 @@
 
   const addInvoiceItem = () => {
     const newItem = {
-      description: "",
+      name: "",
       quantity: 1,
-      unitPrice: 0,
-      discount: 0,
+      unitPrice: "",
+      discount: "",
       tax: {
-        amount: 0,
-        type: "percentage",
+        amount: "",
+        type: "percentage" as "percentage" | "fixed",
       },
       amount: "",
+      currency: "",
     };
-    formData.items = [...formData.items, newItem];
+    formData.invoiceItems = [...formData.invoiceItems, newItem];
   };
 
   const removeInvoiceItem = (index: number) => {
-    formData.items = formData.items.filter((_, i) => i !== index);
+    formData.invoiceItems = formData.invoiceItems.filter((_, i) => i !== index);
   };
 </script>
 
@@ -377,17 +378,17 @@
           </tr>
         </thead>
         <tbody>
-          {#each formData.items as item, index (index)}
+          {#each formData.invoiceItems as item, index (index)}
             <tr>
               <th
                 scope="row"
-                class="invoice-form-table-body-header invoice-form-table-body-description"
+                class="invoice-form-table-body-header invoice-form-table-body-name"
                 style="font-weight: normal;"
               >
                 <Input
-                  id={`description-${index}`}
+                  id={`name-${index}`}
                   type="text"
-                  value={item.description}
+                  value={item.name}
                   placeholder="Enter description"
                   handleInput={(event) => handleInput(event, index)}
                 />
@@ -638,7 +639,7 @@
     padding: 12px 16px;
   }
 
-  .invoice-form-table-body-description {
+  .invoice-form-table-body-name {
     width: 250px !important;
   }
 
