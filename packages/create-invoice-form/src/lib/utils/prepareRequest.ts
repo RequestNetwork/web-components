@@ -59,10 +59,11 @@ export const prepareRequestParams = ({
         format: "rnf_invoice",
         version: "0.0.3",
       },
-      miscellaneous:
-        formData.miscellaneous.labels.length > 0
-          ? formData.miscellaneous
-          : undefined,
+      miscellaneous: {
+        labels: formData.miscellaneous.labels || undefined,
+        builderId: formData.miscellaneous.builderId || undefined,
+        createdWith: formData.miscellaneous.createdWith || undefined,
+      },
       creationDate: new Date(formData.issuedOn).toISOString(),
       invoiceNumber: formData.invoiceNumber,
       note: formData.note.length > 0 ? formData.note : undefined,

@@ -15,6 +15,8 @@ export interface CustomFormData {
   miscellaneous: {
     // This is a placeholder for any additional data that the user wants to include in the invoice
     labels: string[];
+    builderId: string;
+    createdWith: string;
   };
   invoiceNumber: string;
   payerAddress: string;
