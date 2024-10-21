@@ -1,46 +1,22 @@
-export interface InvoiceItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  tax: {
-    amount: number;
-    type: string;
-  };
-}
+import { Invoice, InvoiceItem, ActorInfo } from "@requestnetwork/data-format";
 
-export interface CustomFormData {
+export interface CustomFormData extends Omit<Invoice, "meta" | "creationDate"> {
   creatorId: string;
   note: string;
   miscellaneous: {
     // This is a placeholder for any additional data that the user wants to include in the invoice
     labels: string[];
+    builderId: string;
+    createdWith: string;
   };
   invoiceNumber: string;
   payerAddress: string;
   payeeAddress: string;
   dueDate: string;
   issuedOn: string;
-  items: InvoiceItem[];
-  buyerInfo?: SellerBuyerInfo;
-  sellerInfo?: SellerBuyerInfo;
-}
-
-export interface SellerBuyerInfo {
-  firstName: string | undefined;
-  lastName: string | undefined;
-  businessName: string | undefined;
-  taxRegistration: string | undefined;
-  address: Address | undefined;
-  email: string | undefined;
-}
-
-export interface Address {
-  "country-name"?: string;
-  locality?: string;
-  "postal-code"?: string;
-  region?: string;
-  "street-address"?: string;
+  invoiceItems: InvoiceItem[];
+  buyerInfo?: ActorInfo;
+  sellerInfo?: ActorInfo;
 }
 
 export interface IConfig {

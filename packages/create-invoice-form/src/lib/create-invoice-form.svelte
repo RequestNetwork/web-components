@@ -85,7 +85,7 @@
 
   $: {
     formData.creatorId = (account?.address ?? "") as string;
-    invoiceTotals = calculateInvoiceTotals(formData.items);
+    invoiceTotals = calculateInvoiceTotals(formData.invoiceItems);
   }
 
   let payeeAddressError = false;
@@ -95,9 +95,9 @@
     const basicDetailsFilled =
       formData.payeeAddress && formData.payerAddress && formData.dueDate;
     const hasItems =
-      formData.items.length > 0 &&
-      formData.items.every(
-        (item) => item.description && item.quantity > 0 && item.unitPrice > 0
+      formData.invoiceItems.length > 0 &&
+      formData.invoiceItems.every(
+        (item) => item.name && item.quantity > 0 && Number(item.unitPrice) > 0
       );
 
     const addressesAreValid = !payeeAddressError && !clientAddressError;

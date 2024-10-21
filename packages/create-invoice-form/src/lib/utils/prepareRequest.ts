@@ -66,17 +66,16 @@ export const prepareRequestParams = ({
       creationDate: new Date(formData.issuedOn).toISOString(),
       invoiceNumber: formData.invoiceNumber,
       note: formData.note.length > 0 ? formData.note : undefined,
-      invoiceItems: formData.items.map((item) => ({
-        name: item.description,
+      invoiceItems: formData.invoiceItems.map((item) => ({
+        name: item.name,
         quantity: Number(item.quantity),
         unitPrice: parseUnits(
           item.unitPrice.toString(),
           currency.decimals
         ).toString(),
-        discount: parseUnits(
-          item.discount.toString(),
-          currency.decimals
-        ).toString(),
+        discount:
+          item.discount &&
+          parseUnits(item.discount.toString(), currency.decimals).toString(),
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),
