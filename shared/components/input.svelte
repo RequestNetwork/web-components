@@ -131,11 +131,11 @@
 
   /* Error styles */
   .input-error {
-    border-color: red;
+    border-color: #e89e14ee;
   }
 
   .error-message {
-    color: red;
+    color: #e89e14ee;
     font-size: 12px;
     margin-top: 5px;
   }
