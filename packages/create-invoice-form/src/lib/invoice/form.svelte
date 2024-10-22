@@ -26,8 +26,17 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
-  export let payeeAddressError = false;
-  export let clientAddressError = false;
+
+  let validationErrors = {
+    payeeAddress: false,
+    clientAddress: false,
+    sellerInfo: {
+      email: false,
+    },
+    buyerInfo: {
+      email: false,
+    },
+  };
 
   let creatorId = "";
 
@@ -35,12 +44,17 @@
     creatorId = formData.creatorId;
   }
 
+  const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    validationErrors[`${type}`].email = !emailRegex.test(email);
+  };
+
   const checkPayeeAddress = () => {
-    payeeAddressError = !checkAddress(formData.payeeAddress);
+    validationErrors.payeeAddress = !checkAddress(formData.payeeAddress);
   };
 
   const checkClientAddress = () => {
-    clientAddressError = !checkAddress(formData.payerAddress);
+    validationErrors.clientAddress = !checkAddress(formData.payerAddress);
   };
 
   const calculateInputWidth = (value: string) => {
@@ -177,7 +191,13 @@
                 type="email"
                 value={formData.sellerInfo?.email}
                 placeholder="Email"
-                handleInput={handleAdditionalInfo}
+                handleInput={(e) => {
+                  handleAdditionalInfo(e);
+                }}
+                onBlur={(e) => validateEmail(e?.target?.value, "sellerInfo")}
+                error={validationErrors.sellerInfo.email
+                  ? "Please enter a valid email"
+                  : ""}
               />
               <Input
                 id="sellerInfo-country"
@@ -227,10 +247,10 @@
             placeholder="Client Wallet Address"
             {handleInput}
             onBlur={checkClientAddress}
+            error={validationErrors.clientAddress
+              ? "Please enter a valid Ethereum address"
+              : ""}
           />
-          {#if clientAddressError}
-            <p class="error-address">Please enter a valid Ethereum address</p>
-          {/if}
           <Accordion title="Add Client Info">
             <div class="invoice-form-info">
               <Input
@@ -266,7 +286,13 @@
                 type="email"
                 value={formData.buyerInfo?.email}
                 placeholder="Email"
-                handleInput={handleAdditionalInfo}
+                handleInput={(e) => {
+                  handleAdditionalInfo(e);
+                }}
+                onBlur={(e) => validateEmail(e?.target?.value, "buyerInfo")}
+                error={validationErrors.buyerInfo.email
+                  ? "Please enter a valid email"
+                  : ""}
               />
               <Input
                 id="buyerInfo-country"
@@ -335,10 +361,10 @@
           placeholder="0x..."
           {handleInput}
           onBlur={checkPayeeAddress}
+          error={validationErrors.payeeAddress
+            ? "Please enter a valid Ethereum address"
+            : ""}
         />
-        {#if payeeAddressError}
-          <p class="error-address">Please enter a valid Ethereum address</p>
-        {/if}
       </div>
     </div>
     <div class="invoice-form-dates">
