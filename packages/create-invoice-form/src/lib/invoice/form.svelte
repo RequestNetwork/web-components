@@ -193,8 +193,8 @@
                 placeholder="Email"
                 handleInput={(e) => {
                   handleAdditionalInfo(e);
-                  validateEmail(e?.target?.value, "sellerInfo");
                 }}
+                onBlur={(e) => validateEmail(e?.target?.value, "sellerInfo")}
                 error={validationErrors.sellerInfo.email
                   ? "Please enter a valid email"
                   : ""}
@@ -288,8 +288,8 @@
                 placeholder="Email"
                 handleInput={(e) => {
                   handleAdditionalInfo(e);
-                  validateEmail(e?.target?.value, "buyerInfo");
                 }}
+                onBlur={(e) => validateEmail(e?.target?.value, "buyerInfo")}
                 error={validationErrors.buyerInfo.email
                   ? "Please enter a valid email"
                   : ""}
