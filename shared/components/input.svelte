@@ -14,12 +14,14 @@
   export let max = 0;
   export let style = "";
   export let width = "";
+  export let error: string | null = null;
 </script>
 
 <div class="input-wrapper">
   {#if label}
     <label for={id} class="input-label">{label}</label>
   {/if}
+
   <div class={`input-container ${width}`}>
     <div class={`${$$slots.icon ? "text-input-icon" : ""}`}>
       <slot name="icon" />
@@ -33,7 +35,7 @@
         {placeholder}
         maxlength={max}
         on:input={handleInput}
-        class={`textarea-input ${className}`}
+        class={`textarea-input ${className} ${error ? "input-error" : ""}`}
       />
     {:else}
       <input
@@ -46,10 +48,14 @@
         {placeholder}
         on:blur={onBlur}
         on:input={handleInput}
-        class={`text-input ${className} `}
+        class={`text-input ${className} ${error ? "input-error" : ""}`}
       />
     {/if}
   </div>
+
+  {#if error?.length > 0}
+    <p class="error-message">{error}</p>
+  {/if}
 </div>
 
 <style>
@@ -121,5 +127,16 @@
 
   .input-wrapper .text-input-icon {
     margin-right: 10px;
+  }
+
+  /* Error styles */
+  .input-error {
+    border-color: #e89e14ee;
+  }
+
+  .error-message {
+    color: #e89e14ee;
+    font-size: 12px;
+    margin-top: 5px;
   }
 </style>

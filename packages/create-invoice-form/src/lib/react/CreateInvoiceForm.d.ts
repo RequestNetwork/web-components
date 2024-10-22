@@ -1,9 +1,11 @@
 import React from "react";
+import { Config as WagmiConfig } from "@wagmi/core";
 import type { IConfig } from "@requestnetwork/shared-types";
 import type { RequestNetwork, Types } from "@requestnetwork/request-client.js";
+
 export interface CreateInvoiceFormProps {
   config: IConfig;
-  signer: string;
+  wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
   currencies: {
     symbol: string;
@@ -26,7 +28,7 @@ export interface CreateInvoiceFormProps {
  * @example
  * <CreateInvoiceForm
  *   config={config}
- *   signer={signer}
+ *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
  *   currencies={[
  *     {

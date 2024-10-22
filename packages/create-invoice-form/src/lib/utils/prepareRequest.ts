@@ -12,7 +12,7 @@ interface IRequestParams {
     totalTaxAmount: number;
     totalAmount: number;
   };
-  signer: string;
+  address: `0x${string}` | undefined;
 }
 
 const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, currency: CurrencyTypes.CurrencyDefinition, formData: CustomFormData) => {
@@ -69,6 +69,7 @@ const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, cu
 export const prepareRequestParams = ({
   signer,
   invoiceCurrency,
+  address,
   currency,
   formData,
   invoiceTotals,
@@ -110,17 +111,19 @@ export const prepareRequestParams = ({
       creationDate: new Date(formData.issuedOn).toISOString(),
       invoiceNumber: formData.invoiceNumber,
       note: formData.note.length > 0 ? formData.note : undefined,
-      invoiceItems: formData.items.map((item) => ({
-        name: item.description,
+      invoiceItems: formData.invoiceItems.map((item) => ({
+        name: item.name,
         quantity: Number(item.quantity),
         unitPrice: parseUnits(
           item.unitPrice.toString(),
           invoiceCurrency.decimals
         ).toString(),
-        discount: parseUnits(
-          item.discount.toString(),
-          invoiceCurrency.decimals
-        ).toString(),
+        discount: 
+          item.discount && 
+            parseUnits(
+              item.discount.toString(),
+              invoiceCurrency.decimals
+            ).toString(),
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),
@@ -167,7 +170,7 @@ export const prepareRequestParams = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: signer,
+      value: address as string,
     },
   };
 };

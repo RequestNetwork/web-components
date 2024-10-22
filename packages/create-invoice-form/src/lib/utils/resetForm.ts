@@ -12,16 +12,17 @@ export function getInitialFormData() {
       builderId: "",
       createdWith: "",
     },
-    items: [
+    invoiceItems: [
       {
-        description: "",
+        name: "",
         quantity: 1,
-        unitPrice: 0,
-        discount: 0,
+        unitPrice: "",
+        discount: "",
         tax: {
-          amount: 0,
-          type: "percentage",
+          amount: "",
+          type: "percentage" as "fixed" | "percentage",
         },
+        currency: "",
       },
     ],
     sellerInfo: {

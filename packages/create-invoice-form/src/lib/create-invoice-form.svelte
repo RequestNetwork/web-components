@@ -1,31 +1,32 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
+  import { getAccount } from "@wagmi/core";
+  import { Config as WagmiConfig } from "wagmi";
   // Types
-  import { APP_STATUS } from "@requestnetwork/shared-types/enums";
+  import { type GetAccountReturnType } from "@wagmi/core";
   import type { IConfig } from "@requestnetwork/shared-types";
-
+  import { APP_STATUS } from "@requestnetwork/shared-types/enums";
+  import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   // Utils
-  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { getInitialFormData, prepareRequestParams } from "./utils";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
+  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
   import { getCurrencySupportedNetworksForConversion, initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-
   // Components
+  import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
 
-  import { InvoiceForm, InvoiceView } from "./invoice";
-  import { getInitialFormData, prepareRequestParams } from "./utils";
-  import type { RequestNetwork } from "@requestnetwork/request-client.js";
-  import { Types } from "@requestnetwork/request-client.js";
-  import { CurrencyTypes } from "@requestnetwork/types";
-
   export let config: IConfig;
-  export let signer: string = "";
+  export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: any;
 
+  let account: GetAccountReturnType;
   let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
@@ -94,28 +95,27 @@
   };
 
   $: {
-    formData.creatorId = signer;
-    invoiceTotals = calculateInvoiceTotals(formData.items);
+    if (wagmiConfig) {
+      account = getAccount(wagmiConfig);
+    }
   }
 
-  let payeeAddressError = false;
-  let clientAddressError = false;
+  $: {
+    formData.creatorId = (account?.address ?? "") as string;
+    invoiceTotals = calculateInvoiceTotals(formData.invoiceItems);
+  }
+
+  const isValidItem = (item: any) =>
+    item.name && item.quantity > 0 && Number(item.unitPrice) > 0;
 
   $: {
     const basicDetailsFilled =
       formData.payeeAddress && formData.payerAddress && formData.dueDate;
     const hasItems =
-      formData.items.length > 0 &&
-      formData.items.every(
-        (item) => item.description && item.quantity > 0 && item.unitPrice > 0
-      );
+      formData.invoiceItems.length > 0 &&
+      formData.invoiceItems.every(isValidItem);
 
-    const addressesAreValid = !payeeAddressError && !clientAddressError;
-
-    canSubmit =
-      basicDetailsFilled && hasItems && requestNetwork && addressesAreValid
-        ? true
-        : false;
+    canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
 
   const addToStatus = (newStatus: APP_STATUS) => {
@@ -147,7 +147,7 @@
     formData.miscellaneous.createdWith = window.location.hostname;
 
     const requestCreateParameters = prepareRequestParams({
-      signer,
+      address: account?.address,
       formData,
       invoiceCurrency,
       currency,

@@ -36,18 +36,34 @@
   export let currency: CurrencyTypes.CurrencyDefinition | undefined;
   export let network: any;
 
+  let validationErrors = {
+    payeeAddress: false,
+    clientAddress: false,
+    sellerInfo: {
+      email: false,
+    },
+    buyerInfo: {
+      email: false,
+    },
+  };
+
   let creatorId = "";
 
   $: {
     creatorId = formData.creatorId;
   }
 
+  const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    validationErrors[`${type}`].email = !emailRegex.test(email);
+  };
+
   const checkPayeeAddress = () => {
-    payeeAddressError = !checkAddress(formData.payeeAddress);
+    validationErrors.payeeAddress = !checkAddress(formData.payeeAddress);
   };
 
   const checkClientAddress = () => {
-    clientAddressError = !checkAddress(formData.payerAddress);
+    validationErrors.clientAddress = !checkAddress(formData.payerAddress);
   };
 
   const calculateInputWidth = (value: string) => {
@@ -91,11 +107,11 @@
 
     if (typeof itemIndex === "number") {
       if (fieldName === "tax") {
-        (formData.items[itemIndex] as any)[fieldName].amount = value;
+        (formData.invoiceItems[itemIndex] as any)[fieldName].amount = value;
         return;
       }
 
-      (formData.items[itemIndex] as any)[fieldName] = value;
+      (formData.invoiceItems[itemIndex] as any)[fieldName] = value;
     } else {
       if (id in formData) {
         (formData as any)[id] = value;
@@ -113,21 +129,22 @@
 
   const addInvoiceItem = () => {
     const newItem = {
-      description: "",
+      name: "",
       quantity: 1,
-      unitPrice: 0,
-      discount: 0,
+      unitPrice: "",
+      discount: "",
       tax: {
-        amount: 0,
-        type: "percentage",
+        amount: "",
+        type: "percentage" as "percentage" | "fixed",
       },
       amount: "",
+      currency: "",
     };
-    formData.items = [...formData.items, newItem];
+    formData.invoiceItems = [...formData.invoiceItems, newItem];
   };
 
   const removeInvoiceItem = (index: number) => {
-    formData.items = formData.items.filter((_, i) => i !== index);
+    formData.invoiceItems = formData.invoiceItems.filter((_, i) => i !== index);
   };
 </script>
 
@@ -192,7 +209,13 @@
                 type="email"
                 value={formData.sellerInfo?.email}
                 placeholder="Email"
-                handleInput={handleAdditionalInfo}
+                handleInput={(e) => {
+                  handleAdditionalInfo(e);
+                }}
+                onBlur={(e) => validateEmail(e?.target?.value, "sellerInfo")}
+                error={validationErrors.sellerInfo.email
+                  ? "Please enter a valid email"
+                  : ""}
               />
               <Input
                 id="sellerInfo-country"
@@ -242,10 +265,10 @@
             placeholder="Client Wallet Address"
             {handleInput}
             onBlur={checkClientAddress}
+            error={validationErrors.clientAddress
+              ? "Please enter a valid Ethereum address"
+              : ""}
           />
-          {#if clientAddressError}
-            <p class="error-address">Please enter a valid Ethereum address</p>
-          {/if}
           <Accordion title="Add Client Info">
             <div class="invoice-form-info">
               <Input
@@ -281,7 +304,13 @@
                 type="email"
                 value={formData.buyerInfo?.email}
                 placeholder="Email"
-                handleInput={handleAdditionalInfo}
+                handleInput={(e) => {
+                  handleAdditionalInfo(e);
+                }}
+                onBlur={(e) => validateEmail(e?.target?.value, "buyerInfo")}
+                error={validationErrors.buyerInfo.email
+                  ? "Please enter a valid email"
+                  : ""}
               />
               <Input
                 id="buyerInfo-country"
@@ -364,10 +393,10 @@
           placeholder="0x..."
           {handleInput}
           onBlur={checkPayeeAddress}
+          error={validationErrors.payeeAddress
+            ? "Please enter a valid Ethereum address"
+            : ""}
         />
-        {#if payeeAddressError}
-          <p class="error-address">Please enter a valid Ethereum address</p>
-        {/if}
       </div>
     </div>
     <div class="invoice-form-dates">
@@ -406,17 +435,17 @@
           </tr>
         </thead>
         <tbody>
-          {#each formData.items as item, index (index)}
+          {#each formData.invoiceItems as item, index (index)}
             <tr>
               <th
                 scope="row"
-                class="invoice-form-table-body-header invoice-form-table-body-description"
+                class="invoice-form-table-body-header invoice-form-table-body-name"
                 style="font-weight: normal;"
               >
                 <Input
-                  id={`description-${index}`}
+                  id={`name-${index}`}
                   type="text"
-                  value={item.description}
+                  value={item.name}
                   placeholder="Enter description"
                   handleInput={(event) => handleInput(event, index)}
                 />
@@ -667,7 +696,7 @@
     padding: 12px 16px;
   }
 
-  .invoice-form-table-body-description {
+  .invoice-form-table-body-name {
     width: 250px !important;
   }
 

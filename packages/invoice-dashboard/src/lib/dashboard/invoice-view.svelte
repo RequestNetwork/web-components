@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { toast } from "svelte-sonner";
+  import type { GetAccountReturnType } from "@wagmi/core";
   import {
     approveErc20,
     approveErc20ForProxyConversion,
@@ -12,7 +13,7 @@
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
   import { CurrencyTypes } from "@requestnetwork/types";
-  import { toast } from "svelte-sonner";
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   // Components
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -25,20 +26,18 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-  // Types
-  import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
-
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { getConversionPaymentValues } from '../../utils/getConversionPaymentValues';
-  import { walletClientToSigner } from "../../utils";
+  import { getEthersSigner } from "../../utils";
 
   export let config;
-  export let wallet: WalletState | undefined;
+  export let account: GetAccountReturnType;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let request: Types.IRequestDataWithEvents;
   export let currencyManager: any;
   export let isRequestPayed: boolean;
+  export let wagmiConfig: any;
 
   let network: string | undefined = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
@@ -50,15 +49,16 @@
   let requestData: any = null;
   let signer: any = null;
   let approved = false;
-  let address = wallet?.accounts?.[0]?.address;
+  let address = account.address;
   let firstItems: any;
   let otherItems: any;
   let sellerInfo: { label: string; value: string }[] = [];
   let buyerInfo: { label: string; value: string }[] = [];
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
+  let hexStringChain = "0x" + account.chainId.toString(16);
   let correctChain =
-    wallet?.chains[0].id === String(getNetworkIdFromNetworkName(network));
+    hexStringChain === String(getNetworkIdFromNetworkName(network));
   let paymentNetworkExtension: any = null;
 
   const generateDetailParagraphs = (info: any) => {
@@ -102,7 +102,7 @@
   $: request, checkInvoice();
 
   $: {
-    wallet = wallet;
+    account = account;
     network = request?.currencyInfo?.network || "mainnet";
     // FIXME: Use a non deprecated function
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
@@ -115,7 +115,9 @@
       const singleRequest = await requestNetwork?.fromRequestId(
         request!.requestId
       );
-      signer = walletClientToSigner(wallet);
+
+      signer = await getEthersSigner(wagmiConfig);
+
       requestData = singleRequest?.getData();
       paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
@@ -239,11 +241,9 @@
   async function switchNetworkIfNeeded(network: string) {
     try {
       const targetNetworkId = String(getNetworkIdFromNetworkName(network));
-      await wallet?.provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: targetNetworkId }],
-      });
-      signer = walletClientToSigner(wallet);
+      await account.connector.switchChain({ chainId: Number(targetNetworkId) });
+      signer = await getEthersSigner(wagmiConfig);
+
       correctChain = true;
     } catch (err) {
       console.error("Something went wrong while switching networks: ", err);

@@ -64,7 +64,7 @@ import { Types } from "@requestnetwork/request-client.js";
 import { formattedCurrencyConversionPairs } from './currencyConversionPairs'
 
 export function initializeCurrencyManager(
-  customCurrencies: any[]
+  customCurrencies: any[] = []
 ): CurrencyManager {
   let currenciesToUse: any[];
 
