@@ -5,5 +5,6 @@ export interface Currency {
   address: string;
   network: string;
   decimals: number;
+  value: string;
   type: Types.RequestLogic.CURRENCY;
 }
