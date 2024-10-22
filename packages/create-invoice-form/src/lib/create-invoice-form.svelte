@@ -85,27 +85,20 @@
 
   $: {
     formData.creatorId = (account?.address ?? "") as string;
-    invoiceTotals = calculateInvoiceTotals(formData.items);
+    invoiceTotals = calculateInvoiceTotals(formData.invoiceItems);
   }
 
-  let payeeAddressError = false;
-  let clientAddressError = false;
+  const isValidItem = (item: any) =>
+    item.name && item.quantity > 0 && Number(item.unitPrice) > 0;
 
   $: {
     const basicDetailsFilled =
       formData.payeeAddress && formData.payerAddress && formData.dueDate;
     const hasItems =
-      formData.items.length > 0 &&
-      formData.items.every(
-        (item) => item.description && item.quantity > 0 && item.unitPrice > 0
-      );
+      formData.invoiceItems.length > 0 &&
+      formData.invoiceItems.every(isValidItem);
 
-    const addressesAreValid = !payeeAddressError && !clientAddressError;
-
-    canSubmit =
-      basicDetailsFilled && hasItems && requestNetwork && addressesAreValid
-        ? true
-        : false;
+    canSubmit = basicDetailsFilled && hasItems && requestNetwork ? true : false;
   }
 
   const addToStatus = (newStatus: APP_STATUS) => {
@@ -179,8 +172,6 @@
       bind:formData
       config={activeConfig}
       bind:defaultCurrencies
-      bind:payeeAddressError
-      bind:clientAddressError
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}

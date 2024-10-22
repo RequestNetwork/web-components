@@ -32,9 +32,10 @@
     "!dist/**/*.spec.*"
   ],
   "dependencies": {
+    "@requestnetwork/data-format": "^0.19.0",
     "@requestnetwork/request-client.js": "0.47.1-next.2043",
-    "viem": "^2.9.15",
-    "@wagmi/core": "^2.13.8"
+    "@wagmi/core": "^2.13.8",
+    "viem": "^2.9.15"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.5.2",

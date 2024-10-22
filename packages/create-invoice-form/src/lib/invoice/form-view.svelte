@@ -29,7 +29,7 @@
   let sellerInfo: any[] = [];
   let buyerInfo: any[] = [];
 
-  $: formData.items = formData.items.map((item) => ({
+  $: formData.invoiceItems = formData.invoiceItems.map((item) => ({
     ...item,
     amount: calculateItemTotal(item),
   }));
@@ -188,10 +188,10 @@
           </tr>
         </thead>
         <tbody class="invoice-table-body">
-          {#each formData.items as item, index (index)}
+          {#each formData.invoiceItems as item, index (index)}
             <tr class="invoice-table-body-row">
               <th scope="row">
-                <p>{item.description}</p>
+                <p>{item.name}</p>
               </th>
               <td>{item.quantity}</td>
               <td>{item.unitPrice}</td>
