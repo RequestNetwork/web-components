@@ -41,7 +41,7 @@ jobs:
       - name: Check release type 🕵️‍♀️
         id: check-release
         run: |
-          RELEASE_TYPE=$(./scripts/check-release-type.sh)
+          RELEASE_TYPE=$(npm run check-release-type --workspace=${{ matrix.package }} --silent)
           echo "release-type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
 
       - name: Publish stable version 📦
@@ -53,7 +53,7 @@ jobs:
           
       - name: Publish next version 📦
         if: steps.check-release.outputs.release-type == 'next'
-        run: ./scripts/publish-next-release.sh
+        run: npm run publish-next-release --workspace=${{ matrix.package }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
           VITE_WEB3MODAL_PROJECT_ID: ${{ secrets.VITE_WEB3MODAL_PROJECT_ID }}
