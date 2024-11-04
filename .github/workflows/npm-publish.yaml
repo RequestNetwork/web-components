@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout repository 🛎️
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -31,21 +33,27 @@ jobs:
       - name: Install dependencies 📥
         run: npm ci
 
-      - name: Make is-release-needed.sh executable
-        run: chmod +x ./scripts/is-release-needed.sh
-
-      - name: Check if version number has already been released 🕵️‍♀️
-        id: is-release-needed
+      - name: Make scripts executable
         run: |
-          echo "Checking if ${{ matrix.package }} is already published..."
-          IS_RELEASE_NEEDED=$(npm run is-release-needed --workspace=${{ matrix.package }} --silent)
-          echo "is-release-needed=$IS_RELEASE_NEEDED"
-          echo "is-release-needed=$IS_RELEASE_NEEDED" >> $GITHUB_OUTPUT
+          chmod +x ./scripts/check-release-type.sh
+          chmod +x ./scripts/publish-next-release.sh
 
-      - name: Publish package on NPM 📦
-        if: steps.is-release-needed.outputs.is-release-needed == 'true'
+      - name: Check release type 🕵️‍♀️
+        id: check-release
         run: |
-          npm publish --workspace=${{ matrix.package }}
+          RELEASE_TYPE=$(./scripts/check-release-type.sh)
+          echo "release-type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+
+      - name: Publish stable version 📦
+        if: steps.check-release.outputs.release-type == 'stable'
+        run: npm publish --workspace=${{ matrix.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
+          VITE_WEB3MODAL_PROJECT_ID: ${{ secrets.VITE_WEB3MODAL_PROJECT_ID }}
+          
+      - name: Publish next version 📦
+        if: steps.check-release.outputs.release-type == 'next'
+        run: ./scripts/publish-next-release.sh
         env:
           NODE_AUTH_TOKEN: ${{ secrets.REQUEST_BOT_NPM_TOKEN }}
           VITE_WEB3MODAL_PROJECT_ID: ${{ secrets.VITE_WEB3MODAL_PROJECT_ID }}
