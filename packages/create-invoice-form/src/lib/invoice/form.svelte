@@ -29,8 +29,6 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
-  export let payeeAddressError = false;
-  export let clientAddressError = false;
   export let currencyManager: any;
   export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
   export let currency: CurrencyTypes.CurrencyDefinition | undefined;

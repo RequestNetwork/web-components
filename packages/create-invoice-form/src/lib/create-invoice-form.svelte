@@ -190,8 +190,6 @@
       bind:formData
       config={activeConfig}
       bind:defaultCurrencies
-      bind:payeeAddressError
-      bind:clientAddressError
       {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
