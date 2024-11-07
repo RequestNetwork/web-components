@@ -55,18 +55,18 @@ export const exportToPDF = async (
       <meta charset="UTF-8">
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
-        body { 
-          font-family: 'Urbanist', sans-serif; 
-          font-size: 10px; 
+        body {
+          font-family: 'Urbanist', sans-serif;
+          font-size: 10px;
         }
-        table { 
-          table-layout: fixed; 
-          width: 100%; 
+        table {
+          table-layout: fixed;
+          width: 100%;
           border-collapse: collapse;
         }
-        td, th { 
-          word-wrap: break-word; 
-          border: 1px solid #ddd; 
+        td, th {
+          word-wrap: break-word;
+          border: 1px solid #ddd;
           padding: 4px;
         }
         th {
@@ -168,7 +168,7 @@ export const exportToPDF = async (
           </tr>
         </tfoot>
       </table>
-      
+
       ${
         invoice.contentData?.note
           ? `<div style="margin-top: 20px; font-size: 10px;">
