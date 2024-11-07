@@ -14,8 +14,8 @@ export interface PaymentWidgetProps {
   supportedCurrencies: SupportedCurrencies;
   sellerAddress: string;
   persistRequest?: boolean;
-  showRNBranding?: boolean;
   builderId?: string;
+  hideTotalAmount?: boolean;
   onPaymentSuccess?: (request: any) => void;
   onError?: (error: string) => void;
   buyerInfo?: BuyerInfo;
