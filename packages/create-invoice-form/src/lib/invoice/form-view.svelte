@@ -176,10 +176,6 @@
       <span>Settlement Currency</span>
       {currency ? `${currency?.symbol} (${currency?.network})` : ""}
     </p>
-    <p class="invoice-section-title">
-      <span>Invoice Type</span>
-      Regular Invoice
-    </p>
     <div class="invoice-table-wrapper">
       <table class="invoice-table">
         <thead class="invoice-table-header">

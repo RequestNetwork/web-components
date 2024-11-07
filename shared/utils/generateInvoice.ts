@@ -106,14 +106,13 @@ export const exportToPDF = async (
           ${invoice.contentData?.buyerInfo?.taxRegistration ? `<p style="font-size: 10px; margin: 3px 0;">VAT: ${invoice.contentData.buyerInfo.taxRegistration}</p>` : ""}
         </div>
       </div>
-      
+
       <div style="margin-bottom: 20px; font-size: 10px;">
         <strong>Payment Chain:</strong> ${paymentCurrencies.length > 0 ? paymentCurrencies[0]?.network : "-"}<br>
         <strong>Invoice Currency:</strong> ${invoice.currency || "-"}<br>
         <strong>Settlement Currency:</strong> ${paymentCurrencies.length > 0 ? paymentCurrencies[0]?.symbol : "-"}<br>
-        <strong>Invoice Type:</strong> Regular Invoice
       </div>
-      
+
       <table>
         <thead>
           <tr>
