@@ -1,5 +1,4 @@
 import { formatUnits } from "viem";
-import { loadScript } from "./loadScript";
 import { CurrencyTypes } from "@requestnetwork/types";
 import { Types } from "@requestnetwork/request-client.js";
 import { calculateItemTotal } from "./invoiceTotals";
@@ -10,7 +9,7 @@ declare global {
   }
 }
 
-const loadScript = (src: string): Promise<void> => {
+export const loadScript = (src: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = src;
