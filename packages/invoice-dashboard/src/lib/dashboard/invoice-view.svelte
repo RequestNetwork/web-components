@@ -59,7 +59,7 @@
   let hexStringChain = "0x" + account.chainId.toString(16);
   let correctChain =
     hexStringChain === String(getNetworkIdFromNetworkName(network));
-  let paymentNetworkExtension: any = null;
+  let paymentNetworkExtension: Types.Extension.IPaymentNetworkState<any> | undefined;
 
   const generateDetailParagraphs = (info: any) => {
     return [
