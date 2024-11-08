@@ -45,7 +45,7 @@
     return Array.from(networkSet);
   };
 
-  let networks: (string | undefined)[] = extractUniqueNetworkNames();
+  let networks: string[] = extractUniqueNetworkNames();
 
   let network: any = undefined;
   let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
