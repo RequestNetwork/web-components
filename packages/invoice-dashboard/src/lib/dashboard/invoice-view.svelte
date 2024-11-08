@@ -28,7 +28,7 @@
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
-  import { getConversionPaymentValues } from '../../utils/getConversionPaymentValues';
+  import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
   import { getEthersSigner } from "../../utils";
 
   export let config;
@@ -41,7 +41,8 @@
 
   let network: string | undefined = request?.currencyInfo?.network || "mainnet";
   // FIXME: Use a non deprecated function
-  let currency: CurrencyTypes.CurrencyDefinition | undefined = getCurrencyFromManager(request.currencyInfo, currencyManager);
+  let currency: CurrencyTypes.CurrencyDefinition | undefined =
+    getCurrencyFromManager(request.currencyInfo, currencyManager);
   let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
   let statuses: any = [];
   let isPaid = false;
@@ -59,7 +60,9 @@
   let hexStringChain = "0x" + account.chainId.toString(16);
   let correctChain =
     hexStringChain === String(getNetworkIdFromNetworkName(network));
-  let paymentNetworkExtension: Types.Extension.IPaymentNetworkState<any> | undefined;
+  let paymentNetworkExtension:
+    | Types.Extension.IPaymentNetworkState<any>
+    | undefined;
 
   const generateDetailParagraphs = (info: any) => {
     return [
@@ -121,15 +124,27 @@
       requestData = singleRequest?.getData();
       paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
-      if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens?.map(
-          (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
-        );
-      } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
-        paymentCurrencies = [currencyManager.getNativeCurrency(
-         Types.RequestLogic.CURRENCY.ETH,
-          paymentNetworkExtension?.values?.network
-        )];
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        paymentCurrencies =
+          paymentNetworkExtension?.values?.acceptedTokens?.map((token: any) =>
+            currencyManager.fromAddress(
+              token,
+              paymentNetworkExtension?.values?.network
+            )
+          );
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        paymentCurrencies = [
+          currencyManager.getNativeCurrency(
+            Types.RequestLogic.CURRENCY.ETH,
+            paymentNetworkExtension?.values?.network
+          ),
+        ];
       } else {
         paymentCurrencies = [currency];
       }
@@ -165,8 +180,9 @@
       let paymentSettings = undefined;
       if (
         paymentNetworkExtension?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY || paymentNetworkExtension?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
       ) {
         const { conversion } = await getConversionPaymentValues({
           baseAmount: requestData?.expectedAmount,
@@ -179,7 +195,13 @@
         paymentSettings = conversion;
       }
 
-      const paymentTx = await payRequest(requestData, signer, undefined, undefined, paymentSettings);
+      const paymentTx = await payRequest(
+        requestData,
+        signer,
+        undefined,
+        undefined,
+        paymentSettings
+      );
       await paymentTx.wait(2);
 
       statuses = [...statuses, "Payment detected"];
@@ -200,18 +222,30 @@
     }
   };
 
-  const checkApproval = async (requestData: any, paymentCurrencies: any[], signer: any) => {
+  const checkApproval = async (
+    requestData: any,
+    paymentCurrencies: any[],
+    signer: any
+  ) => {
     if (
       paymentNetworkExtension?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
-      ) {
-        return await hasErc20Approval(requestData!, address!, signer)
-      } else if(paymentNetworkExtension?.id ===
-      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        return await hasErc20ApprovalForProxyConversion(requestData!, address!, paymentCurrencies[0]?.address, signer, requestData.expectedAmount);
-      }
+      Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+    ) {
+      return await hasErc20Approval(requestData!, address!, signer);
+    } else if (
+      paymentNetworkExtension?.id ===
+      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+    ) {
+      return await hasErc20ApprovalForProxyConversion(
+        requestData!,
+        address!,
+        paymentCurrencies[0]?.address,
+        signer,
+        requestData.expectedAmount
+      );
+    }
 
-      return false;
+    return false;
   };
 
   async function approve() {
@@ -225,9 +259,15 @@
         const approvalTx = await approveErc20(requestData!, signer);
         await approvalTx.wait(2);
         approved = true;
-      } else if(paymentNetworkExtension?.id ===
-      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        const approvalTx = await approveErc20ForProxyConversion(requestData!, paymentCurrencies[0]?.address, signer);
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        const approvalTx = await approveErc20ForProxyConversion(
+          requestData!,
+          paymentCurrencies[0]?.address,
+          signer
+        );
         await approvalTx.wait(2);
         approved = true;
       }
@@ -301,7 +341,12 @@
       <Download
         onClick={async () => {
           try {
-            await exportToPDF(request, currency, paymentCurrencies, config.logo);
+            await exportToPDF(
+              request,
+              currency,
+              paymentCurrencies,
+              config.logo
+            );
           } catch (error) {
             toast.error(`Failed to export PDF`, {
               description: `${error}`,
@@ -348,7 +393,7 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {paymentCurrencies? paymentCurrencies[0]?.network || "-" : ""}
+    {paymentCurrencies ? paymentCurrencies[0]?.network || "-" : ""}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
@@ -357,7 +402,7 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Settlement Currency:</span>
-    {paymentCurrencies? paymentCurrencies[0]?.symbol || "-" : ""}
+    {paymentCurrencies ? paymentCurrencies[0]?.symbol || "-" : ""}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
