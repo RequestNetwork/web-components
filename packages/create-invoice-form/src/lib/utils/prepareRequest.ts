@@ -117,8 +117,8 @@ export const prepareRequestParams = ({
           item.unitPrice.toString(),
           invoiceCurrency.decimals
         ).toString(),
-        discount: 
-          item.discount && 
+        discount:
+          item.discount &&
             parseUnits(
               item.discount.toString(),
               invoiceCurrency.decimals
