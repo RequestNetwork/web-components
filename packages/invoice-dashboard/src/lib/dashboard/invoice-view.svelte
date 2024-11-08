@@ -209,8 +209,8 @@
       } else if(paymentNetworkExtension?.id ===
       Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
         return await hasErc20ApprovalForProxyConversion(requestData!, address!, paymentCurrencies[0]?.address, signer, requestData.expectedAmount);
-      } 
-      
+      }
+
       return false;
   };
 
