@@ -170,11 +170,11 @@
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {invoiceCurrency ? invoiceCurrency?.symbol: ""}
+      {invoiceCurrency ? invoiceCurrency.symbol: ""}
     </p>
     <p class="invoice-section-title">
       <span>Settlement Currency</span>
-      {currency ? `${currency?.symbol} (${currency?.network})` : ""}
+      {currency ? `${currency.symbol} (${currency.network})` : ""}
     </p>
     <div class="invoice-table-wrapper">
       <table class="invoice-table">
@@ -222,7 +222,7 @@
       >
         <span>Due: </span>
         <span
-          >{currency? currency?.symbol : ""}
+          >{currency ? currency.symbol : ""}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >
