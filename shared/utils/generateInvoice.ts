@@ -1,6 +1,7 @@
 import { formatUnits } from "viem";
 import { loadScript } from "./loadScript";
 import { CurrencyTypes } from "@requestnetwork/types";
+import { Types } from "@requestnetwork/request-client.js";
 import { calculateItemTotal } from "./invoiceTotals";
 
 declare global {
@@ -18,10 +19,10 @@ async function ensureHtml2PdfLoaded() {
 }
 
 export const exportToPDF = async (
-  invoice: any,
-  currency: CurrencyTypes.CurrencyDefinition | undefined,
-  paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[],
-  logo: string | undefined
+  invoice: Types.IRequestDataWithEvents,
+  currency?: CurrencyTypes.CurrencyDefinition,
+  paymentCurrencies?: CurrencyTypes.CurrencyDefinition[],
+  logo?: string
 ) => {
   await ensureHtml2PdfLoaded();
 
