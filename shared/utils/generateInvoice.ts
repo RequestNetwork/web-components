@@ -10,6 +10,16 @@ declare global {
   }
 }
 
+const loadScript = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
+};
+
 async function ensureHtml2PdfLoaded() {
   if (typeof window.html2pdf === "undefined") {
     await loadScript(
