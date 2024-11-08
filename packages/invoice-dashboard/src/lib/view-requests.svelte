@@ -256,7 +256,7 @@
     ): Types.IRequestDataWithEvents & {
       formattedAmount: string;
       currencySymbol: string;
-      paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[];
+      paymentCurrencies: (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency | undefined)[];
     } => {
       const currencyInfo = getCurrencyFromManager(
         request.currencyInfo,
@@ -290,7 +290,7 @@
         paymentCurrencies,
       };
     }
-  );
+    );
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {

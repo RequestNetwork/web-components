@@ -8,7 +8,9 @@ export const getCurrencyFromManager = (
   const currencyResult =
     currency.type === Types.RequestLogic.CURRENCY.ETH
       ? currencyManager.getNativeCurrency(currency.type, currency.network!)
-      : currency.type === Types.RequestLogic.CURRENCY.ISO4217 ?  currencyManager.fromSymbol(currency.value, currency.network): currencyManager.fromAddress(currency.value, currency.network);
+      : currency.type === Types.RequestLogic.CURRENCY.ISO4217
+      ? currencyManager.fromSymbol(currency.value, currency.network)
+      : currencyManager.fromAddress(currency.value, currency.network);
 
   return currencyResult;
 };
