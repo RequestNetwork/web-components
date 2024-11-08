@@ -227,53 +227,52 @@
     paymentCurrencies: any[],
     signer: any
   ) => {
-    if (
-      paymentNetworkExtension?.id ===
-      Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
-    ) {
-      return await hasErc20Approval(requestData!, address!, signer);
-    } else if (
-      paymentNetworkExtension?.id ===
-      Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
-    ) {
-      return await hasErc20ApprovalForProxyConversion(
-        requestData!,
-        address!,
-        paymentCurrencies[0]?.address,
-        signer,
-        requestData.expectedAmount
-      );
-    }
+    const approvalCheckers: { [key: string]: () => Promise<boolean> } = {
+      [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: () =>
+        hasErc20Approval(requestData!, address!, signer),
+      [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: () =>
+        hasErc20ApprovalForProxyConversion(
+          requestData!,
+          address!,
+          paymentCurrencies[0]?.address,
+          signer,
+          requestData.expectedAmount
+        ),
+    };
 
-    return false;
+    return (
+      (paymentNetworkExtension?.id &&
+        approvalCheckers[paymentNetworkExtension.id]?.()) || false
+    );
   };
 
   async function approve() {
     try {
       loading = true;
 
-      if (
-        paymentNetworkExtension?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
-      ) {
-        const approvalTx = await approveErc20(requestData!, signer);
-        await approvalTx.wait(2);
-        approved = true;
-      } else if (
-        paymentNetworkExtension?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
-      ) {
-        const approvalTx = await approveErc20ForProxyConversion(
-          requestData!,
-          paymentCurrencies[0]?.address,
-          signer
-        );
-        await approvalTx.wait(2);
-        approved = true;
+      const approvers: { [key: string]: () => Promise<void> } = {
+        [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: async () => {
+          const approvalTx = await approveErc20(requestData!, signer);
+          await approvalTx.wait(2);
+          approved = true;
+        },
+        [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: async () => {
+          const approvalTx = await approveErc20ForProxyConversion(
+            requestData!,
+            paymentCurrencies[0]?.address,
+            signer
+          );
+          await approvalTx.wait(2);
+          approved = true;
+        },
+      };
+
+      if (paymentNetworkExtension?.id && approvers[paymentNetworkExtension.id]) {
+        await approvers[paymentNetworkExtension.id]();
       }
-      loading = false;
     } catch (err) {
-      console.error("Something went wrong while approving ERC20 : ", err);
+      console.error("Something went wrong while approving ERC20: ", err);
+    } finally {
       loading = false;
     }
   }
