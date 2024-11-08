@@ -67,7 +67,6 @@ const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, cu
 };
 
 export const prepareRequestParams = ({
-  signer,
   invoiceCurrency,
   address,
   currency,
