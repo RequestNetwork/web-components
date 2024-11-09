@@ -39,7 +39,7 @@
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
-  import { getPaymentNetworkExtension } from '@requestnetwork/payment-detection';
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
@@ -320,7 +320,7 @@
         paymentCurrencies,
       };
     }
-    );
+  );
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
