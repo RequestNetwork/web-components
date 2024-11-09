@@ -68,7 +68,7 @@
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: CurrencyTypes.CurrencyDefinition) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || currency.network === network
+    (currency: CurrencyTypes.CurrencyDefinition) => currency.type === Types.RequestLogic.CURRENCY.ISO4217 || (network ? currency.network === network : true)
   );
 
   const handleInvoiceCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
