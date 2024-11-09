@@ -87,7 +87,7 @@
     network = undefined;
     currency = undefined;
 
-    if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+    if (invoiceCurrency && invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
       networks = getCurrencySupportedNetworksForConversion(
         invoiceCurrency.hash,
         currencyManager
