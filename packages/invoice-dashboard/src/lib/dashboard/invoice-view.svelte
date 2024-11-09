@@ -145,8 +145,15 @@
             paymentNetworkExtension?.values?.network
           ),
         ];
-      } else {
+      } else if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+      ) {
         paymentCurrencies = [currency];
+      } else {
+        throw new Error("Unsupported payment network");
       }
 
       network = paymentCurrencies[0]?.network || "mainnet";
@@ -157,14 +164,13 @@
         approved = true;
       }
       isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
-      loading = false;
     } catch (err: any) {
-      console.log("Error while checking invoice: ", err);
-      loading = false;
+      console.error("Error while checking invoice: ", err);
       if (String(err).includes("Unsupported payment")) {
         unsupportedNetwork = true;
-        return;
       }
+    } finally {
+      loading = false;
     }
   };
 
