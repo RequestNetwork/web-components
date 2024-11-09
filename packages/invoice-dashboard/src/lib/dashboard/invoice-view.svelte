@@ -392,7 +392,7 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {paymentCurrencies ? paymentCurrencies[0]?.network || "-" : ""}
+    {paymentCurrencies && paymentCurrencies.length > 0 ? paymentCurrencies[0]?.network || "-" : ""}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
@@ -401,7 +401,7 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Settlement Currency:</span>
-    {paymentCurrencies ? paymentCurrencies[0]?.symbol || "-" : ""}
+    {paymentCurrencies && paymentCurrencies.length > 0 ? paymentCurrencies[0]?.symbol || "-" : ""}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
