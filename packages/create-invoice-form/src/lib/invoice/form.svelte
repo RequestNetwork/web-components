@@ -389,13 +389,13 @@
           {config}
           placeholder="Settlement currency"
           selectedValue={currency
-            ? `${currency.symbol} (${currency?.network})`
+            ? `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`
             : undefined}
           options={defaultCurrencies
             .filter((currency) => filterSettlementCurrencies(currency))
             .map((currency) => ({
               value: currency,
-              label: `${currency.symbol} (${currency?.network})`,
+              label: `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`,
             }))}
           onchange={handleCurrencyChange}
         />
