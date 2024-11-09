@@ -47,7 +47,7 @@
 
   let networks: string[] = extractUniqueNetworkNames();
 
-  let network: any = undefined;
+  let network: string | undefined = undefined;
   let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
   let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
 
