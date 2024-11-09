@@ -256,7 +256,11 @@
     ): Types.IRequestDataWithEvents & {
       formattedAmount: string;
       currencySymbol: string;
-      paymentCurrencies: (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency | undefined)[];
+      paymentCurrencies: (
+        | CurrencyTypes.ERC20Currency
+        | CurrencyTypes.NativeCurrency
+        | undefined
+      )[];
     } => {
       const currencyInfo = getCurrencyFromManager(
         request.currencyInfo,
@@ -264,21 +268,47 @@
       );
 
       let paymentNetworkExtension = getPaymentNetworkExtension(request);
-      let paymentCurrencies = [currencyInfo];
+      let paymentCurrencies: (
+        | CurrencyTypes.ERC20Currency
+        | CurrencyTypes.NativeCurrency
+        | undefined
+      )[] = [];
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        paymentCurrencies =
+          paymentNetworkExtension?.values?.acceptedTokens?.map((token: any) =>
+            currencyManager.fromAddress(
+              token,
+              paymentNetworkExtension?.values?.network
+            )
+          );
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        const network = paymentNetworkExtension?.values?.network;
 
-      if (paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY) {
-        paymentCurrencies = paymentNetworkExtension?.values?.acceptedTokens?.map(
-          (token: any) => currencyManager.fromAddress(token, paymentNetworkExtension?.values?.network)
+        paymentCurrencies = [
+          currencyManager.getNativeCurrency(
+            Types.RequestLogic.CURRENCY.ETH,
+            network
+          ) as CurrencyTypes.NativeCurrency,
+        ];
+      } else if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+      ) {
+        paymentCurrencies = [currencyInfo as (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency)];
+      } else {
+        console.error(
+          "Payment network extension not supported:",
+          paymentNetworkExtension
         );
-      } else if( paymentNetworkExtension?.id === Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY) {
-          const network = paymentNetworkExtension?.values?.network ?? "mainnet";
-
-          paymentCurrencies = [currencyManager.getNativeCurrency(
-          Types.RequestLogic.CURRENCY.ETH,
-          network
-        )];
       }
-
 
       return {
         ...request,
