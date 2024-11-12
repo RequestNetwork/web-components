@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/payment-widget",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
