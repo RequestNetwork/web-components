@@ -530,7 +530,7 @@
                       request.timestamp * 1000
                     ).toLocaleDateString()}</td
                   >
-                  <td>{request.contentData.invoiceNumber || "-"}</td>
+                  <td>{request?.contentData?.invoiceNumber || "-"}</td>
                   {#if currentTab === "All"}
                     <td
                       ><div class="address">

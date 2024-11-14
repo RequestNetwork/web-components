@@ -85,8 +85,8 @@
   }
 
   $: {
-    sellerInfo = generateDetailParagraphs(request?.contentData.sellerInfo);
-    buyerInfo = generateDetailParagraphs(request?.contentData.buyerInfo);
+    sellerInfo = generateDetailParagraphs(request?.contentData?.sellerInfo);
+    buyerInfo = generateDetailParagraphs(request?.contentData?.buyerInfo);
   }
 
   onMount(() => {
@@ -399,11 +399,11 @@
       </Accordion>
     {/if}
   {/if}
-  {#if request?.contentData.note}
+  {#if request?.contentData?.note}
     <div class="note-container">
       <p class="note-content">
         <span class="note-title">Memo:</span> <br />
-        {request.contentData.note || "-"}
+        {request.contentData?.note || "-"}
       </p>
     </div>
   {/if}

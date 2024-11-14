@@ -110,6 +110,12 @@
     }
   };
 
+  const handleCheckbox = (event: any) => {
+    console.log("formData.isEncrypted", formData.isEncrypted);
+    formData.isEncrypted = !formData.isEncrypted;
+    setTimeout(() => event.target.checked = formData.isEncrypted, 0);
+  };
+
   const addInvoiceItem = () => {
     const newItem = {
       name: "",
@@ -129,6 +135,7 @@
   const removeInvoiceItem = (index: number) => {
     formData.invoiceItems = formData.invoiceItems.filter((_, i) => i !== index);
   };
+  
 </script>
 
 <form class="invoice-form">
@@ -366,6 +373,13 @@
             ? "Please enter a valid Ethereum address"
             : ""}
         />
+        <Input
+          type="checkbox"
+          id="isEncrypted"
+          label="Encrypt invoice"
+          checked={formData.isEncrypted}
+          {handleCheckbox}
+          />
       </div>
     </div>
     <div class="invoice-form-dates">

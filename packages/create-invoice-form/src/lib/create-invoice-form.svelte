@@ -18,6 +18,7 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import { EncryptionTypes } from '@requestnetwork/types';
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -139,12 +140,33 @@
     if (requestNetwork) {
       try {
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
-        const request = await requestNetwork.createRequest({
-          requestInfo: requestCreateParameters.requestInfo,
-          paymentNetwork: requestCreateParameters.paymentNetwork,
-          contentData: requestCreateParameters.contentData,
-          signer: requestCreateParameters.signer,
-        });
+        let request;
+        if(formData.isEncrypted) {
+          const payeeEncryptionPublicKey = {
+            key: requestCreateParameters.requestInfo.payee?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+          const payerEncryptionPublicKey = {
+            key: requestCreateParameters.requestInfo.payer?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+
+          request = await requestNetwork._createEncryptedRequest(
+            {
+              requestInfo: requestCreateParameters.requestInfo,
+              signer: requestCreateParameters.signer,
+              paymentNetwork: requestCreateParameters.paymentNetwork,
+            },
+            [payeeEncryptionPublicKey, payerEncryptionPublicKey],
+          );
+        } else {
+          request = await requestNetwork.createRequest({
+            requestInfo: requestCreateParameters.requestInfo,
+            paymentNetwork: requestCreateParameters.paymentNetwork,
+            contentData: requestCreateParameters.contentData,
+            signer: requestCreateParameters.signer,
+          });
+        }
 
         activeRequest = request;
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);

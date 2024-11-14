@@ -6,8 +6,10 @@
   export let type: HTMLInputTypeAttribute = "text";
   export let placeholder = "";
   export let value: string | number = "";
+  export let checked: boolean = false;
   export let className = "";
   export let handleInput: ((e: Event) => void) | undefined = undefined;
+  export let handleCheckbox: ((e: Event) => void) | undefined = undefined;
   export let onBlur: ((e: Event) => void) | undefined = undefined;
   export let disabled = false;
   export let min = "";
@@ -18,7 +20,7 @@
 </script>
 
 <div class="input-wrapper">
-  {#if label}
+  {#if label && type !== "checkbox"}
     <label for={id} class="input-label">{label}</label>
   {/if}
 
@@ -37,6 +39,18 @@
         on:input={handleInput}
         class={`textarea-input ${className} ${error ? "input-error" : ""}`}
       />
+    {:else if type === "checkbox"}
+    <label for={id} class="input-label">
+      <input
+        {id}
+        type="checkbox"
+        checked={checked}
+        {disabled}
+        class={`checkbox-input ${className} ${error ? "input-error" : ""}`}
+        on:click={handleCheckbox}
+      />
+      {label}
+    </label>  
     {:else}
       <input
         {id}
@@ -123,6 +137,11 @@
     font-size: 14px;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .input-wrapper .checkbox-input {
+    appearance: auto;
+    accent-color: #0BB489;
   }
 
   .input-wrapper .text-input-icon {
