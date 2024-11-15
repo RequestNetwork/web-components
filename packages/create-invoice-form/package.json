@@ -36,7 +36,7 @@
     "@requestnetwork/data-format": "0.19.1",
     "@requestnetwork/request-client.js": "0.50.0",
     "@wagmi/core": "^2.13.8",
-    "viem": "^2.9.15"
+    "viem": "2.21.45"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.5.2",
