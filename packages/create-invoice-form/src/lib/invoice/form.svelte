@@ -111,7 +111,6 @@
   };
 
   const handleCheckbox = (event: any) => {
-    console.log("formData.isEncrypted", formData.isEncrypted);
     formData.isEncrypted = !formData.isEncrypted;
     setTimeout(() => event.target.checked = formData.isEncrypted, 0);
   };
