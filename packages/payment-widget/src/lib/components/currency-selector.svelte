@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Web3Modal } from "@web3modal/ethers5";
-  import { Currency, PaymentStep } from "../types";
+  import { Currency } from "../types";
   import { NETWORK_LABEL } from "../utils/currencies";
   import WalletInfo from "./wallet-info.svelte";
 
