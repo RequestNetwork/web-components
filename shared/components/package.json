@@ -3,10 +3,8 @@
   "license": "MIT",
   "dependencies": {
     "clsx": "^2.1.1",
-    "mode-watcher": "^0.4.0",
     "svelte-sonner": "^0.3.27",
-    "tailwind-merge": "^2.4.0",
-    "tailwind-variants": "^0.2.1"
+    "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
