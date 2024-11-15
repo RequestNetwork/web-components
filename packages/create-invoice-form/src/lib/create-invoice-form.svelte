@@ -156,6 +156,7 @@
               requestInfo: requestCreateParameters.requestInfo,
               signer: requestCreateParameters.signer,
               paymentNetwork: requestCreateParameters.paymentNetwork,
+              contentData: requestCreateParameters.contentData,
             },
             [payeeEncryptionPublicKey, payerEncryptionPublicKey],
           );
@@ -173,7 +174,7 @@
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error: any) {
-        if (error.message.includes("Transactioon confirmation not received")) {
+        if (error.message.includes("Transaction confirmation not received")) {
           isTimeout = true;
           removeAllStatuses();
         } else {
