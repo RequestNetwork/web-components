@@ -268,7 +268,7 @@
       {createdRequest}
       {enablePdfReceipt}
       {enableRequestScanLink}
-      sellerLogo={sellerInfo.logo}
+      sellerLogo={sellerInfo?.logo || ""}
     />
   {/if}
 </Modal>
