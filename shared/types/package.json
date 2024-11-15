@@ -1,4 +1,7 @@
 {
   "name": "@requestnetwork/shared-types",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@requestnetwork/data-format": "0.19.1"
+  }
 }
