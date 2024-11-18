@@ -1,6 +1,6 @@
+import { parseUnits, zeroAddress, getAddress } from "viem";
 import { Types, Utils } from "@requestnetwork/request-client.js";
 import type { CustomFormData } from "@requestnetwork/shared-types";
-import { parseUnits, zeroAddress } from "viem";
 
 interface IRequestParams {
   currency: any;
@@ -34,11 +34,11 @@ export const prepareRequestParams = ({
       ).toString(),
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: formData.creatorId,
+        value: getAddress(formData.creatorId),
       },
       payer: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: formData.payerAddress,
+        value: getAddress(formData.payerAddress),
       },
       timestamp: Utils.getCurrentTimestampInSecond(),
     },
@@ -49,7 +49,7 @@ export const prepareRequestParams = ({
           : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
       parameters: {
         paymentNetworkName: currency.network,
-        paymentAddress: formData.payeeAddress,
+        paymentAddress: getAddress(formData.payeeAddress),
         feeAddress: zeroAddress,
         feeAmount: "0",
       },
@@ -122,7 +122,7 @@ export const prepareRequestParams = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: address as string,
+      value: getAddress(address as string),
     },
   };
 };
