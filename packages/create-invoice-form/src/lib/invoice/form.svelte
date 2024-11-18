@@ -702,6 +702,20 @@
     font-size: 12px;
   }
 
+  :global(input:-webkit-autofill),
+  :global(input:-webkit-autofill:hover),
+  :global(input:-webkit-autofill:focus),
+  :global(input:-webkit-autofill:active) {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: inherit !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  :global(input:autofill) {
+    background-color: white !important;
+    color: inherit !important;
+  }
+
   :global(.invoice-form-label-wrapper .input-wrapper) {
     flex: 1;
   }
