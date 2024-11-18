@@ -118,11 +118,12 @@ export const prepareRequestParams = ({
           invoiceCurrency.decimals
         ).toString(),
         discount:
-          item.discount != null &&
-            parseUnits(
+          item.discount != null
+            ? parseUnits(
               item.discount.toString(),
               invoiceCurrency.decimals
-            ).toString(),
+            ).toString()
+            : undefined,
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),

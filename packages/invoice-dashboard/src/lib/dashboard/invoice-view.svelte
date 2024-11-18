@@ -248,7 +248,7 @@
 
     return (
       (paymentNetworkExtension?.id &&
-        approvalCheckers[paymentNetworkExtension.id]?.()) ||
+        await approvalCheckers[paymentNetworkExtension.id]?.()) ||
       false
     );
   };

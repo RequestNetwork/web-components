@@ -77,7 +77,7 @@
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
     (currency: CurrencyTypes.CurrencyDefinition) =>
       currency.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-      (network ? currency.network === network : true)
+      network ? currency.network === network : true
   );
 
   const handleInvoiceCurrencyChange = (

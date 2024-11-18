@@ -108,9 +108,9 @@ export const exportToPDF = async (
       </div>
 
       <div style="margin-bottom: 20px; font-size: 10px;">
-        <strong>Payment Chain:</strong> ${paymentCurrencies && paymentCurrencies[0] && paymentCurrencies[0].network ? paymentCurrencies[0].network : "-"}<br>
+        <strong>Payment Chain:</strong> ${paymentCurrencies?.[0]?.network ?? "-"}<br>
         <strong>Invoice Currency:</strong> ${invoice.currency || "-"}<br>
-        <strong>Settlement Currency:</strong> ${paymentCurrencies && paymentCurrencies[0] && paymentCurrencies[0].symbol ? paymentCurrencies[0].symbol : "-"}<br>
+        <strong>Settlement Currency:</strong> ${paymentCurrencies?.[0]?.symbol ?? "-"}<br>
       </div>
 
       <table>
