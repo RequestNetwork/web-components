@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/payment-widget",
-  "version": "0.2.0",
+  "version": "0.3.2",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -56,9 +56,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@requestnetwork/payment-processor": "^0.47.0",
-    "@requestnetwork/request-client.js": "^0.49.0",
-    "@requestnetwork/web3-signature": "^0.8.0",
+    "@requestnetwork/payment-processor": "0.48.0",
+    "@requestnetwork/request-client.js": "0.50.0",
+    "@requestnetwork/web3-signature": "0.8.1",
     "@web3modal/ethers5": "^5.0.11",
     "ethers": "^5.7.2",
     "vite-plugin-node-polyfills": "^0.22.0"

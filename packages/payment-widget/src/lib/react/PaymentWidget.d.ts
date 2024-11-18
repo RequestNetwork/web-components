@@ -14,8 +14,8 @@ export interface PaymentWidgetProps {
   supportedCurrencies: SupportedCurrencies;
   sellerAddress: string;
   persistRequest?: boolean;
-  showRNBranding?: boolean;
   builderId?: string;
+  hideTotalAmount?: boolean;
   onPaymentSuccess?: (request: any) => void;
   onError?: (error: string) => void;
   buyerInfo?: BuyerInfo;
@@ -39,6 +39,11 @@ export interface PaymentWidgetProps {
  * - Handles transaction creation and management
  * - Provides real-time payment status updates
  * - Supports full invoice information
+ * - Allows enabling/disabling buyer information collection
+ * - Option to hide the total amount displayed
+ * - Configurable fee address and amount
+ * - Option to enable PDF receipt generation
+ * - Option to enable a request scan link
  *
  * @param {PaymentWidgetProps} props - The component props
  * @returns {JSX.Element}
@@ -74,8 +79,11 @@ export interface PaymentWidgetProps {
  *   onError={(error) => {
  *     console.error(error);
  *   }}
- *   feeAddress="0x1234567890123456789012345678901234567890
+ *   feeAddress="0x1234567890123456789012345678901234567890"
  *   feeAmountInUSD={22}
+ *   enablePdfReceipt={true}
+ *   enableRequestScanLink={true}
+ *   hideTotalAmount={false}
  * />
  */
 declare const PaymentWidget: React.FC<PaymentWidgetProps>;

@@ -28,7 +28,7 @@
   "license": "MIT",
   "packageManager": "npm@10.5.0",
   "dependencies": {
-    "@requestnetwork/currency": "^0.18.0",
+    "@requestnetwork/currency": "0.19.0",
     "bits-ui": "^0.21.12"
   }
 }

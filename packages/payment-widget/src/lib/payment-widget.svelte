@@ -2,7 +2,7 @@
 
 <script lang="ts">
   import Modal from "@requestnetwork/shared-components/modal.svelte";
-  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import RNLogoWhite from "@requestnetwork/shared-icons/rn-logo-white.svelte";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { ethers } from "ethers";
@@ -30,7 +30,6 @@
   export let supportedCurrencies: SupportedCurrencies;
   export let sellerAddress: string = "";
   export let persistRequest: boolean = true;
-  export let showRNBranding: boolean = true;
   export let builderId: string = "";
   export let onPaymentSuccess: (request: any) => void;
   export let onError: (error: string) => void;
@@ -41,6 +40,7 @@
   export let feeAmountInUSD: number = 0;
   export let enablePdfReceipt: boolean = true;
   export let enableRequestScanLink: boolean = true;
+  export let hideTotalAmount: boolean = false;
 
   // State
   let web3Modal: Web3Modal | null = null;
@@ -167,107 +167,111 @@
 </script>
 
 <section class="rn-payment-widget">
-  <section class="rn-payment-widget-header">
-    {#if sellerInfo?.logo || sellerInfo?.name}
-      <div class="rn-payment-widget-header-seller-info">
-        {#if sellerInfo.logo}
-          <img src={sellerInfo.logo} alt="Seller logo" />
-        {/if}
-        <h2>{sellerInfo.name}</h2>
-      </div>
-    {/if}
-
-    {#if productInfo?.name || productInfo?.description || productInfo?.image}
-      <div class="rn-payment-widget-header-product-info">
-        <div class="rn-payment-widget-header-product-info-body">
-          <h2>{productInfo?.name}</h2>
-          <span>{productInfo?.description}</span>
+  {#if sellerInfo?.logo || sellerInfo?.name || productInfo?.name || productInfo?.description || productInfo?.image || (!hideTotalAmount && amountInUSD)}
+    <div class="rn-payment-widget-content">
+      <!-- Seller Info -->
+      {#if sellerInfo?.logo || sellerInfo?.name}
+        <div class="rn-payment-widget-seller">
+          {#if sellerInfo.logo}
+            <img src={sellerInfo.logo} alt="Seller logo" />
+          {/if}
+          <span>{sellerInfo.name}</span>
         </div>
-        {#if productInfo.image}
-          <img src={productInfo.image} alt="Product" />
-        {/if}
-      </div>
-    {/if}
+      {/if}
 
-    <div class="rn-payment-widget-header-total">
-      <span>TOTAL</span>
-      <span>{amountInUSD} USD</span>
+      <!-- Product Info -->
+      {#if productInfo?.name || productInfo?.description || productInfo?.image}
+        <div class="rn-payment-widget-product">
+          <div class="rn-payment-widget-product-text">
+            {#if productInfo?.name}
+              <h3>{productInfo.name}</h3>
+            {/if}
+            {#if productInfo?.description}
+              <p>{productInfo.description}</p>
+            {/if}
+          </div>
+          {#if productInfo?.image}
+            <img src={productInfo.image} alt="Product" />
+          {/if}
+        </div>
+      {/if}
+
+      <!-- Total -->
+      {#if !hideTotalAmount && amountInUSD}
+        <div class="rn-payment-widget-total">
+          <span>TOTAL</span>
+          <span>{amountInUSD} USD</span>
+        </div>
+      {/if}
     </div>
-  </section>
+  {/if}
 
-  <section class="rn-payment-widget-body">
-    <h2>Pay with crypto</h2>
-    <button
-      disabled={!amountInUSD ||
-        !sellerAddress ||
-        amountInUSD === 0 ||
-        supportedCurrencies?.length === 0}
-      on:click={() => {
-        if (!isConnected) {
-          web3Modal?.open();
-        } else {
-          isModalOpen = true;
-        }
-      }}>Pay</button
-    >
-  </section>
-  <Modal
-    config={{}}
-    title="Pay with crypto"
-    isOpen={isModalOpen}
-    onClose={() => {
-      isModalOpen = false;
+  <button
+    class="rn-payment-button"
+    disabled={!amountInUSD ||
+      !sellerAddress ||
+      amountInUSD === 0 ||
+      supportedCurrencies?.length === 0}
+    on:click={() => {
+      if (!isConnected) {
+        web3Modal?.open();
+      } else {
+        isModalOpen = true;
+      }
     }}
   >
-    {#if currentPaymentStep === "currency"}
-      <CurrencySelector
-        {web3Modal}
-        currencies={currencyDetails.currencies}
-        bind:selectedCurrency
-        bind:isConnected
-        onCurrencySelected={handleCurrencySelection}
-      />
-    {:else if currentPaymentStep === "buyer-info"}
-      <BuyerInfoForm
-        bind:currentPaymentStep
-        bind:buyerInfo={currentBuyerInfo}
-      />
-    {:else if selectedCurrency && currentPaymentStep === "confirmation"}
-      <PaymentConfirmation
-        {feeAddress}
-        {feeAmountInUSD}
-        {enableBuyerInfo}
-        {productInfo}
-        {amountInUSD}
-        {sellerAddress}
-        {web3Modal}
-        {selectedCurrency}
-        {persistRequest}
-        {onPaymentSuccess}
-        {builderId}
-        onPaymentError={onError}
-        bind:currentPaymentStep
-        bind:isConnected
-        bind:createdRequest
-        {sellerInfo}
-        buyerInfo={currentBuyerInfo}
-        {invoiceNumber}
-      />
-    {:else}
-      <PaymentComplete
-        {createdRequest}
-        {enablePdfReceipt}
-        {enableRequestScanLink}
-        sellerLogo={sellerInfo.logo}
-      />
-    {/if}
-  </Modal>
+    Pay with <RNLogoWhite />
+  </button>
 </section>
-{#if showRNBranding}
-  <div class="rn-payment-widget-branding">
-    <PoweredBy />
-  </div>
-{/if}
+
+<Modal
+  config={{}}
+  title="Pay with crypto"
+  isOpen={isModalOpen}
+  onClose={() => {
+    isModalOpen = false;
+  }}
+>
+  {#if currentPaymentStep === "currency"}
+    <CurrencySelector
+      {web3Modal}
+      currencies={currencyDetails.currencies}
+      bind:selectedCurrency
+      bind:isConnected
+      onCurrencySelected={handleCurrencySelection}
+    />
+  {:else if currentPaymentStep === "buyer-info"}
+    <BuyerInfoForm bind:currentPaymentStep bind:buyerInfo={currentBuyerInfo} />
+  {:else if selectedCurrency && currentPaymentStep === "confirmation"}
+    <PaymentConfirmation
+      {feeAddress}
+      {feeAmountInUSD}
+      {enableBuyerInfo}
+      {productInfo}
+      {amountInUSD}
+      {sellerAddress}
+      {web3Modal}
+      {selectedCurrency}
+      {persistRequest}
+      {onPaymentSuccess}
+      {builderId}
+      onPaymentError={onError}
+      bind:currentPaymentStep
+      bind:isConnected
+      bind:createdRequest
+      {sellerInfo}
+      buyerInfo={currentBuyerInfo}
+      {invoiceNumber}
+    />
+  {:else}
+    <PaymentComplete
+      {createdRequest}
+      {enablePdfReceipt}
+      {enableRequestScanLink}
+      sellerLogo={sellerInfo?.logo || ""}
+    />
+  {/if}
+</Modal>
 
 <style lang="scss">
   @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap");
@@ -284,141 +288,115 @@
   .rn-payment-widget {
     width: 100%;
     max-width: 530px;
+    margin: 0 auto;
+    background: #f6f6f7;
+    border-radius: 16px;
+    position: relative;
+    padding: 16px 16px 16px 20px;
+    border-left: 4px solid #0bb489;
+  }
+
+  .rn-payment-widget-content {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #01503a 0%, #002b20 100%);
-    border-radius: 20px;
-    padding: 0;
-    margin: 0 auto;
+    gap: 16px;
+    margin-bottom: 16px;
 
-    &-branding {
-      display: flex;
-      justify-content: flex-end;
+    &:not(:empty) {
+      padding-bottom: 16px;
+      border-bottom: 1px solid #d1d7e3;
+    }
+  }
+
+  .rn-payment-widget-seller {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    img {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      object-fit: cover;
     }
 
-    &-header {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: #000;
+    }
+  }
 
-      &-seller-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+  .rn-payment-widget-product {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
 
-        img {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
-          object-fit: cover;
-        }
+    &-text {
+      flex: 1;
+      min-width: 0;
 
-        h2 {
-          color: white;
-          font-size: 14px;
-          font-weight: 500;
-        }
+      h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0 0 8px 0;
+        color: #000;
       }
 
-      &-product-info {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        flex-wrap: wrap;
-
-        &-body {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          flex: 1;
-          min-width: 0;
-
-          h2 {
-            color: white;
-            font-size: 20px;
-            font-weight: 500;
-          }
-
-          span {
-            color: #d9d9d9;
-            font-size: 14px;
-            font-weight: 400;
-            word-wrap: break-word;
-          }
-        }
-
-        img {
-          width: 80px;
-          height: 80px;
-          border-radius: 8px;
-          object-fit: cover;
-        }
-      }
-
-      &-total {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        span {
-          color: white;
-          font-size: 14px;
-          font-weight: 500;
-        }
+      p {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
       }
     }
 
-    &-body {
-      padding: 16px 20px 20px 20px;
-      background-color: #fafafa;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      margin: 0;
-      height: 100%;
-      border-radius: 0px 0px 20px 20px;
+    img {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+  }
 
-      button {
-        display: inline-flex;
-        cursor: pointer;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition-property: color, background-color, border-color,
-          text-decoration-color, fill, stroke;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        background-color: #0bb489;
-        color: white;
-        padding: 0.5rem 1rem;
-        border: none;
-        outline: none;
+  .rn-payment-widget-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-        &:focus-visible {
-          outline: 2px solid transparent;
-          outline-offset: 2px;
-          box-shadow: 0 0 0 2px var(--ring-color, #000);
-        }
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: #000;
 
-        &:disabled {
-          pointer-events: none;
-          opacity: 0.5;
-        }
-
-        &:hover {
-          background-color: rgba($color: #0bb489, $alpha: 0.8);
-        }
+      &:last-child {
+        font-weight: 600;
       }
+    }
+  }
 
-      h2 {
-        color: black;
-        font-size: 18px;
-        font-weight: 500;
-      }
+  .rn-payment-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: #0bb489;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: darken(#0bb489, 5%);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
