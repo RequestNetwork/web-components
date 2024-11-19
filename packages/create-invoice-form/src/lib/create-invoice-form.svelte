@@ -76,8 +76,9 @@
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
     (currency: CurrencyTypes.CurrencyDefinition) =>
-      currency.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-      network ? currency.network === network : true
+      currency.type === Types.RequestLogic.CURRENCY.ISO4217 || network
+        ? currency.network === network
+        : true
   );
 
   const handleInvoiceCurrencyChange = (
@@ -87,7 +88,10 @@
     network = undefined;
     currency = undefined;
 
-    if (invoiceCurrency && invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+    if (
+      invoiceCurrency &&
+      invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
+    ) {
       networks = getCurrencySupportedNetworksForConversion(
         invoiceCurrency.hash,
         currencyManager
