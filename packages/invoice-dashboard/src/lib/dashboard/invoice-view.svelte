@@ -139,7 +139,7 @@
 
       statuses = [...statuses, "Waiting for payment"];
       const paymentTx = await payRequest(requestData, signer);
-      await paymentTx.wait(2);
+      await paymentTx.wait();
 
       statuses = [...statuses, "Payment detected"];
       while (requestData.balance?.balance! < requestData.expectedAmount) {
@@ -172,7 +172,7 @@
         Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
       ) {
         const approvalTx = await approveErc20(requestData!, signer);
-        await approvalTx.wait(2);
+        await approvalTx.wait();
         approved = true;
       }
       loading = false;
