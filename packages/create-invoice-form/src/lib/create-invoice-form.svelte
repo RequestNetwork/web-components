@@ -123,7 +123,14 @@
 
   $: {
     const basicDetailsFilled =
-      formData.payeeAddress && formData.payerAddress && formData.dueDate;
+      formData.payeeAddress &&
+      formData.payerAddress &&
+      formData.dueDate &&
+      formData.invoiceNumber &&
+      formData.issuedOn &&
+      invoiceCurrency &&
+      currency &&
+      formData.issuedOn;
     const hasItems =
       formData.invoiceItems.length > 0 &&
       formData.invoiceItems.every(isValidItem);
