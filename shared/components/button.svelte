@@ -17,7 +17,7 @@
   {type}
   {disabled}
   on:click={onClick}
-  class={`button ${padding} main-button ${className}`}
+  class={`button ${padding} ${className} main-button`}
 >
   {#if icon}
     <i class={icon.class} style={icon.style}></i>

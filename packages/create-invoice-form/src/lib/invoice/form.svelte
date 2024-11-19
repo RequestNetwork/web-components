@@ -9,7 +9,6 @@
   // Icons
   import Trash from "@requestnetwork/shared-icons/trash.svelte";
   import Plus from "@requestnetwork/shared-icons/plus.svelte";
-  import Close from "@requestnetwork/shared-icons/close.svelte";
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
@@ -50,8 +49,11 @@
     },
   };
 
-  let creatorId = formData.creatorId || "";
-  let showPayeeAddressInput = false;
+  let creatorId = "";
+
+  $: {
+    creatorId = formData.creatorId;
+  }
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
     validationErrors[`${type}`].email = !isEmail(email);
@@ -152,17 +154,6 @@
   const removeInvoiceItem = (index: number) => {
     formData.invoiceItems = formData.invoiceItems.filter((_, i) => i !== index);
   };
-
-  const togglePayeeAddress = () => {
-    showPayeeAddressInput = !showPayeeAddressInput;
-    if (!showPayeeAddressInput) {
-      formData.payeeAddress = creatorId;
-    }
-  };
-
-  $: if (!showPayeeAddressInput && creatorId) {
-    formData.payeeAddress = creatorId;
-  }
 </script>
 
 <form class="invoice-form">
@@ -191,38 +182,6 @@
             label="From"
             placeholder="Connect wallet to populate"
           />
-          {#if !showPayeeAddressInput}
-            <Button
-              text="+ Add Recipient Address"
-              type="button"
-              onClick={togglePayeeAddress}
-              className="invoice-form-add-recipient-button"
-            />
-          {:else}
-            <div class="payee-address-container">
-              <Input
-                label="Where do you want to receive your payment?"
-                id="payeeAddress"
-                type="text"
-                value={formData.payeeAddress}
-                placeholder="0x..."
-                {handleInput}
-                onBlur={checkPayeeAddress}
-                error={validationErrors.payeeAddress
-                  ? "Please enter a valid Ethereum address"
-                  : ""}
-              />
-              <Button
-                type="button"
-                onClick={togglePayeeAddress}
-                className="invoice-form-close-recipient-button"
-              >
-                <div slot="icon" style="padding: 7px;">
-                  <Close />
-                </div>
-              </Button>
-            </div>
-          {/if}
           <Accordion title="Add Your Info">
             <div class="invoice-form-info">
               <Input
@@ -439,6 +398,18 @@
               label: `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`,
             }))}
           onchange={handleCurrencyChange}
+        />
+        <Input
+          label="Where do you want to receive your payment?"
+          id="payeeAddress"
+          type="text"
+          value={formData.payeeAddress}
+          placeholder="0x..."
+          {handleInput}
+          onBlur={checkPayeeAddress}
+          error={validationErrors.payeeAddress
+            ? "Please enter a valid Ethereum address"
+            : ""}
         />
       </div>
     </div>
@@ -668,20 +639,6 @@
     gap: 20px;
   }
 
-  :global(.invoice-form-add-recipient-button) {
-    background-color: transparent !important;
-    color: var(--mainColor) !important;
-    text-transform: uppercase;
-    transform: none !important;
-    font-weight: 500;
-    font-size: 14px !important;
-    width: fit-content;
-  }
-
-  :global(.invoice-form-add-recipient-button:hover) {
-    color: var(--secondaryColor) !important;
-  }
-
   .invoice-form-section {
     display: flex;
     flex-direction: column;
@@ -837,26 +794,5 @@
     ) {
     width: 12px;
     height: 12px;
-  }
-
-  .payee-address-container {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .payee-address-container :global(.input-wrapper) {
-    flex: 1;
-  }
-
-  :global(.invoice-form-close-recipient-button) {
-    position: absolute;
-    right: 0;
-    top: -4px;
-  }
-
-  :global(.invoice-form-close-recipient-button div) {
-    padding: 4px !important;
   }
 </style>
