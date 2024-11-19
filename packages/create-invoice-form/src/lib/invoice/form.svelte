@@ -17,16 +17,26 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;
+  export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
 
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
+  export let currencyManager: any;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let currency:
+    | CurrencyTypes.ERC20Currency
+    | CurrencyTypes.NativeCurrency
+    | undefined;
+  export let network: any;
 
   let validationErrors = {
     payeeAddress: false,
@@ -108,6 +118,21 @@
         (formData as any)[id] = value;
       }
     }
+  };
+
+  const filterSettlementCurrencies = (
+    currency: CurrencyTypes.CurrencyDefinition
+  ) => {
+    return invoiceCurrency
+      ? invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
+        ? currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency.network
+          )?.length > 0
+        : invoiceCurrency.hash === currency.hash
+      : false;
   };
 
   const addInvoiceItem = () => {
@@ -333,25 +358,45 @@
             </div>
           </Accordion>
         </div>
-        <Dropdown
-          {config}
-          placeholder="Select payment chain"
-          options={networks.map((network) => {
-            return {
-              value: network,
-              label: network[0].toUpperCase() + network.slice(1),
-            };
-          })}
-          onchange={handleNetworkChange}
-        />
 
         <Dropdown
           {config}
-          placeholder="Select a currency"
+          selectedValue={invoiceCurrency
+            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
+            : undefined}
+          placeholder="Invoice currency (labeling)"
           options={defaultCurrencies.map((currency) => ({
             value: currency,
-            label: `${currency.symbol} (${currency.network})`,
+            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
           }))}
+          onchange={handleInvoiceCurrencyChange}
+        />
+        <Dropdown
+          {config}
+          placeholder="Payment chain"
+          selectedValue={network}
+          options={networks
+            .filter((networkItem) => networkItem)
+            .map((networkItem) => {
+              return {
+                value: networkItem,
+                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+              };
+            })}
+          onchange={handleNetworkChange}
+        />
+        <Dropdown
+          {config}
+          placeholder="Settlement currency"
+          selectedValue={currency
+            ? `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`
+            : undefined}
+          options={defaultCurrencies
+            .filter((currency) => filterSettlementCurrencies(currency))
+            .map((currency) => ({
+              value: currency,
+              label: `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`,
+            }))}
           onchange={handleCurrencyChange}
         />
         <Input

@@ -8,11 +8,16 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import { APP_STATUS } from "@requestnetwork/shared-types/enums";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   // Utils
   import { getInitialFormData, prepareRequestParams } from "./utils";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import {
+    getCurrencySupportedNetworksForConversion,
+    initializeCurrencyManager,
+  } from "@requestnetwork/shared-utils/initCurrencyManager";
   // Components
   import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -34,26 +39,34 @@
   const extractUniqueNetworkNames = (): string[] => {
     const networkSet = new Set<string>();
 
-    currencyManager.knownCurrencies.forEach((currency: any) => {
-      networkSet.add(currency.network);
-    });
+    currencyManager.knownCurrencies.forEach(
+      (currency: CurrencyTypes.CurrencyDefinition) => {
+        if (currency.network) {
+          networkSet.add(currency.network);
+        }
+      }
+    );
 
     return Array.from(networkSet);
   };
 
-  let networks = extractUniqueNetworkNames();
+  let networks: string[] = extractUniqueNetworkNames();
 
-  let network = networks[0];
+  let network: string | undefined = undefined;
+  let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
+  let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
 
-  const handleNetworkChange = (network: string) => {
-    if (network) {
+  const handleNetworkChange = (newNetwork: string) => {
+    if (newNetwork) {
       const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: any) => currency.network === network
+        (currency: CurrencyTypes.CurrencyDefinition) =>
+          currency.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+          currency.network === newNetwork
       );
 
-      network = network;
+      network = newNetwork;
       defaultCurrencies = newCurrencies;
-      currency = newCurrencies[0];
+      currency = undefined;
     }
   };
 
@@ -62,12 +75,33 @@
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: any) => currency.network === network
+    (currency: CurrencyTypes.CurrencyDefinition) =>
+      currency.type === Types.RequestLogic.CURRENCY.ISO4217 || network
+        ? currency.network === network
+        : true
   );
 
-  let currency = defaultCurrencies[0];
+  const handleInvoiceCurrencyChange = (
+    value: CurrencyTypes.CurrencyDefinition
+  ) => {
+    invoiceCurrency = value;
+    network = undefined;
+    currency = undefined;
 
-  const handleCurrencyChange = (value: string) => {
+    if (
+      invoiceCurrency &&
+      invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
+    ) {
+      networks = getCurrencySupportedNetworksForConversion(
+        invoiceCurrency.hash,
+        currencyManager
+      );
+    } else {
+      networks = extractUniqueNetworkNames();
+    }
+  };
+
+  const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
 
@@ -93,7 +127,14 @@
 
   $: {
     const basicDetailsFilled =
-      formData.payeeAddress && formData.payerAddress && formData.dueDate;
+      formData.payeeAddress &&
+      formData.payerAddress &&
+      formData.dueDate &&
+      formData.invoiceNumber &&
+      formData.issuedOn &&
+      invoiceCurrency &&
+      currency &&
+      formData.issuedOn;
     const hasItems =
       formData.invoiceItems.length > 0 &&
       formData.invoiceItems.every(isValidItem);
@@ -132,6 +173,7 @@
     const requestCreateParameters = prepareRequestParams({
       address: account?.address,
       formData,
+      invoiceCurrency,
       currency,
       invoiceTotals,
     });
@@ -172,13 +214,19 @@
       bind:formData
       config={activeConfig}
       bind:defaultCurrencies
+      {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}
+      {currencyManager}
+      {invoiceCurrency}
+      {currency}
+      {network}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
+        {invoiceCurrency}
         {currency}
         bind:formData
         bind:canSubmit
