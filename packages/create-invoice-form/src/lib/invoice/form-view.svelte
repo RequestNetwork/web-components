@@ -457,7 +457,7 @@
   }
 
   .invoice-note-content {
-    width: 620px;
+    max-width: 620px;
     word-break: break-all;
   }
 
