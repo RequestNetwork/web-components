@@ -19,6 +19,7 @@
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
   import { Types } from "@requestnetwork/request-client.js";
   import { CurrencyTypes } from "@requestnetwork/types";
+  import isEmail from "validator/es/lib/isEmail";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
@@ -55,8 +56,7 @@
   }
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    validationErrors[`${type}`].email = !emailRegex.test(email);
+    validationErrors[`${type}`].email = !isEmail(email);
   };
 
   const checkPayeeAddress = () => {

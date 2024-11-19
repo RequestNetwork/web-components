@@ -614,7 +614,13 @@
                     </td>
                   {/if}
                   <td>
-                    {request.formattedAmount}
+                    {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
+                      <Tooltip text={request.formattedAmount}>
+                        {Number(request.formattedAmount).toFixed(5)}
+                      </Tooltip>
+                    {:else}
+                      {request.formattedAmount}
+                    {/if}
                     {request.currencySymbol}
                   </td>
                   <td> {checkStatus(request)}</td>

@@ -1,3 +1,4 @@
+import { getAddress } from "viem";
 import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
 
 export const formatAddress = (
@@ -9,5 +10,7 @@ export const formatAddress = (
     console.error("Invalid address!");
   }
 
-  return `${address.slice(0, first)}...${address.slice(-last)}`;
+  const checksumAddress = getAddress(address);
+
+  return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
 };

@@ -208,7 +208,7 @@
         undefined,
         paymentSettings
       );
-      await paymentTx.wait(2);
+      await paymentTx.wait();
 
       statuses = [...statuses, "Payment detected"];
       while (requestData.balance?.balance! < requestData.expectedAmount) {
@@ -261,7 +261,7 @@
         [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
           async () => {
             const approvalTx = await approveErc20(requestData!, signer);
-            await approvalTx.wait(2);
+            await approvalTx.wait();
             approved = true;
           },
         [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: async () => {
@@ -270,7 +270,7 @@
             paymentCurrencies[0]?.address,
             signer
           );
-          await approvalTx.wait(2);
+          await approvalTx.wait();
           approved = true;
         },
       };
