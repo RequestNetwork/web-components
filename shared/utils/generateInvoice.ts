@@ -1,4 +1,6 @@
 import { formatUnits } from "viem";
+import { CurrencyTypes } from "@requestnetwork/types";
+import { Types } from "@requestnetwork/request-client.js";
 import { calculateItemTotal } from "./invoiceTotals";
 
 declare global {
@@ -7,7 +9,7 @@ declare global {
   }
 }
 
-const loadScript = (src: string): Promise<void> => {
+export const loadScript = (src: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = src;
@@ -26,9 +28,10 @@ async function ensureHtml2PdfLoaded() {
 }
 
 export const exportToPDF = async (
-  invoice: any,
-  currency: any,
-  logo: string | undefined
+  invoice: Types.IRequestDataWithEvents,
+  currency?: CurrencyTypes.CurrencyDefinition,
+  paymentCurrencies?: (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency | undefined)[],
+  logo?: string
 ) => {
   await ensureHtml2PdfLoaded();
 
@@ -52,18 +55,18 @@ export const exportToPDF = async (
       <meta charset="UTF-8">
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
-        body { 
-          font-family: 'Urbanist', sans-serif; 
-          font-size: 10px; 
+        body {
+          font-family: 'Urbanist', sans-serif;
+          font-size: 10px;
         }
-        table { 
-          table-layout: fixed; 
-          width: 100%; 
+        table {
+          table-layout: fixed;
+          width: 100%;
           border-collapse: collapse;
         }
-        td, th { 
-          word-wrap: break-word; 
-          border: 1px solid #ddd; 
+        td, th {
+          word-wrap: break-word;
+          border: 1px solid #ddd;
           padding: 4px;
         }
         th {
@@ -103,13 +106,13 @@ export const exportToPDF = async (
           ${invoice.contentData?.buyerInfo?.taxRegistration ? `<p style="font-size: 10px; margin: 3px 0;">VAT: ${invoice.contentData.buyerInfo.taxRegistration}</p>` : ""}
         </div>
       </div>
-      
+
       <div style="margin-bottom: 20px; font-size: 10px;">
-        <strong>Payment Chain:</strong> ${invoice.currencyInfo?.network || "-"}<br>
+        <strong>Payment Chain:</strong> ${paymentCurrencies?.[0]?.network ?? "-"}<br>
         <strong>Invoice Currency:</strong> ${invoice.currency || "-"}<br>
-        <strong>Invoice Type:</strong> Regular Invoice
+        <strong>Settlement Currency:</strong> ${paymentCurrencies?.[0]?.symbol ?? "-"}<br>
       </div>
-      
+
       <table>
         <thead>
           <tr>
@@ -165,7 +168,7 @@ export const exportToPDF = async (
           </tr>
         </tfoot>
       </table>
-      
+
       ${
         invoice.contentData?.note
           ? `<div style="margin-top: 20px; font-size: 10px;">
