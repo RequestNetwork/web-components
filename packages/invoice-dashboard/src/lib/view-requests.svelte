@@ -12,6 +12,7 @@
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import TxType from "@requestnetwork/shared-components/tx-type.svelte";
   import { toast } from "svelte-sonner";
   // Icons
   import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
@@ -302,7 +303,11 @@
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
       ) {
-        paymentCurrencies = [currencyInfo as (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency)];
+        paymentCurrencies = [
+          currencyInfo as
+            | CurrencyTypes.ERC20Currency
+            | CurrencyTypes.NativeCurrency,
+        ];
       } else {
         console.error(
           "Payment network extension not supported:",
@@ -539,6 +544,26 @@
                   </i>
                 </div>
               </th>
+              <th
+                on:click={() => {
+                  const sortBy = processedRequests?.some(
+                    (req) => req.payer?.value === signer
+                  )
+                    ? "payer.value"
+                    : "payee.value";
+                  handleSort(sortBy);
+                }}
+              >
+                <div>
+                  Type<i class={`caret `}>
+                    {#if sortOrder === "asc" && (sortColumn === "payer.value" || sortColumn === "payee.value")}
+                      <ChevronUp />
+                    {:else}
+                      <ChevronDown />
+                    {/if}
+                  </i>
+                </div>
+              </th>
               <th on:click={() => handleSort("state")}>
                 <div>
                   Status<i class={`caret `}>
@@ -622,6 +647,11 @@
                       {request.formattedAmount}
                     {/if}
                     {request.currencySymbol}
+                  </td>
+                  <td>
+                    <TxType
+                      type={signer === request.payer?.value ? "OUT" : "IN"}
+                    />
                   </td>
                   <td> {checkStatus(request)}</td>
                   <td
