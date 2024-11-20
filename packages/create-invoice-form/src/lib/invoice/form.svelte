@@ -50,7 +50,6 @@
     },
   };
 
-  let creatorId = formData.creatorId || "";
   let showPayeeAddressInput = false;
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
@@ -156,12 +155,12 @@
   const togglePayeeAddress = () => {
     showPayeeAddressInput = !showPayeeAddressInput;
     if (!showPayeeAddressInput) {
-      formData.payeeAddress = creatorId;
+      formData.payeeAddress = formData.creatorId;
     }
   };
 
-  $: if (!showPayeeAddressInput && creatorId) {
-    formData.payeeAddress = creatorId;
+  $: if (!showPayeeAddressInput && formData.creatorId) {
+    formData.payeeAddress = formData.creatorId;
   }
 </script>
 
@@ -187,7 +186,7 @@
             disabled
             id="creatorId"
             type="text"
-            value={creatorId}
+            value={formData.creatorId}
             label="From"
             placeholder="Connect wallet to populate"
           />
@@ -430,13 +429,13 @@
           {config}
           placeholder="Settlement currency"
           selectedValue={currency
-            ? `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`
+            ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
             : undefined}
           options={defaultCurrencies
             .filter((currency) => filterSettlementCurrencies(currency))
             .map((currency) => ({
               value: currency,
-              label: `${currency.symbol ?? 'Unknown'} (${currency?.network ?? 'Unknown'})`,
+              label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
             }))}
           onchange={handleCurrencyChange}
         />
