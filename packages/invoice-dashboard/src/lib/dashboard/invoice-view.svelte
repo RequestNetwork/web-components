@@ -31,6 +31,12 @@
   import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
   import { getEthersSigner } from "../../utils";
 
+  interface BuyerSelerInfo {
+    value: string;
+    isCompany?: boolean;
+    isEmail?: boolean;
+  }
+
   export let config;
   export let account: GetAccountReturnType;
   export let requestNetwork: RequestNetwork | null | undefined;
@@ -53,8 +59,8 @@
   let address = account.address;
   let firstItems: any;
   let otherItems: any;
-  let sellerInfo: { label: string; value: string }[] = [];
-  let buyerInfo: { label: string; value: string }[] = [];
+  let sellerInfo: BuyerSelerInfo[] = [];
+  let buyerInfo: BuyerSelerInfo[] = [];
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
   let hexStringChain = "0x" + account.chainId.toString(16);
@@ -65,17 +71,37 @@
     | undefined;
 
   const generateDetailParagraphs = (info: any) => {
+    const fullName = [info?.firstName, info?.lastName]
+      .filter(Boolean)
+      .join(" ");
+    const fullAddress = [
+      info?.address?.["street-address"],
+      info?.address?.locality,
+      info?.address?.region,
+      info?.address?.["postal-code"],
+      info?.address?.["country-name"],
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     return [
-      { label: "First Name", value: info?.firstName },
-      { label: "Last Name", value: info?.lastName },
-      { label: "Company Name", value: info?.businessName },
-      { label: "Tax Registration", value: info?.taxRegistration },
-      { label: "Country", value: info?.address?.["country-name"] },
-      { label: "City", value: info?.address?.locality },
-      { label: "Region", value: info?.address?.region },
-      { label: "Postal Code", value: info?.address?.["postal-code"] },
-      { label: "Street Address", value: info?.address?.["street-address"] },
-      { label: "Email", value: info?.email },
+      ...(fullName ? [{ label: "Name", value: fullName }] : []),
+      ...(info?.businessName
+        ? [
+            {
+              label: "Company Name",
+              value: info?.businessName,
+              isCompany: true,
+            },
+          ]
+        : []),
+      ...(info?.taxRegistration
+        ? [{ label: "Tax Registration", value: info?.taxRegistration }]
+        : []),
+      ...(fullAddress ? [{ label: "Address", value: fullAddress }] : []),
+      ...(info?.email
+        ? [{ label: "Email", value: info?.email, isEmail: true }]
+        : []),
     ].filter((detail) => detail.value);
   };
 
@@ -248,7 +274,7 @@
 
     return (
       (paymentNetworkExtension?.id &&
-        await approvalCheckers[paymentNetworkExtension.id]?.()) ||
+        (await approvalCheckers[paymentNetworkExtension.id]?.())) ||
       false
     );
   };
@@ -376,11 +402,16 @@
     <p>{request?.payee?.value || "-"}</p>
   </div>
   {#if sellerInfo.length > 0}
-    <div class={`invoice-info bg-zinc-light`}>
-      {#each sellerInfo as { label, value }}
+    <div class={`invoice-info`}>
+      {#each sellerInfo as { value, isCompany, isEmail }}
         <p>
-          <span>{label || "-"}:</span>
-          {value || "-"}
+          {#if isEmail}
+            <a href="mailto:{value}" class="email-link">{value}</a>
+          {:else if isCompany}
+            <span class="company-name">{value}</span>
+          {:else}
+            {value}
+          {/if}
         </p>
       {/each}
     </div>
@@ -391,11 +422,16 @@
     <p>{request?.payer?.value || "-"}</p>
   </div>
   {#if buyerInfo.length > 0}
-    <div class={`invoice-info bg-zinc-light`}>
-      {#each buyerInfo as { label, value }}
+    <div class={`invoice-info`}>
+      {#each buyerInfo as { value, isCompany, isEmail }}
         <p>
-          <span>{label || "-"}:</span>
-          {value || "-"}
+          {#if isEmail}
+            <a href="mailto:{value}" class="email-link">{value}</a>
+          {:else if isCompany}
+            <span class="company-name">{value}</span>
+          {:else}
+            {value}
+          {/if}
         </p>
       {/each}
     </div>
@@ -647,10 +683,11 @@
 
   .invoice-info {
     display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    padding: 0.75rem;
+    flex-direction: column;
+    gap: 6px;
     width: fit-content;
+    color: #6e7480;
+    font-size: 16px;
   }
 
   .invoice-info p {
@@ -861,5 +898,17 @@
 
   .bg-zinc-light {
     background-color: #f4f4f5;
+  }
+
+  .company-name {
+    font-weight: 600 !important;
+  }
+
+  .email-link {
+    color: #6e7480;
+  }
+
+  .email-link:hover {
+    text-decoration: underline;
   }
 </style>
