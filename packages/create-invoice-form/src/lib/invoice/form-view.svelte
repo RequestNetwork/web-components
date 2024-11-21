@@ -139,7 +139,7 @@
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>From</span>
-        {formData.payeeAddress}
+        {formData.creatorId}
       </p>
       <div class={`invoice-info`}>
         {#each sellerInfo as { value, isEmail, isCompany }}
