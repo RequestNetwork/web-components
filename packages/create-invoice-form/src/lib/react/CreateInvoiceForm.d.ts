@@ -2,7 +2,7 @@ import React from "react";
 import { Config as WagmiConfig } from "@wagmi/core";
 import type { IConfig } from "@requestnetwork/shared-types";
 import type { RequestNetwork } from "@requestnetwork/request-client.js";
-import type { CurrencyTypes, RequestLogicTypes } from "@requestnetwork/types";
+import type { CurrencyTypes } from "@requestnetwork/types";
 
 export interface CreateInvoiceFormProps {
   config: IConfig;
