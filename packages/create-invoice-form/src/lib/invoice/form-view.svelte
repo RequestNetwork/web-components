@@ -135,7 +135,7 @@
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>From</span>
-        {formData.payeeAddress}
+        {formData.creatorId}
       </p>
       <div
         class={`invoice-details ${sellerInfo.length > 0 && "invoice-details-active"} `}
@@ -166,11 +166,14 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency?.network ? currency.network.charAt(0).toUpperCase() + currency.network.slice(1).toLowerCase() : ""}
+      {currency?.network
+        ? currency.network.charAt(0).toUpperCase() +
+          currency.network.slice(1).toLowerCase()
+        : ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {invoiceCurrency ? invoiceCurrency.symbol: ""}
+      {invoiceCurrency ? invoiceCurrency.symbol : ""}
     </p>
     <p class="invoice-section-title">
       <span>Settlement Currency</span>
