@@ -31,11 +31,15 @@
   import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
   import { getEthersSigner } from "../../utils";
 
-  interface BuyerSelerInfo {
+  interface EntityInfo {
     value: string;
     isCompany?: boolean;
     isEmail?: boolean;
   }
+
+  interface BuyerInfo extends EntityInfo {}
+
+  interface SellerInfo extends EntityInfo {}
 
   export let config;
   export let account: GetAccountReturnType;
@@ -46,7 +50,6 @@
   export let wagmiConfig: any;
 
   let network: string | undefined = request?.currencyInfo?.network || "mainnet";
-  // FIXME: Use a non deprecated function
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
     getCurrencyFromManager(request.currencyInfo, currencyManager);
   let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
@@ -59,11 +62,11 @@
   let address = account.address;
   let firstItems: any;
   let otherItems: any;
-  let sellerInfo: BuyerSelerInfo[] = [];
-  let buyerInfo: BuyerSelerInfo[] = [];
+  let sellerInfo: SellerInfo[] = [];
+  let buyerInfo: BuyerInfo[] = [];
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
-  let hexStringChain = "0x" + account.chainId.toString(16);
+  let hexStringChain = "0x" + account?.chainId?.toString(16);
   let correctChain =
     hexStringChain === String(getNetworkIdFromNetworkName(network));
   let paymentNetworkExtension:
@@ -85,23 +88,18 @@
       .join(", ");
 
     return [
-      ...(fullName ? [{ label: "Name", value: fullName }] : []),
+      ...(fullName ? [{ value: fullName }] : []),
       ...(info?.businessName
         ? [
             {
-              label: "Company Name",
               value: info?.businessName,
               isCompany: true,
             },
           ]
         : []),
-      ...(info?.taxRegistration
-        ? [{ label: "Tax Registration", value: info?.taxRegistration }]
-        : []),
-      ...(fullAddress ? [{ label: "Address", value: fullAddress }] : []),
-      ...(info?.email
-        ? [{ label: "Email", value: info?.email, isEmail: true }]
-        : []),
+      ...(info?.taxRegistration ? [{ value: info?.taxRegistration }] : []),
+      ...(fullAddress ? [{ value: fullAddress }] : []),
+      ...(info?.email ? [{ value: info?.email, isEmail: true }] : []),
     ].filter((detail) => detail.value);
   };
 
@@ -133,7 +131,6 @@
   $: {
     account = account;
     network = request?.currencyInfo?.network || "mainnet";
-    // FIXME: Use a non deprecated function
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
   }
 

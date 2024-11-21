@@ -142,7 +142,7 @@
         {formData.payeeAddress}
       </p>
       <div class={`invoice-info`}>
-        {#each sellerInfo as { label, value, isEmail, isCompany }}
+        {#each sellerInfo as { value, isEmail, isCompany }}
           <p>
             {#if isEmail}
               <a href="mailto:{value}">{value}</a>
@@ -160,7 +160,7 @@
         {formData.payerAddress}
       </p>
       <div class={`invoice-info`}>
-        {#each buyerInfo as { label, value, isEmail, isCompany }}
+        {#each buyerInfo as { value, isEmail, isCompany }}
           <p>
             {#if isEmail}
               <a href="mailto:{value}">{value}</a>
