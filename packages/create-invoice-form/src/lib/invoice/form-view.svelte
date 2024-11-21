@@ -8,6 +8,7 @@
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
@@ -18,7 +19,8 @@
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency = defaultCurrencies[0];
+  export let currency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -164,16 +166,15 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency.network[0].toUpperCase() + currency.network.slice(1)}
+      {currency?.network ? currency.network.charAt(0).toUpperCase() + currency.network.slice(1).toLowerCase() : ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {currency.symbol}
-      ({currency.network})
+      {invoiceCurrency ? invoiceCurrency.symbol: ""}
     </p>
     <p class="invoice-section-title">
-      <span>Invoice Type</span>
-      Regular Invoice
+      <span>Settlement Currency</span>
+      {currency ? `${currency.symbol} (${currency.network})` : ""}
     </p>
     <div class="invoice-table-wrapper">
       <table class="invoice-table">
@@ -221,7 +222,7 @@
       >
         <span>Due: </span>
         <span
-          >{currency.symbol}
+          >{currency ? currency.symbol : ""}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >
@@ -457,7 +458,7 @@
   }
 
   .invoice-note-content {
-    width: 620px;
+    max-width: 620px;
     word-break: break-all;
   }
 

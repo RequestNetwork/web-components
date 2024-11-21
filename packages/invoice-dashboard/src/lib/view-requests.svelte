@@ -39,6 +39,8 @@
   import { formatUnits } from "viem";
   import { capitalize, debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -254,11 +256,59 @@
     ): Types.IRequestDataWithEvents & {
       formattedAmount: string;
       currencySymbol: string;
+      paymentCurrencies: (
+        | CurrencyTypes.ERC20Currency
+        | CurrencyTypes.NativeCurrency
+        | undefined
+      )[];
     } => {
       const currencyInfo = getCurrencyFromManager(
         request.currencyInfo,
         currencyManager
       );
+
+      let paymentNetworkExtension = getPaymentNetworkExtension(request);
+      let paymentCurrencies: (
+        | CurrencyTypes.ERC20Currency
+        | CurrencyTypes.NativeCurrency
+        | undefined
+      )[] = [];
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        paymentCurrencies =
+          paymentNetworkExtension?.values?.acceptedTokens?.map((token: any) =>
+            currencyManager.fromAddress(
+              token,
+              paymentNetworkExtension?.values?.network
+            )
+          );
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        const network = paymentNetworkExtension?.values?.network;
+
+        paymentCurrencies = [
+          currencyManager.getNativeCurrency(
+            Types.RequestLogic.CURRENCY.ETH,
+            network
+          ) as CurrencyTypes.NativeCurrency,
+        ];
+      } else if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+      ) {
+        paymentCurrencies = [currencyInfo as (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency)];
+      } else {
+        console.error(
+          "Payment network extension not supported:",
+          paymentNetworkExtension
+        );
+      }
 
       return {
         ...request,
@@ -267,6 +317,7 @@
           currencyInfo?.decimals ?? 18
         ),
         currencySymbol: currencyInfo!.symbol,
+        paymentCurrencies,
       };
     }
   );
@@ -563,7 +614,13 @@
                     </td>
                   {/if}
                   <td>
-                    {request.formattedAmount}
+                    {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
+                      <Tooltip text={request.formattedAmount}>
+                        {Number(request.formattedAmount).toFixed(5)}
+                      </Tooltip>
+                    {:else}
+                      {request.formattedAmount}
+                    {/if}
                     {request.currencySymbol}
                   </td>
                   <td> {checkStatus(request)}</td>
@@ -578,6 +635,7 @@
                                 request.currencyInfo,
                                 currencyManager
                               ),
+                              request.paymentCurrencies,
                               config.logo
                             );
                           } catch (error) {
