@@ -383,14 +383,29 @@
   };
 
   const checkStatus = (request: any) => {
-    switch (request?.balance?.balance > 0) {
-      case true:
-        return request?.balance?.balance >= request?.expectedAmount
-          ? "Paid"
-          : "Partially Paid";
-      default:
-        return capitalize(request?.state);
+    if (request?.balance?.balance > 0) {
+      return request.balance.balance >= request.expectedAmount
+        ? "Paid"
+        : "Partially Paid";
     }
+
+    const eventStatus = {
+      reject: "Rejected",
+      overdue: "Overdue",
+      cancel: "Canceled",
+    };
+
+    for (const [event, status] of Object.entries(eventStatus)) {
+      if (
+        request?.events?.some(
+          (e: { name?: string }) => e?.name?.toLowerCase() === event
+        )
+      ) {
+        return status;
+      }
+    }
+
+    return capitalize(request?.state);
   };
 </script>
 

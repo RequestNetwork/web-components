@@ -73,6 +73,34 @@
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
 
+  const checkStatus = (request: any) => {
+    if (Number(request?.balance?.balance)! > 0) {
+      return request?.balance?.balance! >= request.expectedAmount
+        ? "Paid"
+        : "Partially Paid";
+    }
+
+    const eventStatus = {
+      create: "Created",
+      reject: "Rejected",
+      overdue: "Overdue",
+      cancel: "Canceled",
+    };
+
+    for (const [event, reqStatus] of Object.entries(eventStatus)) {
+      console.log(event, reqStatus);
+      if (
+        request?.events?.some(
+          (e: { name?: string }) => e?.name?.toLowerCase() === event
+        )
+      ) {
+        return reqStatus;
+      }
+    }
+  };
+
+  let status = checkStatus(requestData || request);
+
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
       .filter(Boolean)
@@ -186,7 +214,8 @@
       } else {
         approved = true;
       }
-      isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
+
+      status = checkStatus(requestData || request);
     } catch (err: any) {
       console.error("Error while checking invoice: ", err);
       if (String(err).includes("Unsupported payment")) {
@@ -368,7 +397,7 @@
   <h2 class="invoice-number">
     Invoice #{request?.contentData?.invoiceNumber || "-"}
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
-      {isPaid ? "Paid" : "Created"}
+      {status}
     </p>
     <Tooltip text="Download PDF">
       <Download
