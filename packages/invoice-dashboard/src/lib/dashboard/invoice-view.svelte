@@ -73,9 +73,9 @@
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
 
-  const checkStatus = (request: any) => {
+  const checkStatus = (request: Types.IRequestDataWithEvents | null) => {
     if (Number(request?.balance?.balance)! > 0) {
-      return request?.balance?.balance! >= request.expectedAmount
+      return request?.balance?.balance! >= request?.expectedAmount!
         ? "Paid"
         : "Partially Paid";
     }
@@ -88,7 +88,6 @@
     };
 
     for (const [event, reqStatus] of Object.entries(eventStatus)) {
-      console.log(event, reqStatus);
       if (
         request?.events?.some(
           (e: { name?: string }) => e?.name?.toLowerCase() === event
@@ -97,6 +96,8 @@
         return reqStatus;
       }
     }
+
+    return "Created";
   };
 
   let status = checkStatus(requestData || request);

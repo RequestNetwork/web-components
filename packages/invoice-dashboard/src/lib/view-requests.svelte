@@ -382,9 +382,9 @@
     activeRequest = undefined;
   };
 
-  const checkStatus = (request: any) => {
-    if (request?.balance?.balance > 0) {
-      return request.balance.balance >= request.expectedAmount
+  const checkStatus = (request: Types.IRequestDataWithEvents | null) => {
+    if (Number(request?.balance?.balance)! > 0) {
+      return request?.balance?.balance! >= request?.expectedAmount!
         ? "Paid"
         : "Partially Paid";
     }
@@ -405,7 +405,7 @@
       }
     }
 
-    return capitalize(request?.state);
+    return capitalize(request?.state as string);
   };
 </script>
 
