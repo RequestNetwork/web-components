@@ -23,6 +23,7 @@
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
@@ -72,33 +73,6 @@
   let paymentNetworkExtension:
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
-
-  const checkStatus = (request: Types.IRequestDataWithEvents | null) => {
-    if (Number(request?.balance?.balance)! > 0) {
-      return request?.balance?.balance! >= request?.expectedAmount!
-        ? "Paid"
-        : "Partially Paid";
-    }
-
-    const eventStatus = {
-      create: "Created",
-      reject: "Rejected",
-      overdue: "Overdue",
-      cancel: "Canceled",
-    };
-
-    for (const [event, reqStatus] of Object.entries(eventStatus)) {
-      if (
-        request?.events?.some(
-          (e: { name?: string }) => e?.name?.toLowerCase() === event
-        )
-      ) {
-        return reqStatus;
-      }
-    }
-
-    return "Created";
-  };
 
   let status = checkStatus(requestData || request);
 
