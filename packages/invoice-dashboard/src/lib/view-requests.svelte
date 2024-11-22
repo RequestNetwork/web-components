@@ -578,7 +578,7 @@
               </th>
               <th on:click={() => handleSort("currencyInfo.network")}>
                 <div>
-                  Payment Network<i class={`caret `}>
+                  Payment Chain<i class={`caret `}>
                     {#if sortOrder === "asc" && sortColumn === "currencyInfo.network"}
                       <ChevronUp />
                     {:else}
