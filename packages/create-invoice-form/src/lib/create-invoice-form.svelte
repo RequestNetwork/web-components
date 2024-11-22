@@ -27,7 +27,7 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: any;
+  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let account: GetAccountReturnType;
   let isTimeout = false;
