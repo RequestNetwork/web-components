@@ -42,7 +42,7 @@
   }
 
   .skeleton-item {
-    height: 15px;
+    height: 20px;
     border-radius: 20px;
     margin-bottom: 10px;
     background: var(--mainColor);

@@ -142,8 +142,6 @@
       requests = requestsData
         ?.map((request) => request.getData())
         .sort((a, b) => b.timestamp - a.timestamp);
-
-      loading = false;
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
@@ -664,7 +662,7 @@
                           );
                         } catch (error) {
                           toast.error(`Failed to export PDF`, {
-                            description: `${error}`,
+                            description: `An error occurred while generating the PDF.`,
                             action: {
                               label: "X",
                               onClick: () => console.info("Close"),

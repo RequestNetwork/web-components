@@ -24,7 +24,7 @@
 
 <style>
   .skeleton-item {
-    padding: 20px;
+    padding: 16px 24px;
     border-bottom: 1px solid #d1d5db;
   }
 </style>
