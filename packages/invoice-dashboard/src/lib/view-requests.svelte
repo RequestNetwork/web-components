@@ -46,7 +46,7 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: any = [];
+  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;

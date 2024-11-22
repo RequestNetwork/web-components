@@ -1,4 +1,5 @@
 import { CurrencyManager } from "@requestnetwork/currency";
+import { CurrencyTypes } from "@requestnetwork/types";
 
 const defaultCurrencyIds = [
   "USD",
@@ -64,7 +65,7 @@ import { Types } from "@requestnetwork/request-client.js";
 import { formattedCurrencyConversionPairs } from './currencyConversionPairs'
 
 export function initializeCurrencyManager(
-  customCurrencies: any[] = []
+  customCurrencies: CurrencyTypes.CurrencyInput[] = []
 ): CurrencyManager {
   let currenciesToUse: any[];
 
@@ -113,7 +114,7 @@ export function initializeCurrencyManagerWithCurrencyIDS(
 }
 
 export const getCurrencySupportedNetworksForConversion = (currencyHash: string, currencyManager: any) : (string | undefined)[] => {
- return Object.keys(currencyManager.conversionPairs).filter((network) => 
+ return Object.keys(currencyManager.conversionPairs).filter((network) =>
     currencyManager.conversionPairs[network][currencyHash]
  );
 }
