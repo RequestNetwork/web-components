@@ -21,6 +21,7 @@
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
+  import Network from "@requestnetwork/shared-icons/network/network-icon.svelte";
   // Types
   import type {
     GetAccountReturnType,
@@ -575,6 +576,17 @@
                   </i>
                 </div>
               </th>
+              <th on:click={() => handleSort("currencyInfo.network")}>
+                <div>
+                  Payment Network<i class={`caret `}>
+                    {#if sortOrder === "asc" && sortColumn === "currencyInfo.network"}
+                      <ChevronUp />
+                    {:else}
+                      <ChevronDown />
+                    {/if}
+                  </i>
+                </div>
+              </th>
               <th></th>
             </tr>
           </thead>
@@ -654,6 +666,9 @@
                     />
                   </td>
                   <td> {checkStatus(request)}</td>
+                  <td
+                    ><Network network={request.paymentCurrencies[0]?.network} />
+                  </td>
                   <td
                     ><Tooltip text="Download PDF">
                       <Download
