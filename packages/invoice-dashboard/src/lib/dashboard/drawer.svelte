@@ -50,8 +50,11 @@
     left: 50%;
     height: fit-content;
     width: 800px;
-
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     transform: translateX(0);
+    padding-right: 20px;
   }
 
   @media only screen and (max-width: 880px) {
