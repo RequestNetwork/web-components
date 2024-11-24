@@ -9,6 +9,7 @@
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
   import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
@@ -34,11 +35,12 @@
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { capitalize, debounce, formatAddress } from "../utils";
+  import { debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
@@ -381,17 +383,6 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
-
-  const checkStatus = (request: any) => {
-    switch (request?.balance?.balance > 0) {
-      case true:
-        return request?.balance?.balance >= request?.expectedAmount
-          ? "Paid"
-          : "Partially Paid";
-      default:
-        return capitalize(request?.state);
-    }
-  };
 </script>
 
 <div
@@ -653,7 +644,7 @@
                       type={signer === request.payer?.value ? "OUT" : "IN"}
                     />
                   </td>
-                  <td> {checkStatus(request)}</td>
+                  <td><StatusLabel status={checkStatus(request)} /></td>
                   <td
                     ><Tooltip text="Download PDF">
                       <Download

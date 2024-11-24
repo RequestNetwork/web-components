@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { capitalize } from "../utils/capitalize";
+
   export let status: string;
 
   let statusClass = "";
@@ -14,7 +16,7 @@
       case "accepted":
         statusClass = "status-accepted";
         break;
-      case "created":
+      case "awaiting payment":
         statusClass = "status-created";
         break;
       case "canceled":
@@ -30,13 +32,13 @@
         statusClass = "status-pending";
         break;
       default:
-        statusClass = "";
+        statusClass = "status-created";
     }
   }
 </script>
 
 <div class={`status-indicator ${statusClass}`}>
-  {status}
+  {capitalize(status)}
 </div>
 
 <style>
@@ -44,46 +46,58 @@
     text-align: center;
     padding: 6px 12px;
     text-align: center;
-    min-width: 84px;
+    width: fit-content;
     border-radius: 8px;
+    font-weight: 500;
   }
 
   .status-paid {
     color: #328965;
-    background-color: #58e1a5;
+    background-color: rgba(88, 225, 165, 0.15);
   }
 
   .status-partially-paid {
-    background: linear-gradient(135deg, green 50%, white 50%);
+    color: #328965;
+    background: linear-gradient(
+      135deg,
+      rgba(88, 225, 165, 0.2) 25%,
+      white 25%,
+      white 50%,
+      rgba(88, 225, 165, 0.2) 50%,
+      rgba(88, 225, 165, 0.2) 75%,
+      white 75%,
+      white 100%
+    );
+    background-size: 20px 20px;
   }
 
   .status-accepted {
     color: #006ebe;
-    background-color: #5abaff;
+    background-color: rgba(90, 186, 255, 0.15);
   }
 
   .status-created {
     color: #c99101;
-    background-color: #ffc531;
+    background-color: rgba(255, 197, 49, 0.15);
   }
 
   .status-canceled {
     color: #212121;
-    background-color: #252525;
+    background-color: rgba(37, 37, 37, 0.15);
   }
 
   .status-rejected {
     color: #d9601c;
-    background-color: #ff8743;
+    background-color: rgba(255, 135, 67, 0.15);
   }
 
   .status-overdue {
     color: #d91c1c;
-    background-color: #ff3131;
+    background-color: rgba(255, 49, 49, 0.15);
   }
 
   .status-pending {
     color: #7b7b7b;
-    background-color: #e0e0e0;
+    background-color: rgba(224, 224, 224, 0.15);
   }
 </style>
