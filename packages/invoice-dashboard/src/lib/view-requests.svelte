@@ -34,12 +34,13 @@
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { capitalize, debounce, formatAddress } from "../utils";
+  import { debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
@@ -381,17 +382,6 @@
 
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
-  };
-
-  const checkStatus = (request: any) => {
-    switch (request?.balance?.balance > 0) {
-      case true:
-        return request?.balance?.balance >= request?.expectedAmount
-          ? "Paid"
-          : "Partially Paid";
-      default:
-        return capitalize(request?.state);
-    }
   };
 </script>
 

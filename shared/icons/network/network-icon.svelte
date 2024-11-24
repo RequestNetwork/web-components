@@ -1,4 +1,5 @@
 <script>
+  import { capitalize } from "../../utils/capitalize";
   import { getNetworkIcon } from "../../utils/getNetworkIcon";
 
   export let network = "mainnet";
@@ -9,7 +10,7 @@
 {#if icon}
   <div class="network-icon">
     <svelte:component this={icon} />
-    <span>{network}</span>
+    <span>{capitalize(network)}</span>
   </div>
 {/if}
 
