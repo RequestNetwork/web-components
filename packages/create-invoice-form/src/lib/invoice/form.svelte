@@ -27,7 +27,6 @@
   export let formData: CustomFormData;
   export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
-
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
@@ -115,21 +114,6 @@
         (formData as any)[id] = value;
       }
     }
-  };
-
-  const filterSettlementCurrencies = (
-    currency: CurrencyTypes.CurrencyDefinition
-  ) => {
-    return invoiceCurrency
-      ? invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-        ? currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
-          currencyManager?.getConversionPath(
-            invoiceCurrency,
-            currency,
-            currency.network
-          )?.length > 0
-        : invoiceCurrency.hash === currency.hash
-      : false;
   };
 
   const addInvoiceItem = () => {
@@ -398,19 +382,6 @@
             </div>
           </Accordion>
         </div>
-
-        <Dropdown
-          {config}
-          selectedValue={invoiceCurrency
-            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
-            : undefined}
-          placeholder="Invoice currency (labeling)"
-          options={defaultCurrencies.map((currency) => ({
-            value: currency,
-            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
-          }))}
-          onchange={handleInvoiceCurrencyChange}
-        />
         <Dropdown
           {config}
           placeholder="Payment chain"
@@ -427,16 +398,61 @@
         />
         <Dropdown
           {config}
+          selectedValue={invoiceCurrency
+            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
+            : undefined}
+          placeholder="Invoice currency (labeling)"
+          options={defaultCurrencies
+            ?.filter((curr) => {
+              if (!curr) return false;
+
+              return (
+                curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+                (curr.network && curr.network === network)
+              );
+            })
+            .map((currency) => ({
+              value: currency,
+              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
+            })) ?? []}
+          onchange={handleInvoiceCurrencyChange}
+        />
+        <Dropdown
+          {config}
           placeholder="Settlement currency"
           selectedValue={currency
             ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
             : undefined}
           options={defaultCurrencies
-            .filter((currency) => filterSettlementCurrencies(currency))
+            ?.filter((curr) => {
+              if (!curr || !invoiceCurrency) return false;
+
+              if (
+                invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
+              ) {
+                return (
+                  (curr.type === Types.RequestLogic.CURRENCY.ERC20 ||
+                    curr.type === Types.RequestLogic.CURRENCY.ISO4217) &&
+                  curr.network === network
+                );
+              } else if (
+                invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20
+              ) {
+                return (
+                  curr.type === Types.RequestLogic.CURRENCY.ERC20 &&
+                  curr.network === invoiceCurrency.network
+                );
+              } else {
+                return (
+                  curr.type === Types.RequestLogic.CURRENCY.ERC20 &&
+                  curr.network === invoiceCurrency.network
+                );
+              }
+            })
             .map((currency) => ({
               value: currency,
-              label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
-            }))}
+              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
+            })) ?? []}
           onchange={handleCurrencyChange}
         />
       </div>
