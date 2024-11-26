@@ -232,7 +232,7 @@
       >
         <span>Due: </span>
         <span
-          >{currency ? currency.symbol : ""}
+          >{invoiceCurrency ? invoiceCurrency.symbol : ""}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >

@@ -398,19 +398,6 @@
             </div>
           </Accordion>
         </div>
-
-        <Dropdown
-          {config}
-          selectedValue={invoiceCurrency
-            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
-            : undefined}
-          placeholder="Invoice currency (labeling)"
-          options={defaultCurrencies.map((currency) => ({
-            value: currency,
-            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
-          }))}
-          onchange={handleInvoiceCurrencyChange}
-        />
         <Dropdown
           {config}
           placeholder="Payment chain"
@@ -424,6 +411,18 @@
               };
             })}
           onchange={handleNetworkChange}
+        />
+        <Dropdown
+          {config}
+          selectedValue={invoiceCurrency
+            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
+            : undefined}
+          placeholder="Invoice currency (labeling)"
+          options={defaultCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
+          }))}
+          onchange={handleInvoiceCurrencyChange}
         />
         <Dropdown
           {config}
