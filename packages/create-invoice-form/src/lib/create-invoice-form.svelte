@@ -214,16 +214,16 @@
   <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
+      bind:currency
       config={activeConfig}
       bind:defaultCurrencies
+      bind:network
       {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}
       {currencyManager}
       {invoiceCurrency}
-      {currency}
-      {network}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
