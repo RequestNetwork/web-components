@@ -50,6 +50,7 @@
   };
 
   let showPayeeAddressInput = false;
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
     validationErrors[`${type}`].email = !isEmail(email);
@@ -145,6 +146,32 @@
 
   $: if (!showPayeeAddressInput && formData.creatorId) {
     formData.payeeAddress = formData.creatorId;
+  }
+
+  $: {
+    // Filter settlement currencies whenever network, invoiceCurrency, or currencyManager changes
+    filteredSettlementCurrencies = defaultCurrencies.filter((currency) => {
+      if (!invoiceCurrency) {
+        return false;
+      }
+
+      // For ISO4217 currencies (like EUR)
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        const hasValidPath =
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency.network
+          )?.length > 0;
+
+        return (
+          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
+        );
+      }
+
+      // For other currency types (like ERC20)
+      return invoiceCurrency.hash === currency.hash;
+    });
   }
 </script>
 
@@ -388,12 +415,10 @@
           selectedValue={network}
           options={networks
             .filter((networkItem) => networkItem)
-            .map((networkItem) => {
-              return {
-                value: networkItem,
-                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
-              };
-            })}
+            .map((networkItem) => ({
+              value: networkItem,
+              label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+            }))}
           onchange={handleNetworkChange}
         />
         <Dropdown
@@ -405,7 +430,6 @@
           options={defaultCurrencies
             ?.filter((curr) => {
               if (!curr) return false;
-
               return (
                 curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
                 (curr.network && curr.network === network)
@@ -423,36 +447,10 @@
           selectedValue={currency
             ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
             : undefined}
-          options={defaultCurrencies
-            ?.filter((curr) => {
-              if (!curr || !invoiceCurrency) return false;
-
-              if (
-                invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-              ) {
-                return (
-                  (curr.type === Types.RequestLogic.CURRENCY.ERC20 ||
-                    curr.type === Types.RequestLogic.CURRENCY.ISO4217) &&
-                  curr.network === network
-                );
-              } else if (
-                invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20
-              ) {
-                return (
-                  curr.type === Types.RequestLogic.CURRENCY.ERC20 &&
-                  curr.network === invoiceCurrency.network
-                );
-              } else {
-                return (
-                  curr.type === Types.RequestLogic.CURRENCY.ERC20 &&
-                  curr.network === invoiceCurrency.network
-                );
-              }
-            })
-            .map((currency) => ({
-              value: currency,
-              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
-            })) ?? []}
+          options={filteredSettlementCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
+          }))}
           onchange={handleCurrencyChange}
         />
       </div>
