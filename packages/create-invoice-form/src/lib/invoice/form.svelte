@@ -5,6 +5,7 @@
   import Input from "@requestnetwork/shared-components/input.svelte";
   import Labels from "@requestnetwork/shared-components/labels.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import SearchableDropdown from "@requestnetwork/shared-components/searchable-dropdown.svelte";
 
   // Icons
   import Trash from "@requestnetwork/shared-icons/trash.svelte";
@@ -411,34 +412,27 @@
           }))}
           onchange={handleInvoiceCurrencyChange}
         />
-        <Dropdown
-          {config}
-          placeholder="Payment chain"
-          selectedValue={network}
-          options={networks
-            .filter((networkItem) => networkItem)
-            .map((networkItem) => {
-              return {
-                value: networkItem,
-                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
-              };
-            })}
-          onchange={handleNetworkChange}
-        />
-        <Dropdown
-          {config}
-          placeholder="Settlement currency"
-          selectedValue={currency
-            ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
-            : undefined}
-          options={defaultCurrencies
-            .filter((currency) => filterSettlementCurrencies(currency))
-            .map((currency) => ({
-              value: currency,
-              label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
-            }))}
-          onchange={handleCurrencyChange}
-        />
+        <div class="form-group">
+          <label for="payment-chain">Payment Chain</label>
+          <SearchableDropdown
+            items={networks}
+            placeholder="Search chains..."
+            getValue={(network) => network}
+            onSelect={handleNetworkChange}
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="payment-currency">Payment Currency</label>
+          <SearchableDropdown
+            items={defaultCurrencies}
+            placeholder="Search currencies..."
+            getValue={(currency) => currency.symbol}
+            getDisplayValue={(currency) => currency.symbol}
+            getSecondaryValue={(currency) => currency.name}
+            onSelect={handleCurrencyChange}
+          />
+        </div>
       </div>
     </div>
     <div class="invoice-form-dates">
