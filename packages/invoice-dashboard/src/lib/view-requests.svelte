@@ -21,6 +21,7 @@
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
+  import Network from "@requestnetwork/shared-icons/network/network-icon.svelte";
   // Types
   import type {
     GetAccountReturnType,
@@ -31,14 +32,16 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { capitalize, debounce, formatAddress } from "../utils";
+  import { debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
@@ -381,17 +384,6 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
-
-  const checkStatus = (request: any) => {
-    switch (request?.balance?.balance > 0) {
-      case true:
-        return request?.balance?.balance >= request?.expectedAmount
-          ? "Paid"
-          : "Partially Paid";
-      default:
-        return capitalize(request?.state);
-    }
-  };
 </script>
 
 <div
@@ -572,11 +564,22 @@
                 </i>
               </div>
             </th>
+            <th on:click={() => handleSort("currencyInfo.network")}>
+              <div>
+                Payment Chain<i class={`caret `}>
+                  {#if sortOrder === "asc" && sortColumn === "currencyInfo.network"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {#if !loading && processedRequests}
+          {#if processedRequests.length > 0}
             {#each processedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
@@ -646,6 +649,13 @@
                   />
                 </td>
                 <td> {checkStatus(request)}</td>
+                <td>
+                  {#if request.paymentCurrencies.length > 0}
+                    <Network network={request.paymentCurrencies[0]?.network} />
+                  {:else}
+                    <span class="text-gray-400">-</span>
+                  {/if}
+                </td>
                 <td
                   ><Tooltip text="Download PDF">
                     <Download
@@ -662,7 +672,7 @@
                           );
                         } catch (error) {
                           toast.error(`Failed to export PDF`, {
-                            description: `An error occurred while generating the PDF.`,
+                            description: `${error}`,
                             action: {
                               label: "X",
                               onClick: () => console.info("Close"),

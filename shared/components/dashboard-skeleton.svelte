@@ -1,8 +1,8 @@
 <script>
   import Skeleton from "./skeleton.svelte";
 
-  export let rows = 7;
-  export let columns = 10;
+  export let rows = 10;
+  export let columns = 8;
   let skeletonConfig = {
     colors: {
       main: "#D9D9D9",
@@ -11,9 +11,9 @@
   };
 </script>
 
-{#each Array(columns) as _}
+{#each Array(rows) as _}
   <tr class="skeleton-wrapper">
-    {#each Array(rows) as _}
+    {#each Array(columns) as _}
       <td class="skeleton-item"
         ><Skeleton config={skeletonConfig} lineCount={1} /></td
       >
