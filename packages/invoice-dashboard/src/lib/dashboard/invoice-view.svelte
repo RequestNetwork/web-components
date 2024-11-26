@@ -23,8 +23,8 @@
   import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
@@ -74,6 +74,8 @@
   let paymentNetworkExtension:
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
+
+  let status = checkStatus(requestData || request);
 
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
@@ -188,7 +190,8 @@
       } else {
         approved = true;
       }
-      isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
+
+      status = checkStatus(requestData || request);
     } catch (err: any) {
       console.error("Error while checking invoice: ", err);
       if (String(err).includes("Unsupported payment")) {
