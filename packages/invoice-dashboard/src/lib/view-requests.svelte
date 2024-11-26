@@ -21,6 +21,7 @@
   import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
   import Search from "@requestnetwork/shared-icons/search.svelte";
+  import Network from "@requestnetwork/shared-icons/network/network-icon.svelte";
   // Types
   import type {
     GetAccountReturnType,
@@ -34,6 +35,7 @@
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
@@ -562,11 +564,22 @@
                 </i>
               </div>
             </th>
+            <th on:click={() => handleSort("currencyInfo.network")}>
+              <div>
+                Payment Chain<i class={`caret `}>
+                  {#if sortOrder === "asc" && sortColumn === "currencyInfo.network"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {#if !loading && processedRequests}
+          {#if processedRequests.length > 0}
             {#each processedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
@@ -636,6 +649,13 @@
                   />
                 </td>
                 <td> {checkStatus(request)}</td>
+                <td>
+                  {#if request.paymentCurrencies.length > 0}
+                    <Network network={request.paymentCurrencies[0]?.network} />
+                  {:else}
+                    <span class="text-gray-400">-</span>
+                  {/if}
+                </td>
                 <td
                   ><Tooltip text="Download PDF">
                     <Download
@@ -652,7 +672,7 @@
                           );
                         } catch (error) {
                           toast.error(`Failed to export PDF`, {
-                            description: `An error occurred while generating the PDF.`,
+                            description: `${error}`,
                             action: {
                               label: "X",
                               onClick: () => console.info("Close"),
