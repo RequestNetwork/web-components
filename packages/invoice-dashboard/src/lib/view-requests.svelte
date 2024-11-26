@@ -9,10 +9,10 @@
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
-  import Skeleton from "@requestnetwork/shared-components/skeleton.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   import TxType from "@requestnetwork/shared-components/tx-type.svelte";
+  import DashboardSkeleton from "@requestnetwork/shared-components/dashboard-skeleton.svelte";
   import { toast } from "svelte-sonner";
   // Icons
   import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
@@ -420,123 +420,34 @@
       </li>
     </ul>
   </div>
-  {#if !loading}
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-      <div class="search-wrapper">
-        <Input
-          placeholder="Search..."
-          width="w-[300px]"
-          handleInput={handleSearchChange}
-        >
-          <div slot="icon">
-            <Search />
-          </div>
-        </Input>
-        <Dropdown
-          config={activeConfig}
-          type="checkbox"
-          options={columnOptions}
-          placeholder="Select Columns"
-          onchange={handleColumnChange}
-        />
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead class="table-head">
-            <tr style="width: 100%;">
-              {#if columns.issuedAt}
-                <th on:click={() => handleSort("contentData.creationDate")}>
-                  <div>
-                    Issued Date<i class="caret">
-                      {#if sortOrder === "asc" && sortColumn === "contentData.creationDate"}
-                        <ChevronUp />
-                      {:else}
-                        <ChevronDown />
-                      {/if}
-                    </i>
-                  </div>
-                </th>
-              {/if}
-              {#if columns.dueDate}
-                <th on:click={() => handleSort("contentData.dueDate")}>
-                  <div>
-                    Due Date<i class="caret">
-                      {#if sortOrder === "asc" && sortColumn === "contentData.dueDate"}
-                        <ChevronUp />
-                      {:else}
-                        <ChevronDown />
-                      {/if}
-                    </i>
-                  </div>
-                </th>
-              {/if}
-              <th on:click={() => handleSort("timestamp")}>
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div class="search-wrapper">
+      <Input
+        placeholder="Search..."
+        width="w-[300px]"
+        handleInput={handleSearchChange}
+      >
+        <div slot="icon">
+          <Search />
+        </div>
+      </Input>
+      <Dropdown
+        config={activeConfig}
+        type="checkbox"
+        options={columnOptions}
+        placeholder="Select Columns"
+        onchange={handleColumnChange}
+      />
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead class="table-head">
+          <tr style="width: 100%;">
+            {#if columns.issuedAt}
+              <th on:click={() => handleSort("contentData.creationDate")}>
                 <div>
-                  Created<i class="caret">
-                    {#if sortOrder === "asc" && sortColumn === "timestamp"}
-                      <ChevronUp />
-                    {:else}
-                      <ChevronDown />
-                    {/if}
-                  </i>
-                </div></th
-              >
-              <th on:click={() => handleSort("contentData.invoiceNumber")}>
-                <div>
-                  Invoice #<i class="caret">
-                    {#if sortOrder === "asc" && sortColumn === "contentData.invoiceNumber"}
-                      <ChevronUp />
-                    {:else}
-                      <ChevronDown />
-                    {/if}
-                  </i>
-                </div></th
-              >
-              {#if currentTab === "All"}
-                <th on:click={() => handleSort("payee.value")}>
-                  <div>
-                    Payee<i class="caret">
-                      {#if sortOrder === "asc" && sortColumn === "payee.value"}
-                        <ChevronUp />
-                      {:else}
-                        <ChevronDown />
-                      {/if}
-                    </i>
-                  </div>
-                </th>
-                <th on:click={() => handleSort("payer.value")}>
-                  <div>
-                    Payer<i class={`caret `}>
-                      {#if sortOrder === "asc" && sortColumn === "payer.value"}
-                        <ChevronUp />
-                      {:else}
-                        <ChevronDown />
-                      {/if}
-                    </i>
-                  </div>
-                </th>
-              {:else}
-                <th
-                  scope="col"
-                  on:click={() =>
-                    handleSort(
-                      currentTab === "Pay" ? "payee.value" : "payer.value"
-                    )}
-                  >{currentTab === "Pay" ? "Payee" : "Payer"}<i
-                    class={`caret `}
-                  >
-                    {#if ((currentTab === "Pay" && sortColumn === "payee.value") || sortColumn === "payer.value") && sortOrder === "asc"}
-                      <ChevronUp />
-                    {:else}
-                      <ChevronDown />
-                    {/if}</i
-                  ></th
-                >
-              {/if}
-              <th on:click={() => handleSort("expectedAmount")}>
-                <div>
-                  Expected Amount<i class={`caret `}>
-                    {#if sortOrder === "asc" && sortColumn === "expectedAmount"}
+                  Issued Date<i class="caret">
+                    {#if sortOrder === "asc" && sortColumn === "contentData.creationDate"}
                       <ChevronUp />
                     {:else}
                       <ChevronDown />
@@ -544,205 +455,283 @@
                   </i>
                 </div>
               </th>
+            {/if}
+            {#if columns.dueDate}
+              <th on:click={() => handleSort("contentData.dueDate")}>
+                <div>
+                  Due Date<i class="caret">
+                    {#if sortOrder === "asc" && sortColumn === "contentData.dueDate"}
+                      <ChevronUp />
+                    {:else}
+                      <ChevronDown />
+                    {/if}
+                  </i>
+                </div>
+              </th>
+            {/if}
+            <th on:click={() => handleSort("timestamp")}>
+              <div>
+                Created<i class="caret">
+                  {#if sortOrder === "asc" && sortColumn === "timestamp"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div></th
+            >
+            <th on:click={() => handleSort("contentData.invoiceNumber")}>
+              <div>
+                Invoice #<i class="caret">
+                  {#if sortOrder === "asc" && sortColumn === "contentData.invoiceNumber"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div></th
+            >
+            {#if currentTab === "All"}
+              <th on:click={() => handleSort("payee.value")}>
+                <div>
+                  Payee<i class="caret">
+                    {#if sortOrder === "asc" && sortColumn === "payee.value"}
+                      <ChevronUp />
+                    {:else}
+                      <ChevronDown />
+                    {/if}
+                  </i>
+                </div>
+              </th>
+              <th on:click={() => handleSort("payer.value")}>
+                <div>
+                  Payer<i class={`caret `}>
+                    {#if sortOrder === "asc" && sortColumn === "payer.value"}
+                      <ChevronUp />
+                    {:else}
+                      <ChevronDown />
+                    {/if}
+                  </i>
+                </div>
+              </th>
+            {:else}
               <th
-                on:click={() => {
-                  const sortBy = processedRequests?.some(
-                    (req) => req.payer?.value === signer
-                  )
-                    ? "payer.value"
-                    : "payee.value";
-                  handleSort(sortBy);
-                }}
+                scope="col"
+                on:click={() =>
+                  handleSort(
+                    currentTab === "Pay" ? "payee.value" : "payer.value"
+                  )}
+                >{currentTab === "Pay" ? "Payee" : "Payer"}<i class={`caret `}>
+                  {#if ((currentTab === "Pay" && sortColumn === "payee.value") || sortColumn === "payer.value") && sortOrder === "asc"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}</i
+                ></th
               >
-                <div>
-                  Type<i class={`caret `}>
-                    {#if sortOrder === "asc" && (sortColumn === "payer.value" || sortColumn === "payee.value")}
-                      <ChevronUp />
-                    {:else}
-                      <ChevronDown />
-                    {/if}
-                  </i>
-                </div>
-              </th>
-              <th on:click={() => handleSort("state")}>
-                <div>
-                  Status<i class={`caret `}>
-                    {#if sortOrder === "asc" && sortColumn === "state"}
-                      <ChevronUp />
-                    {:else}
-                      <ChevronDown />
-                    {/if}
-                  </i>
-                </div>
-              </th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#if processedRequests}
-              {#each processedRequests as request}
-                <tr
-                  class="row"
-                  on:click={(e) => handleRequestSelect(e, request)}
-                >
-                  {#if columns.issuedAt}
-                    <td
-                      >{new Date(
-                        request.contentData.creationDate
-                      ).toLocaleDateString() || "-"}</td
-                    >
+            {/if}
+            <th on:click={() => handleSort("expectedAmount")}>
+              <div>
+                Expected Amount<i class={`caret `}>
+                  {#if sortOrder === "asc" && sortColumn === "expectedAmount"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
                   {/if}
-                  {#if columns.dueDate}
-                    <td
-                      >{request?.contentData?.paymentTerms?.dueDate
-                        ? new Date(
-                            request?.contentData?.paymentTerms?.dueDate
-                          ).toLocaleDateString()
-                        : "-"}</td
-                    >
+                </i>
+              </div>
+            </th>
+            <th
+              on:click={() => {
+                const sortBy = processedRequests?.some(
+                  (req) => req.payer?.value === signer
+                )
+                  ? "payer.value"
+                  : "payee.value";
+                handleSort(sortBy);
+              }}
+            >
+              <div>
+                Type<i class={`caret `}>
+                  {#if sortOrder === "asc" && (sortColumn === "payer.value" || sortColumn === "payee.value")}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
                   {/if}
+                </i>
+              </div>
+            </th>
+            <th on:click={() => handleSort("state")}>
+              <div>
+                Status<i class={`caret `}>
+                  {#if sortOrder === "asc" && sortColumn === "state"}
+                    <ChevronUp />
+                  {:else}
+                    <ChevronDown />
+                  {/if}
+                </i>
+              </div>
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {#if !loading && processedRequests}
+            {#each processedRequests as request}
+              <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
+                {#if columns.issuedAt}
                   <td
                     >{new Date(
-                      request.timestamp * 1000
-                    ).toLocaleDateString()}</td
+                      request.contentData.creationDate
+                    ).toLocaleDateString() || "-"}</td
                   >
-                  <td>{request.contentData.invoiceNumber || "-"}</td>
-                  {#if currentTab === "All"}
-                    <td
-                      ><div class="address">
-                        <span>{formatAddress(request.payee?.value ?? "")}</span>
-                        <Copy textToCopy={request.payee?.value} />
-                      </div></td
-                    >
-                    <td
-                      ><div class="address">
-                        <span>{formatAddress(request.payer?.value ?? "")}</span>
-                        <Copy textToCopy={request.payer?.value} />
-                      </div></td
-                    >
-                  {:else}
-                    <td>
-                      <div class="address">
-                        <span
-                          >{formatAddress(
-                            currentTab === "Pay"
-                              ? (request.payee?.value ?? "")
-                              : (request.payer?.value ?? "")
-                          )}</span
-                        >
-                        <Copy
-                          textToCopy={currentTab === "Pay"
-                            ? request.payee?.value
-                            : request.payer?.value || ""}
-                        />
-                      </div>
-                    </td>
-                  {/if}
-                  <td>
-                    {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
-                      <Tooltip text={request.formattedAmount}>
-                        {Number(request.formattedAmount).toFixed(5)}
-                      </Tooltip>
-                    {:else}
-                      {request.formattedAmount}
-                    {/if}
-                    {request.currencySymbol}
-                  </td>
-                  <td>
-                    <TxType
-                      type={signer === request.payer?.value ? "OUT" : "IN"}
-                    />
-                  </td>
-                  <td> {checkStatus(request)}</td>
+                {/if}
+                {#if columns.dueDate}
                   <td
-                    ><Tooltip text="Download PDF">
-                      <Download
-                        onClick={async () => {
-                          try {
-                            await exportToPDF(
-                              request,
-                              getCurrencyFromManager(
-                                request.currencyInfo,
-                                currencyManager
-                              ),
-                              request.paymentCurrencies,
-                              config.logo
-                            );
-                          } catch (error) {
-                            toast.error(`Failed to export PDF`, {
-                              description: `${error}`,
-                              action: {
-                                label: "X",
-                                onClick: () => console.info("Close"),
-                              },
-                            });
-                            console.error("Failed to export PDF:", error);
-                          }
-                        }}
-                      />
-                    </Tooltip></td
+                    >{request?.contentData?.paymentTerms?.dueDate
+                      ? new Date(
+                          request?.contentData?.paymentTerms?.dueDate
+                        ).toLocaleDateString()
+                      : "-"}</td
                   >
-                </tr>
-              {/each}
-            {/if}
-          </tbody>
-        </table>
-        <Drawer
-          active={activeRequest !== undefined}
-          onClose={handleRemoveSelectedRequest}
-        >
-          {#if activeRequest !== undefined}
-            <InvoiceView
-              {account}
-              {wagmiConfig}
-              bind:isRequestPayed
-              {requestNetwork}
-              {currencyManager}
-              config={activeConfig}
-              request={activeRequest}
-            />
+                {/if}
+                <td>
+                  {new Date(request.timestamp * 1000).toLocaleDateString()}
+                </td>
+                <td>{request.contentData.invoiceNumber || "-"}</td>
+                {#if currentTab === "All"}
+                  <td
+                    ><div class="address">
+                      <span>{formatAddress(request.payee?.value ?? "")}</span>
+                      <Copy textToCopy={request.payee?.value} />
+                    </div></td
+                  >
+                  <td
+                    ><div class="address">
+                      <span>{formatAddress(request.payer?.value ?? "")}</span>
+                      <Copy textToCopy={request.payer?.value} />
+                    </div></td
+                  >
+                {:else}
+                  <td>
+                    <div class="address">
+                      <span
+                        >{formatAddress(
+                          currentTab === "Pay"
+                            ? (request.payee?.value ?? "")
+                            : (request.payer?.value ?? "")
+                        )}</span
+                      >
+                      <Copy
+                        textToCopy={currentTab === "Pay"
+                          ? request.payee?.value
+                          : request.payer?.value || ""}
+                      />
+                    </div>
+                  </td>
+                {/if}
+                <td>
+                  {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
+                    <Tooltip text={request.formattedAmount}>
+                      {Number(request.formattedAmount).toFixed(5)}
+                    </Tooltip>
+                  {:else}
+                    {request.formattedAmount}
+                  {/if}
+                  {request.currencySymbol}
+                </td>
+                <td>
+                  <TxType
+                    type={signer === request.payer?.value ? "OUT" : "IN"}
+                  />
+                </td>
+                <td> {checkStatus(request)}</td>
+                <td
+                  ><Tooltip text="Download PDF">
+                    <Download
+                      onClick={async () => {
+                        try {
+                          await exportToPDF(
+                            request,
+                            getCurrencyFromManager(
+                              request.currencyInfo,
+                              currencyManager
+                            ),
+                            request.paymentCurrencies,
+                            config.logo
+                          );
+                        } catch (error) {
+                          toast.error(`Failed to export PDF`, {
+                            description: `An error occurred while generating the PDF.`,
+                            action: {
+                              label: "X",
+                              onClick: () => console.info("Close"),
+                            },
+                          });
+                          console.error("Failed to export PDF:", error);
+                        }
+                      }}
+                    />
+                  </Tooltip></td
+                >
+              </tr>
+            {/each}
+          {:else}
+            <DashboardSkeleton />
           {/if}
-        </Drawer>
+        </tbody>
+      </table>
+      <Drawer
+        active={activeRequest !== undefined}
+        onClose={handleRemoveSelectedRequest}
+      >
+        {#if activeRequest !== undefined}
+          <InvoiceView
+            {account}
+            {wagmiConfig}
+            bind:isRequestPayed
+            {requestNetwork}
+            {currencyManager}
+            config={activeConfig}
+            request={activeRequest}
+          />
+        {/if}
+      </Drawer>
+    </div>
+    {#if paginatedRequests.length > 0}
+      <div class="pagination">
+        <button
+          class="chevron-button"
+          disabled={currentPage === 1}
+          on:click={() => goToPage(currentPage - 1)}
+        >
+          <i>
+            <ChevronLeft />
+          </i>
+        </button>
+
+        {#each Array(totalPages).fill(null) as _, i}
+          <button
+            class={`active-page page-${currentPage === i + 1 ? "on" : "off"}`}
+            class:active={currentPage === i + 1}
+            on:click={() => goToPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        {/each}
+
+        <button
+          class="chevron-button"
+          disabled={currentPage === totalPages}
+          on:click={() => goToPage(currentPage + 1)}
+        >
+          <i>
+            <ChevronRight />
+          </i>
+        </button>
       </div>
-      {#if paginatedRequests.length > 0}
-        <div class="pagination">
-          <button
-            class="chevron-button"
-            disabled={currentPage === 1}
-            on:click={() => goToPage(currentPage - 1)}
-          >
-            <i>
-              <ChevronLeft />
-            </i>
-          </button>
-
-          {#each Array(totalPages).fill(null) as _, i}
-            <button
-              class={`active-page page-${currentPage === i + 1 ? "on" : "off"}`}
-              class:active={currentPage === i + 1}
-              on:click={() => goToPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          {/each}
-
-          <button
-            class="chevron-button"
-            disabled={currentPage === totalPages}
-            on:click={() => goToPage(currentPage + 1)}
-          >
-            <i>
-              <ChevronRight />
-            </i>
-          </button>
-        </div>
-      {/if}
-    </div>
-  {:else}
-    <div style="margin-top: -16px;">
-      <Skeleton config={activeConfig} lineCount={3} />
-    </div>
-  {/if}
+    {/if}
+  </div>
   {#if !loading && paginatedRequests.length === 0}
     <div class="no-requests">
       <p>No requests found</p>

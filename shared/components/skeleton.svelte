@@ -39,12 +39,11 @@
     flex-direction: column;
     gap: 0.4px;
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    margin-top: 4px;
   }
 
   .skeleton-item {
-    height: 50px;
-    border-radius: 4px;
+    height: 20px;
+    border-radius: 20px;
     margin-bottom: 10px;
     background: var(--mainColor);
     background: linear-gradient(
