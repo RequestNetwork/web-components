@@ -8,7 +8,7 @@
 </script>
 
 {#if icon}
-  <div class="network-icon">
+  <div class="network-icon" aria-label={`Network: ${capitalize(network)}`}>
     <svelte:component this={icon} />
     <span>{capitalize(network)}</span>
   </div>

@@ -578,7 +578,7 @@
           </tr>
         </thead>
         <tbody>
-          {#if processedRequests}
+          {#if processedRequests.length > 0}
             {#each processedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
@@ -648,8 +648,12 @@
                   />
                 </td>
                 <td> {checkStatus(request)}</td>
-                <td
-                  ><Network network={request.paymentCurrencies[0]?.network} />
+                <td>
+                  {#if request.paymentCurrencies.length > 0}
+                    <Network network={request.paymentCurrencies[0]?.network} />
+                  {:else}
+                    <span class="text-gray-400">-</span>
+                  {/if}
                 </td>
                 <td
                   ><Tooltip text="Download PDF">
