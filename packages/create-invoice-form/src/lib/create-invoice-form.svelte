@@ -58,15 +58,16 @@
 
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
-      const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: CurrencyTypes.CurrencyDefinition) =>
-          currency.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-          currency.network === newNetwork
-      );
-
       network = newNetwork;
-      defaultCurrencies = newCurrencies;
+
+      invoiceCurrency = undefined;
       currency = undefined;
+
+      defaultCurrencies = currencyManager.knownCurrencies.filter(
+        (curr: CurrencyTypes.CurrencyDefinition) =>
+          curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+          curr.network === newNetwork
+      );
     }
   };
 
@@ -74,36 +75,37 @@
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: CurrencyTypes.CurrencyDefinition) =>
-      currency.type === Types.RequestLogic.CURRENCY.ISO4217 || network
-        ? currency.network === network
-        : true
-  );
+  let defaultCurrencies = currencyManager.knownCurrencies;
 
   const handleInvoiceCurrencyChange = (
     value: CurrencyTypes.CurrencyDefinition
   ) => {
-    invoiceCurrency = value;
-    network = undefined;
-    currency = undefined;
+    if (value !== invoiceCurrency) {
+      invoiceCurrency = value;
+      currency = undefined;
 
-    if (
-      invoiceCurrency &&
-      invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-    ) {
-      networks = getCurrencySupportedNetworksForConversion(
-        invoiceCurrency.hash,
-        currencyManager
-      );
-    } else {
-      networks = extractUniqueNetworkNames();
+      if (value.type !== Types.RequestLogic.CURRENCY.ISO4217) {
+        network = value.network;
+      }
     }
   };
 
   const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
+
+  $: {
+    if (invoiceCurrency) {
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        networks = getCurrencySupportedNetworksForConversion(
+          invoiceCurrency.hash,
+          currencyManager
+        );
+      } else {
+        networks = extractUniqueNetworkNames();
+      }
+    }
+  }
 
   let invoiceTotals = {
     amountWithoutTax: 0,
