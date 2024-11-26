@@ -5,8 +5,22 @@ export const checkStatus = (request: Types.IRequestDataWithEvents | null) => {
   const balance = BigInt(request?.balance?.balance ?? 0);
   const expectedAmount = BigInt(request?.expectedAmount ?? 0);
   const today = new Date();
-  const dueDate = new Date(request?.contentData?.paymentTerms?.dueDate);
+  let dueDate: Date | null = null;
   const isPaid = balance >= expectedAmount ? "Paid" : "Partially Paid";
+
+  try {
+    const rawDueDate = request?.contentData?.paymentTerms?.dueDate;
+    if (rawDueDate) {
+      dueDate = new Date(rawDueDate);
+      if (isNaN(dueDate.getTime())) {
+        console.warn("Invalid due date format");
+        dueDate = null;
+      }
+    }
+  } catch (e) {
+    console.error("Error parsing due date:", e);
+    dueDate = null;
+  }
 
   const eventStatus = {
     reject: "Rejected",
@@ -23,7 +37,7 @@ export const checkStatus = (request: Types.IRequestDataWithEvents | null) => {
     }
   }
 
-  if (dueDate < today) {
+  if (dueDate && dueDate < today) {
     if (balance === BigInt(0)) {
       return "Overdue";
     }

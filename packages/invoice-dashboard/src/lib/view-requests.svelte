@@ -32,6 +32,7 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
