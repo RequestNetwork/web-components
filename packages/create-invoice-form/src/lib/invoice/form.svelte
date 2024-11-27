@@ -51,6 +51,7 @@
   };
 
   let showPayeeAddressInput = false;
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
     validationErrors[`${type}`].email = !isEmail(email);
@@ -146,6 +147,32 @@
 
   $: if (!showPayeeAddressInput && formData.creatorId) {
     formData.payeeAddress = formData.creatorId;
+  }
+
+  $: {
+    // Filter settlement currencies whenever network, invoiceCurrency, or currencyManager changes
+    filteredSettlementCurrencies = defaultCurrencies.filter((currency) => {
+      if (!invoiceCurrency) {
+        return false;
+      }
+
+      // For ISO4217 currencies (like EUR)
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        const hasValidPath =
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency.network
+          )?.length > 0;
+
+        return (
+          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
+        );
+      }
+
+      // For other currency types (like ERC20)
+      return invoiceCurrency.hash === currency.hash;
+    });
   }
 </script>
 
@@ -389,36 +416,24 @@
           selectedValue={network}
           options={networks
             .filter((networkItem) => networkItem)
-            .map((networkItem) => {
-              return {
-                value: networkItem,
-                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
-              };
-            })}
+            .map((networkItem) => ({
+              value: networkItem,
+              label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+            }))}
           onchange={handleNetworkChange}
         />
-        <Dropdown
-          {config}
-          selectedValue={invoiceCurrency
-            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
-            : undefined}
-          placeholder="Invoice currency (labeling)"
-          options={defaultCurrencies.map((currency) => ({
-            value: currency,
-            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
-          }))}
-          onchange={handleInvoiceCurrencyChange}
-        />
         <div class="form-group">
-          <label for="payment-chain">Payment Chain</label>
+          <label for="invoice-currency">Invoice Currency (labeling)</label>
           <SearchableDropdown
-            items={networks}
-            placeholder="Search chains..."
-            getValue={(network) => network}
-            onSelect={handleNetworkChange}
+            items={defaultCurrencies}
+            placeholder="Search currencies..."
+            getValue={(currency) => currency.symbol}
+            getDisplayValue={(currency) => currency.symbol}
+            getSecondaryValue={(currency) =>
+              currency.network ? `(${currency.network})` : ""}
+            onSelect={handleInvoiceCurrencyChange}
           />
         </div>
-
         <div class="form-group">
           <label for="payment-currency">Payment Currency</label>
           <SearchableDropdown
