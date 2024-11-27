@@ -110,11 +110,6 @@
     }
   };
 
-  const handleCheckbox = (event: any) => {
-    formData.isEncrypted = !formData.isEncrypted;
-    setTimeout(() => event.target.checked = formData.isEncrypted, 0);
-  };
-
   const addInvoiceItem = () => {
     const newItem = {
       name: "",
@@ -376,8 +371,7 @@
           type="checkbox"
           id="isEncrypted"
           label="Encrypt invoice"
-          checked={formData.isEncrypted}
-          {handleCheckbox}
+          bind:checked={formData.isEncrypted}
           />
       </div>
     </div>
