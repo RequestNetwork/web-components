@@ -3,13 +3,12 @@ import { Config as WagmiConfig } from "@wagmi/core";
 import type { IConfig } from "@requestnetwork/shared-types";
 import type { WalletState } from "@requestnetwork/shared-types/web3Onboard";
 import type { RequestNetwork } from "@requestnetwork/request-client.js";
-import { Currency } from "../types";
-
+import { CurrencyTypes } from "@requestnetwork/types";
 export interface InvoiceDashboardProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies: Currency[];
+  currencies: CurrencyTypes.CurrencyInput[];
 }
 /**
  * InvoiceDashboard is a React component that integrates with the Request Network to manage and display invoices.

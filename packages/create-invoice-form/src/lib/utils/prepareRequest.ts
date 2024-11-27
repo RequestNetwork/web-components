@@ -1,9 +1,11 @@
+import { parseUnits, zeroAddress, getAddress } from "viem";
 import { Types, Utils } from "@requestnetwork/request-client.js";
 import type { CustomFormData } from "@requestnetwork/shared-types";
-import { parseUnits, zeroAddress } from "viem";
+import { CurrencyTypes } from "@requestnetwork/types";
 
 interface IRequestParams {
-  currency: any;
+  invoiceCurrency: CurrencyTypes.CurrencyDefinition;
+  currency: CurrencyTypes.CurrencyDefinition;
   formData: CustomFormData;
   invoiceTotals: {
     amountWithoutTax: number;
@@ -13,47 +15,91 @@ interface IRequestParams {
   address: `0x${string}` | undefined;
 }
 
+const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, currency: CurrencyTypes.CurrencyDefinition, formData: CustomFormData) => {
+  if (
+    invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
+    currency.type === Types.RequestLogic.CURRENCY.ETH
+  ) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY,
+      parameters: {
+        network: currency.network,
+        paymentAddress: getAddress(formData.payeeAddress),
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    };
+  } else if (
+    invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
+    currency.type === Types.RequestLogic.CURRENCY.ERC20
+  ) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY,
+      parameters: {
+        network: currency.network,
+        paymentAddress: getAddress(formData.payeeAddress),
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+        acceptedTokens: [getAddress(currency.address)],
+      },
+    };
+  } else if (currency.type === Types.RequestLogic.CURRENCY.ETH) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT,
+      parameters: {
+        paymentNetworkName: currency.network,
+        paymentAddress: getAddress(formData.payeeAddress),
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    }
+  } else if (currency.type === Types.RequestLogic.CURRENCY.ERC20) {
+    return {
+      id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
+      parameters: {
+        paymentNetworkName: currency.network,
+        paymentAddress: getAddress(formData.payeeAddress),
+        feeAddress: zeroAddress,
+        feeAmount: "0",
+      },
+    }
+  } else {
+    throw new Error("Unsupported payment network");
+  }
+};
+
 export const prepareRequestParams = ({
+  invoiceCurrency,
   address,
   currency,
   formData,
   invoiceTotals,
 }: IRequestParams): Types.ICreateRequestParameters => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
-
+  const isERC20InvoiceCurrency = invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20;
   return {
     requestInfo: {
       currency: {
-        type: currency.type,
-        value: isERC20 ? currency.address : "eth",
-        network: currency.network,
+        type: invoiceCurrency.type,
+        value: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
+        network: invoiceCurrency.network,
       },
       expectedAmount: parseUnits(
         invoiceTotals.totalAmount.toString(),
-        currency.decimals
+        invoiceCurrency.decimals
       ).toString(),
       payee: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: formData.creatorId,
+        value: getAddress(formData.creatorId),
       },
       payer: {
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: formData.payerAddress,
+        value: getAddress(formData.payerAddress),
       },
       timestamp: Utils.getCurrentTimestampInSecond(),
     },
-    paymentNetwork: {
-      id:
-        currency.type === Types.RequestLogic.CURRENCY.ETH
-          ? Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
-          : Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
-      parameters: {
-        paymentNetworkName: currency.network,
-        paymentAddress: formData.payeeAddress,
-        feeAddress: zeroAddress,
-        feeAmount: "0",
-      },
-    },
+    paymentNetwork: getPaymentNetwork(invoiceCurrency, currency, formData),
+    paymentCurrency: isERC20 ? getAddress(currency.address) : currency.symbol,
     contentData: {
       meta: {
         format: "rnf_invoice",
@@ -71,16 +117,20 @@ export const prepareRequestParams = ({
         quantity: Number(item.quantity),
         unitPrice: parseUnits(
           item.unitPrice.toString(),
-          currency.decimals
+          invoiceCurrency.decimals
         ).toString(),
         discount:
-          item.discount &&
-          parseUnits(item.discount.toString(), currency.decimals).toString(),
+          item.discount != null
+            ? parseUnits(
+              item.discount.toString(),
+              invoiceCurrency.decimals
+            ).toString()
+            : undefined,
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),
         },
-        currency: isERC20 ? currency.address : currency.symbol,
+        currency: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
       })),
       paymentTerms: {
         dueDate: new Date(formData.dueDate).toISOString(),
@@ -122,7 +172,7 @@ export const prepareRequestParams = ({
     },
     signer: {
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: address as string,
+      value: getAddress(address as string),
     },
   };
 };

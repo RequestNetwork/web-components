@@ -9,6 +9,7 @@
   // Icons
   import Trash from "@requestnetwork/shared-icons/trash.svelte";
   import Plus from "@requestnetwork/shared-icons/plus.svelte";
+  import Close from "@requestnetwork/shared-icons/close.svelte";
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
@@ -17,15 +18,25 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
+  import isEmail from "validator/es/lib/isEmail";
 
   export let config: IConfig;
   export const invoiceNumber: number = 1;
   export let formData: CustomFormData;
+  export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
-
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
+  export let currencyManager: any;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let currency:
+    | CurrencyTypes.ERC20Currency
+    | CurrencyTypes.NativeCurrency
+    | undefined;
+  export let network: any;
 
   let validationErrors = {
     payeeAddress: false,
@@ -38,15 +49,11 @@
     },
   };
 
-  let creatorId = "";
-
-  $: {
-    creatorId = formData.creatorId;
-  }
+  let showPayeeAddressInput = false;
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    validationErrors[`${type}`].email = !emailRegex.test(email);
+    validationErrors[`${type}`].email = !isEmail(email);
   };
 
   const checkPayeeAddress = () => {
@@ -129,7 +136,43 @@
   const removeInvoiceItem = (index: number) => {
     formData.invoiceItems = formData.invoiceItems.filter((_, i) => i !== index);
   };
-  
+
+  const togglePayeeAddress = () => {
+    showPayeeAddressInput = !showPayeeAddressInput;
+    if (!showPayeeAddressInput) {
+      formData.payeeAddress = formData.creatorId;
+    }
+  };
+
+  $: if (!showPayeeAddressInput && formData.creatorId) {
+    formData.payeeAddress = formData.creatorId;
+  }
+
+  $: {
+    // Filter settlement currencies whenever network, invoiceCurrency, or currencyManager changes
+    filteredSettlementCurrencies = defaultCurrencies.filter((currency) => {
+      if (!invoiceCurrency) {
+        return false;
+      }
+
+      // For ISO4217 currencies (like EUR)
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        const hasValidPath =
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency.network
+          )?.length > 0;
+
+        return (
+          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
+        );
+      }
+
+      // For other currency types (like ERC20)
+      return invoiceCurrency.hash === currency.hash;
+    });
+  }
 </script>
 
 <form class="invoice-form">
@@ -154,10 +197,42 @@
             disabled
             id="creatorId"
             type="text"
-            value={creatorId}
+            value={formData.creatorId}
             label="From"
             placeholder="Connect wallet to populate"
           />
+          {#if !showPayeeAddressInput}
+            <Button
+              text="+ Add Recipient Address"
+              type="button"
+              onClick={togglePayeeAddress}
+              className="invoice-form-add-recipient-button"
+            />
+          {:else}
+            <div class="payee-address-container">
+              <Input
+                label="Where do you want to receive your payment?"
+                id="payeeAddress"
+                type="text"
+                value={formData.payeeAddress}
+                placeholder="0x..."
+                {handleInput}
+                onBlur={checkPayeeAddress}
+                error={validationErrors.payeeAddress
+                  ? "Please enter a valid Ethereum address"
+                  : ""}
+              />
+              <Button
+                type="button"
+                onClick={togglePayeeAddress}
+                className="invoice-form-close-recipient-button"
+              >
+                <div slot="icon" style="padding: 7px;">
+                  <Close />
+                </div>
+              </Button>
+            </div>
+          {/if}
           <Accordion title="Add Your Info">
             <div class="invoice-form-info">
               <Input
@@ -336,43 +411,48 @@
         </div>
         <Dropdown
           {config}
-          placeholder="Select payment chain"
-          options={networks.map((network) => {
-            return {
-              value: network,
-              label: network[0].toUpperCase() + network.slice(1),
-            };
-          })}
+          placeholder="Payment chain"
+          selectedValue={network}
+          options={networks
+            .filter((networkItem) => networkItem)
+            .map((networkItem) => ({
+              value: networkItem,
+              label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+            }))}
           onchange={handleNetworkChange}
         />
-
         <Dropdown
           {config}
-          placeholder="Select a currency"
-          options={defaultCurrencies.map((currency) => ({
+          selectedValue={invoiceCurrency
+            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
+            : undefined}
+          placeholder="Invoice currency (labeling)"
+          options={defaultCurrencies
+            ?.filter((curr) => {
+              if (!curr) return false;
+              return (
+                curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+                (curr.network && curr.network === network)
+              );
+            })
+            .map((currency) => ({
+              value: currency,
+              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
+            })) ?? []}
+          onchange={handleInvoiceCurrencyChange}
+        />
+        <Dropdown
+          {config}
+          placeholder="Settlement currency"
+          selectedValue={currency
+            ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
+            : undefined}
+          options={filteredSettlementCurrencies.map((currency) => ({
             value: currency,
-            label: `${currency.symbol} (${currency.network})`,
+            label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
           }))}
           onchange={handleCurrencyChange}
         />
-        <Input
-          label="Where do you want to receive your payment?"
-          id="payeeAddress"
-          type="text"
-          value={formData.payeeAddress}
-          placeholder="0x..."
-          {handleInput}
-          onBlur={checkPayeeAddress}
-          error={validationErrors.payeeAddress
-            ? "Please enter a valid Ethereum address"
-            : ""}
-        />
-        <Input
-          type="checkbox"
-          id="isEncrypted"
-          label="Encrypt invoice"
-          bind:checked={formData.isEncrypted}
-          />
       </div>
     </div>
     <div class="invoice-form-dates">
@@ -601,6 +681,20 @@
     gap: 20px;
   }
 
+  :global(.invoice-form-add-recipient-button) {
+    background-color: transparent !important;
+    color: var(--mainColor) !important;
+    text-transform: uppercase;
+    transform: none !important;
+    font-weight: 500;
+    font-size: 14px !important;
+    width: fit-content;
+  }
+
+  :global(.invoice-form-add-recipient-button:hover) {
+    color: var(--secondaryColor) !important;
+  }
+
   .invoice-form-section {
     display: flex;
     flex-direction: column;
@@ -756,5 +850,26 @@
     ) {
     width: 12px;
     height: 12px;
+  }
+
+  .payee-address-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .payee-address-container :global(.input-wrapper) {
+    flex: 1;
+  }
+
+  :global(.invoice-form-close-recipient-button) {
+    position: absolute;
+    right: 0;
+    top: -4px;
+  }
+
+  :global(.invoice-form-close-recipient-button div) {
+    padding: 4px !important;
   }
 </style>

@@ -1,19 +1,14 @@
 import React from "react";
 import { Config as WagmiConfig } from "@wagmi/core";
 import type { IConfig } from "@requestnetwork/shared-types";
-import type { RequestNetwork, Types } from "@requestnetwork/request-client.js";
+import type { RequestNetwork } from "@requestnetwork/request-client.js";
+import type { CurrencyTypes } from "@requestnetwork/types";
 
 export interface CreateInvoiceFormProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies: {
-    symbol: string;
-    address: string;
-    network: string;
-    decimals: number;
-    type: Types.RequestLogic.CURRENCY;
-  }[];
+  currencies: CurrencyTypes.CurrencyInput[];
 }
 
 /**
@@ -30,15 +25,7 @@ export interface CreateInvoiceFormProps {
  *   config={config}
  *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
- *   currencies={[
- *     {
- *       symbol: "USDC",
- *       address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
- *       network: "sepolia",
- *       decimals: 6,
- *       type: Types.RequestLogic.CURRENCY.ERC20,
- *     },
- *   ]}
+ *   currencies={currencies}
  * />
  */
 declare const CreateInvoiceForm: React.FC<CreateInvoiceFormProps>;

@@ -8,11 +8,16 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import { APP_STATUS } from "@requestnetwork/shared-types/enums";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
+  import { Types } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   // Utils
   import { getInitialFormData, prepareRequestParams } from "./utils";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import {
+    getCurrencySupportedNetworksForConversion,
+    initializeCurrencyManager,
+  } from "@requestnetwork/shared-utils/initCurrencyManager";
   // Components
   import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -23,7 +28,7 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: any;
+  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let account: GetAccountReturnType;
   let isTimeout = false;
@@ -35,26 +40,35 @@
   const extractUniqueNetworkNames = (): string[] => {
     const networkSet = new Set<string>();
 
-    currencyManager.knownCurrencies.forEach((currency: any) => {
-      networkSet.add(currency.network);
-    });
+    currencyManager.knownCurrencies.forEach(
+      (currency: CurrencyTypes.CurrencyDefinition) => {
+        if (currency.network) {
+          networkSet.add(currency.network);
+        }
+      }
+    );
 
     return Array.from(networkSet);
   };
 
-  let networks = extractUniqueNetworkNames();
+  let networks: string[] = extractUniqueNetworkNames();
 
-  let network = networks[0];
+  let network: string | undefined = undefined;
+  let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
+  let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
 
-  const handleNetworkChange = (network: string) => {
-    if (network) {
-      const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: any) => currency.network === network
+  const handleNetworkChange = (newNetwork: string) => {
+    if (newNetwork) {
+      network = newNetwork;
+
+      invoiceCurrency = undefined;
+      currency = undefined;
+
+      defaultCurrencies = currencyManager.knownCurrencies.filter(
+        (curr: CurrencyTypes.CurrencyDefinition) =>
+          curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+          curr.network === newNetwork
       );
-
-      network = network;
-      defaultCurrencies = newCurrencies;
-      currency = newCurrencies[0];
     }
   };
 
@@ -62,15 +76,37 @@
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: any) => currency.network === network
-  );
+  let defaultCurrencies = currencyManager.knownCurrencies;
 
-  let currency = defaultCurrencies[0];
+  const handleInvoiceCurrencyChange = (
+    value: CurrencyTypes.CurrencyDefinition
+  ) => {
+    if (value !== invoiceCurrency) {
+      invoiceCurrency = value;
+      currency = undefined;
 
-  const handleCurrencyChange = (value: string) => {
+      if (value.type !== Types.RequestLogic.CURRENCY.ISO4217) {
+        network = value.network;
+      }
+    }
+  };
+
+  const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
+
+  $: {
+    if (invoiceCurrency) {
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        networks = getCurrencySupportedNetworksForConversion(
+          invoiceCurrency.hash,
+          currencyManager
+        );
+      } else {
+        networks = extractUniqueNetworkNames();
+      }
+    }
+  }
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -94,7 +130,14 @@
 
   $: {
     const basicDetailsFilled =
-      formData.payeeAddress && formData.payerAddress && formData.dueDate;
+      formData.payeeAddress &&
+      formData.payerAddress &&
+      formData.dueDate &&
+      formData.invoiceNumber &&
+      formData.issuedOn &&
+      invoiceCurrency &&
+      currency &&
+      formData.issuedOn;
     const hasItems =
       formData.invoiceItems.length > 0 &&
       formData.invoiceItems.every(isValidItem);
@@ -133,6 +176,7 @@
     const requestCreateParameters = prepareRequestParams({
       address: account?.address,
       formData,
+      invoiceCurrency,
       currency,
       invoiceTotals,
     });
@@ -193,15 +237,21 @@
   <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
+      bind:currency
       config={activeConfig}
       bind:defaultCurrencies
+      bind:network
+      {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}
+      {currencyManager}
+      {invoiceCurrency}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
         config={activeConfig}
+        {invoiceCurrency}
         {currency}
         bind:formData
         bind:canSubmit

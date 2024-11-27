@@ -8,6 +8,7 @@
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
+  import { CurrencyTypes } from "@requestnetwork/types";
 
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
@@ -18,7 +19,8 @@
   export let config: IConfig;
   export let canSubmit = false;
   export let formData: CustomFormData;
-  export let currency = defaultCurrencies[0];
+  export let currency: CurrencyTypes.CurrencyDefinition | undefined;
+  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
   export let submitForm: (e: Event) => Promise<void>;
   export let invoiceTotals = {
     amountWithoutTax: 0,
@@ -46,45 +48,49 @@
 
   const generateDetailParagraphs = (info: any) => {
     const details = [];
-    if (info.firstName) {
-      details.push({ label: "First Name", value: info.firstName });
+
+    if (info.firstName || info.lastName) {
+      details.push({
+        value: `${info.firstName || ""} ${info.lastName || ""}`.trim(),
+      });
     }
+
     if (info.email) {
-      details.push({ label: "Email", value: info.email });
+      details.push({
+        value: info.email,
+        isEmail: true,
+      });
     }
-    if (info.lastName) {
-      details.push({ label: "Last Name", value: info.lastName });
-    }
+
     if (info.businessName) {
-      details.push({ label: "Company Name", value: info.businessName });
+      details.push({
+        value: info.businessName,
+        isCompany: true,
+      });
     }
+
     if (info.taxRegistration) {
       details.push({
-        label: "Tax Identification Number (TIN)",
         value: info.taxRegistration,
       });
     }
-    if (info.address["country-name"]) {
-      details.push({ label: "Country", value: info.address["country-name"] });
-    }
-    if (info.address["street-address"]) {
+
+    const addressParts = [];
+    if (info.address["street-address"])
+      addressParts.push(info.address["street-address"]);
+    if (info.address["locality"]) addressParts.push(info.address["locality"]);
+    if (info.address["region"]) addressParts.push(info.address["region"]);
+    if (info.address["postal-code"])
+      addressParts.push(info.address["postal-code"]);
+    if (info.address["country-name"])
+      addressParts.push(info.address["country-name"]);
+
+    if (addressParts.length > 0) {
       details.push({
-        label: "Street Address",
-        value: info.address["street-address"],
+        value: addressParts.join(", "),
       });
     }
-    if (info.address["postal-code"]) {
-      details.push({
-        label: "Postal Code",
-        value: info.address["postal-code"],
-      });
-    }
-    if (info.address["locality"]) {
-      details.push({ label: "City", value: info.address["locality"] });
-    }
-    if (info.address["region"]) {
-      details.push({ label: "Region", value: info.address["region"] });
-    }
+
     return details;
   };
 
@@ -133,47 +139,52 @@
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>From</span>
-        {formData.payeeAddress}
+        {formData.creatorId}
       </p>
-      <div
-        class={`invoice-details ${sellerInfo.length > 0 && "invoice-details-active"} `}
-      >
-        {#each sellerInfo as paragraph}
-          <div class="invoice-details-info">
-            <span>{paragraph.label}</span>
-            {paragraph.value}
-          </div>
+      <div class={`invoice-info`}>
+        {#each sellerInfo as { value, isEmail, isCompany }}
+          <p>
+            {#if isEmail}
+              <a href="mailto:{value}">{value}</a>
+            {:else}
+              <span class:company={isCompany}>{value}</span>
+            {/if}
+          </p>
         {/each}
       </div>
     </div>
+    <div class="invoice-section-divider"></div>
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>Billed to</span>
         {formData.payerAddress}
       </p>
-      <div
-        class={`invoice-details ${buyerInfo.length > 0 && "invoice-details-active"} `}
-      >
-        {#each buyerInfo as paragraph}
-          <div class="invoice-details-info">
-            <span>{paragraph.label}</span>
-            {paragraph.value}
-          </div>
+      <div class={`invoice-info`}>
+        {#each buyerInfo as { value, isEmail, isCompany }}
+          <p>
+            {#if isEmail}
+              <a href="mailto:{value}">{value}</a>
+            {:else}
+              <span class:company={isCompany}>{value}</span>
+            {/if}
+          </p>
         {/each}
       </div>
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency.network[0].toUpperCase() + currency.network.slice(1)}
+      {currency?.network
+        ? currency.network.charAt(0).toUpperCase() +
+          currency.network.slice(1).toLowerCase()
+        : ""}
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {currency.symbol}
-      ({currency.network})
+      {invoiceCurrency ? invoiceCurrency.symbol : ""}
     </p>
     <p class="invoice-section-title">
-      <span>Invoice Type</span>
-      Regular Invoice
+      <span>Settlement Currency</span>
+      {currency ? `${currency.symbol} (${currency.network})` : ""}
     </p>
     <div class="invoice-table-wrapper">
       <table class="invoice-table">
@@ -221,7 +232,7 @@
       >
         <span>Due: </span>
         <span
-          >{currency.symbol}
+          >{invoiceCurrency ? invoiceCurrency.symbol : ""}
           {" "}
           {invoiceTotals.totalAmount.toFixed(2)}</span
         >
@@ -457,7 +468,7 @@
   }
 
   .invoice-note-content {
-    width: 620px;
+    max-width: 620px;
     word-break: break-all;
   }
 
@@ -485,5 +496,38 @@
   :global(.invoice-label-remove svg, .invoice-label-remove path) {
     fill: white;
     color: white;
+  }
+
+  .invoice-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .invoice-info p {
+    display: flex;
+    gap: 8px;
+  }
+
+  .invoice-info span {
+    color: #6e7480;
+  }
+
+  .invoice-info .company {
+    font-weight: 600 !important;
+  }
+
+  .invoice-info a {
+    color: #6e7480;
+  }
+
+  .invoice-info a:hover {
+    text-decoration: underline;
+  }
+
+  .invoice-section-divider {
+    width: 100%;
+    height: 1px;
+    background-color: var(--mainColor);
   }
 </style>

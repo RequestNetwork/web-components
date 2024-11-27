@@ -8,7 +8,7 @@
 </script>
 
 <div
-  class={`drawer-overlay ${active ? "active" : "hidden"}`}
+  class={`drawer-overlay ${active ? "active-overlay" : "hidden"}`}
   on:click|stopPropagation={onClose}
 ></div>
 <div bind:this={drawerElement} class={`drawer ${active ? "active" : "hidden"}`}>
@@ -28,7 +28,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: transparent;
     z-index: 200;
   }
 
@@ -45,18 +45,22 @@
   }
   .drawer {
     z-index: 1000;
-    display: flex;
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
     height: fit-content;
-    display: flex;
     width: 800px;
-    transition: all 300ms;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(0);
+    padding-right: 20px;
   }
 
   @media only screen and (max-width: 880px) {
     .drawer {
+      position: absolute;
+      left: 50%;
       right: unset;
       width: 600px;
     }
@@ -100,7 +104,17 @@
   }
 
   .active {
-    transform: translateX(0);
+    transform: translate(-50%, -50%);
+  }
+
+  @media only screen and (max-width: 880px) {
+    .active {
+      transform: translate(-20%, -50%);
+    }
+  }
+
+  .active-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .hidden {

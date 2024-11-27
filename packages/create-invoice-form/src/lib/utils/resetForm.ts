@@ -16,10 +16,10 @@ export function getInitialFormData() {
       {
         name: "",
         quantity: 1,
-        unitPrice: "",
-        discount: "",
+        unitPrice: 0,
+        discount: 0,
         tax: {
-          amount: "",
+          amount: 0,
           type: "percentage" as "fixed" | "percentage",
         },
         currency: "",

@@ -3,13 +3,16 @@
   import type { GetAccountReturnType } from "@wagmi/core";
   import {
     approveErc20,
+    approveErc20ForProxyConversion,
     hasErc20Approval,
+    hasErc20ApprovalForProxyConversion,
     payRequest,
   } from "@requestnetwork/payment-processor";
   import {
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   // Components
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
@@ -20,12 +23,24 @@
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
+  import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
   import { getEthersSigner } from "../../utils";
+
+  interface EntityInfo {
+    value: string;
+    isCompany?: boolean;
+    isEmail?: boolean;
+  }
+
+  interface BuyerInfo extends EntityInfo {}
+
+  interface SellerInfo extends EntityInfo {}
 
   export let config;
   export let account: GetAccountReturnType;
@@ -35,9 +50,10 @@
   export let isRequestPayed: boolean;
   export let wagmiConfig: any;
 
-  let network = request?.currencyInfo?.network || "mainnet";
-  // FIXME: Use a non deprecated function
-  let currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
+  let network: string | undefined = request?.currencyInfo?.network || "mainnet";
+  let currency: CurrencyTypes.CurrencyDefinition | undefined =
+    getCurrencyFromManager(request.currencyInfo, currencyManager);
+  let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
   let statuses: any = [];
   let isPaid = false;
   let loading = false;
@@ -47,26 +63,46 @@
   let address = account.address;
   let firstItems: any;
   let otherItems: any;
-  let sellerInfo: { label: string; value: string }[] = [];
-  let buyerInfo: { label: string; value: string }[] = [];
+  let sellerInfo: SellerInfo[] = [];
+  let buyerInfo: BuyerInfo[] = [];
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
-  let hexStringChain = "0x" + account.chainId.toString(16);
+  let hexStringChain = "0x" + account?.chainId?.toString(16);
   let correctChain =
     hexStringChain === String(getNetworkIdFromNetworkName(network));
+  let paymentNetworkExtension:
+    | Types.Extension.IPaymentNetworkState<any>
+    | undefined;
+
+  let status = checkStatus(requestData || request);
 
   const generateDetailParagraphs = (info: any) => {
+    const fullName = [info?.firstName, info?.lastName]
+      .filter(Boolean)
+      .join(" ");
+    const fullAddress = [
+      info?.address?.["street-address"],
+      info?.address?.locality,
+      info?.address?.region,
+      info?.address?.["postal-code"],
+      info?.address?.["country-name"],
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     return [
-      { label: "First Name", value: info?.firstName },
-      { label: "Last Name", value: info?.lastName },
-      { label: "Company Name", value: info?.businessName },
-      { label: "Tax Registration", value: info?.taxRegistration },
-      { label: "Country", value: info?.address?.["country-name"] },
-      { label: "City", value: info?.address?.locality },
-      { label: "Region", value: info?.address?.region },
-      { label: "Postal Code", value: info?.address?.["postal-code"] },
-      { label: "Street Address", value: info?.address?.["street-address"] },
-      { label: "Email", value: info?.email },
+      ...(fullName ? [{ value: fullName }] : []),
+      ...(info?.businessName
+        ? [
+            {
+              value: info?.businessName,
+              isCompany: true,
+            },
+          ]
+        : []),
+      ...(info?.taxRegistration ? [{ value: info?.taxRegistration }] : []),
+      ...(fullAddress ? [{ value: fullAddress }] : []),
+      ...(info?.email ? [{ value: info?.email, isEmail: true }] : []),
     ].filter((detail) => detail.value);
   };
 
@@ -98,7 +134,6 @@
   $: {
     account = account;
     network = request?.currencyInfo?.network || "mainnet";
-    // FIXME: Use a non deprecated function
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
   }
 
@@ -113,20 +148,56 @@
       signer = await getEthersSigner(wagmiConfig);
 
       requestData = singleRequest?.getData();
+      paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
-      if (requestData.currencyInfo.type === Types.RequestLogic.CURRENCY.ERC20) {
-        approved = await checkApproval(requestData, signer);
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        paymentCurrencies =
+          paymentNetworkExtension?.values?.acceptedTokens?.map((token: any) =>
+            currencyManager.fromAddress(
+              token,
+              paymentNetworkExtension?.values?.network
+            )
+          );
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        paymentCurrencies = [
+          currencyManager.getNativeCurrency(
+            Types.RequestLogic.CURRENCY.ETH,
+            paymentNetworkExtension?.values?.network
+          ),
+        ];
+      } else if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+      ) {
+        paymentCurrencies = [currency];
+      } else {
+        throw new Error("Unsupported payment network");
+      }
+
+      network = paymentCurrencies[0]?.network || "mainnet";
+
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, paymentCurrencies, signer);
       } else {
         approved = true;
       }
-      isPaid = requestData?.balance?.balance! >= requestData?.expectedAmount;
-      loading = false;
+
+      status = checkStatus(requestData || request);
     } catch (err: any) {
-      loading = false;
+      console.error("Error while checking invoice: ", err);
       if (String(err).includes("Unsupported payment")) {
         unsupportedNetwork = true;
-        return;
       }
+    } finally {
+      loading = false;
     }
   };
 
@@ -138,8 +209,33 @@
       );
 
       statuses = [...statuses, "Waiting for payment"];
-      const paymentTx = await payRequest(requestData, signer);
-      await paymentTx.wait(2);
+
+      let paymentSettings = undefined;
+      if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        const { conversion } = await getConversionPaymentValues({
+          baseAmount: requestData?.expectedAmount,
+          denominationCurrency: currency!,
+          selectedPaymentCurrency: paymentCurrencies[0]!,
+          currencyManager,
+          provider: signer,
+          fromAddress: address,
+        });
+        paymentSettings = conversion;
+      }
+
+      const paymentTx = await payRequest(
+        requestData,
+        signer,
+        undefined,
+        undefined,
+        paymentSettings
+      );
+      await paymentTx.wait();
 
       statuses = [...statuses, "Payment detected"];
       while (requestData.balance?.balance! < requestData.expectedAmount) {
@@ -159,25 +255,62 @@
     }
   };
 
-  const checkApproval = async (requestData: any, signer: any) => {
-    return await hasErc20Approval(requestData!, address!, signer);
+  const checkApproval = async (
+    requestData: any,
+    paymentCurrencies: any[],
+    signer: any
+  ) => {
+    const approvalCheckers: { [key: string]: () => Promise<boolean> } = {
+      [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: () =>
+        hasErc20Approval(requestData!, address!, signer),
+      [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: () =>
+        hasErc20ApprovalForProxyConversion(
+          requestData!,
+          address!,
+          paymentCurrencies[0]?.address,
+          signer,
+          requestData.expectedAmount
+        ),
+    };
+
+    return (
+      (paymentNetworkExtension?.id &&
+        (await approvalCheckers[paymentNetworkExtension.id]?.())) ||
+      false
+    );
   };
 
   async function approve() {
     try {
       loading = true;
 
+      const approvers: { [key: string]: () => Promise<void> } = {
+        [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
+          async () => {
+            const approvalTx = await approveErc20(requestData!, signer);
+            await approvalTx.wait();
+            approved = true;
+          },
+        [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: async () => {
+          const approvalTx = await approveErc20ForProxyConversion(
+            requestData!,
+            paymentCurrencies[0]?.address,
+            signer
+          );
+          await approvalTx.wait();
+          approved = true;
+        },
+      };
+
       if (
-        getPaymentNetworkExtension(requestData!)?.id ===
-        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+        paymentNetworkExtension?.id &&
+        approvers[paymentNetworkExtension.id]
       ) {
-        const approvalTx = await approveErc20(requestData!, signer);
-        await approvalTx.wait(2);
-        approved = true;
+        await approvers[paymentNetworkExtension.id]();
       }
-      loading = false;
     } catch (err) {
-      console.error("Something went wrong while approving ERC20 : ", err);
+      console.error("Something went wrong while approving ERC20: ", err);
+    } finally {
       loading = false;
     }
   }
@@ -239,13 +372,18 @@
   <h2 class="invoice-number">
     Invoice #{request?.contentData?.invoiceNumber || "-"}
     <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
-      {isPaid ? "Paid" : "Created"}
+      {status}
     </p>
     <Tooltip text="Download PDF">
       <Download
         onClick={async () => {
           try {
-            await exportToPDF(request, currency, config.logo);
+            await exportToPDF(
+              request,
+              currency,
+              paymentCurrencies,
+              config.logo
+            );
           } catch (error) {
             toast.error(`Failed to export PDF`, {
               description: `${error}`,
@@ -265,11 +403,16 @@
     <p>{request?.payee?.value || "-"}</p>
   </div>
   {#if sellerInfo.length > 0}
-    <div class={`invoice-info bg-zinc-light`}>
-      {#each sellerInfo as { label, value }}
+    <div class={`invoice-info`}>
+      {#each sellerInfo as { value, isCompany, isEmail }}
         <p>
-          <span>{label || "-"}:</span>
-          {value || "-"}
+          {#if isEmail}
+            <a href="mailto:{value}" class="email-link">{value}</a>
+          {:else if isCompany}
+            <span class="company-name">{value}</span>
+          {:else}
+            {value}
+          {/if}
         </p>
       {/each}
     </div>
@@ -280,11 +423,16 @@
     <p>{request?.payer?.value || "-"}</p>
   </div>
   {#if buyerInfo.length > 0}
-    <div class={`invoice-info bg-zinc-light`}>
-      {#each buyerInfo as { label, value }}
+    <div class={`invoice-info`}>
+      {#each buyerInfo as { value, isCompany, isEmail }}
         <p>
-          <span>{label || "-"}:</span>
-          {value || "-"}
+          {#if isEmail}
+            <a href="mailto:{value}" class="email-link">{value}</a>
+          {:else if isCompany}
+            <span class="company-name">{value}</span>
+          {:else}
+            {value}
+          {/if}
         </p>
       {/each}
     </div>
@@ -292,11 +440,20 @@
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
-    {currency?.network || "-"}
+    {paymentCurrencies && paymentCurrencies.length > 0
+      ? paymentCurrencies[0]?.network || "-"
+      : ""}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
     {currency?.symbol || "-"}
+  </h3>
+
+  <h3 class="invoice-info-payment">
+    <span style="font-weight: 500;">Settlement Currency:</span>
+    {paymentCurrencies && paymentCurrencies.length > 0
+      ? paymentCurrencies[0]?.symbol || "-"
+      : ""}
   </h3>
 
   {#if request?.contentData?.invoiceItems}
@@ -440,7 +597,7 @@
           type="button"
           text="Switch Network"
           padding="px-[12px] py-[6px]"
-          onClick={() => switchNetworkIfNeeded(network)}
+          onClick={() => switchNetworkIfNeeded(network || "mainnet")}
         />
       {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
         <Button
@@ -527,10 +684,11 @@
 
   .invoice-info {
     display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    padding: 0.75rem;
+    flex-direction: column;
+    gap: 6px;
     width: fit-content;
+    color: #6e7480;
+    font-size: 16px;
   }
 
   .invoice-info p {
@@ -741,5 +899,17 @@
 
   .bg-zinc-light {
     background-color: #f4f4f5;
+  }
+
+  .company-name {
+    font-weight: 600 !important;
+  }
+
+  .email-link {
+    color: #6e7480;
+  }
+
+  .email-link:hover {
+    text-decoration: underline;
   }
 </style>
