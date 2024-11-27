@@ -22,6 +22,7 @@
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
+  import InfoCircle from "@requestnetwork/shared-icons/info-circle.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
@@ -55,7 +56,6 @@
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
     getCurrencyFromManager(request.currencyInfo, currencyManager);
   let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
-  let statuses: any = [];
   let isPaid = false;
   let loading = false;
   let requestData: any = null;
@@ -74,6 +74,23 @@
   let paymentNetworkExtension:
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
+  let statuses: any[] = [
+    {
+      name: "SIGN_TRANSACTION",
+      message: "Sign Transaction",
+      done: false,
+    },
+    {
+      name: "PAYMENT_DETECTED",
+      message: "Payment Detected",
+      done: false,
+    },
+    {
+      name: "CORRECT_NETWORK",
+      message: "Correct Network",
+      done: false,
+    },
+  ];
 
   let status = checkStatus(requestData || request);
 
@@ -128,6 +145,7 @@
 
   onMount(() => {
     checkInvoice();
+    updateStatuses();
   });
 
   $: request, checkInvoice();
@@ -198,7 +216,7 @@
         unsupportedNetwork = true;
       }
     } finally {
-      loading = false;
+      // loading = false;
     }
   };
 
@@ -209,7 +227,7 @@
         requestData?.requestId!
       );
 
-      statuses = [...statuses, "Waiting for payment"];
+      // statuses = [...statuses, "SIGN_TRANSACTION"];
 
       let paymentSettings = undefined;
       if (
@@ -238,13 +256,14 @@
       );
       await paymentTx.wait();
 
-      statuses = [...statuses, "Payment detected"];
+      // statuses = [...statuses, "PAYMENT_DETECTED"];
+
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      statuses = [...statuses, "Payment confirmed"];
+      // statuses = [...statuses, "CORRECT_NETWORK"];
       isPaid = true;
       loading = false;
       statuses = [];
@@ -356,6 +375,28 @@
       ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
       : value;
   }
+
+  const currentStatusIndex = statuses.length - 1;
+
+  const getStatusColor = (index: number) => {
+    if (statuses[index].done) return "green";
+    return "blue";
+  };
+
+  const updateStatuses = async () => {
+    statuses[0].done = true;
+    statuses = statuses;
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    statuses[1].done = true;
+    statuses = statuses;
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    statuses[2].done = true;
+    statuses = statuses;
+  };
 </script>
 
 <div
@@ -575,23 +616,30 @@
   <div class="status-container">
     <div class="statuses">
       {#if statuses.length > 0 && loading}
-        {#each statuses as status, index (index)}
-          <div class="status">
-            {status || "-"}
-            {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
-              <i>
-                <Check />
-              </i>
-            {/if}
-          </div>
-        {/each}
+        <div class="status-wrapper">
+          <ol class="status-list">
+            {#each statuses as status, index}
+              <li class="status-item">
+                <span class={`status-icon-wrapper ${getStatusColor(index)}`}>
+                  {#if status.done}
+                    <Check />
+                  {:else}
+                    <InfoCircle />
+                  {/if}
+                </span>
+                <span class="status-text">{status.message}</span>
+                {#if index < 2}
+                  <div class={`progress-line ${getStatusColor(index)}`}></div>
+                {/if}
+              </li>
+            {/each}
+          </ol>
+        </div>
       {/if}
     </div>
 
     <div class="invoice-view-actions">
-      {#if loading}
-        <div class="loading">Loading...</div>
-      {:else if !correctChain && !isPayee}
+      {#if !correctChain && !isPayee}
         <Button
           type="button"
           text="Switch Network"
@@ -800,7 +848,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: 1rem;
   }
 
@@ -837,17 +885,6 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
-  }
-
-  .loading {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-align: center;
-    border-radius: 0.5rem;
-    background-color: var(--mainColor);
-    color: white;
-    animation: pulse 1s infinite;
   }
 
   .unsupported-network {
@@ -895,5 +932,64 @@
 
   .email-link:hover {
     text-decoration: underline;
+  }
+
+  .status-wrapper {
+    margin-bottom: 32px;
+  }
+
+  .status-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-align: center; /* Center text under icons */
+    width: 150px;
+  }
+
+  .progress-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 6px;
+    background-color: #759aff; /* Default line color */
+    z-index: 0;
+    transform: translateX(-50%);
+    width: 180px;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 29px;
+    height: 29px;
+    background-color: #dbeafe;
+    border-radius: 9999px;
+    padding: 4px;
+    box-shadow: 0 0 0 8px white;
+    position: relative;
+    z-index: 20;
+  }
+
+  .status-text {
+    font-size: 14px; /* Adjust font size */
+    color: #272d41; /* Text color */
+    position: absolute;
+    top: -30px;
+    left: -25px;
+  }
+
+  .checkmark {
+    margin-left: 5px; /* Space between icon and checkmark */
+    color: #58e1a5; /* Checkmark color */
   }
 </style>
