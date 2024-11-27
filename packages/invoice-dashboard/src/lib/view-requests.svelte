@@ -35,7 +35,6 @@
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
