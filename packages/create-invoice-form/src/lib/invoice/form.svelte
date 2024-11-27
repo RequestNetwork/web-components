@@ -28,7 +28,6 @@
   export let formData: CustomFormData;
   export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
-
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
@@ -116,21 +115,6 @@
         (formData as any)[id] = value;
       }
     }
-  };
-
-  const filterSettlementCurrencies = (
-    currency: CurrencyTypes.CurrencyDefinition
-  ) => {
-    return invoiceCurrency
-      ? invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-        ? currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
-          currencyManager?.getConversionPath(
-            invoiceCurrency,
-            currency,
-            currency.network
-          )?.length > 0
-        : invoiceCurrency.hash === currency.hash
-      : false;
   };
 
   const addInvoiceItem = () => {
@@ -399,7 +383,20 @@
             </div>
           </Accordion>
         </div>
-
+        <Dropdown
+          {config}
+          placeholder="Payment chain"
+          selectedValue={network}
+          options={networks
+            .filter((networkItem) => networkItem)
+            .map((networkItem) => {
+              return {
+                value: networkItem,
+                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+              };
+            })}
+          onchange={handleNetworkChange}
+        />
         <Dropdown
           {config}
           selectedValue={invoiceCurrency
