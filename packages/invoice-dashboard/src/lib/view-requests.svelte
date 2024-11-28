@@ -7,6 +7,7 @@
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
+  import Switch from "@requestnetwork/shared-components/switch.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
@@ -49,6 +50,10 @@
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
+  export let isDecryptionSwitchedOn: boolean;
+  export let switchOnDecryption: (option: boolean) => void | undefined;
+
+  let sliderValue = isDecryptionSwitchedOn ? "on" : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -383,6 +388,18 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
+
+  
+  $: sliderValue, getRequests(); 
+
+  $: {
+    if(sliderValue === 'on') {
+      switchOnDecryption(true);
+    } else {
+      switchOnDecryption(false);
+    }
+  }
+
 </script>
 
 <div
@@ -411,17 +428,23 @@
       </li>
     </ul>
   </div>
-  <div style="display: flex; flex-direction: column; gap: 10px;">
+  <div style="display: flex; flex-direction: column;">
     <div class="search-wrapper">
-      <Input
-        placeholder="Search..."
-        width="w-[300px]"
-        handleInput={handleSearchChange}
-      >
-        <div slot="icon">
-          <Search />
+      <div class="search-wrapper" style="gap: 10px;">
+        <Input
+          placeholder="Search..."
+          width="w-[300px]"
+          handleInput={handleSearchChange}
+        >
+          <div slot="icon">
+            <Search />
+          </div>
+        </Input>
+        <div class="width: fit-content;">
+          <Switch bind:value={sliderValue} label="Show encrypted requests" fontSize={14} design="slider" />
         </div>
-      </Input>
+      </div>
+      
       <Dropdown
         config={activeConfig}
         type="checkbox"
@@ -578,7 +601,7 @@
           </tr>
         </thead>
         <tbody>
-          {#if processedRequests.length > 0}
+          {#if !loading && processedRequests.length > 0}
             {#each processedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
@@ -686,7 +709,9 @@
               </tr>
             {/each}
           {:else}
-            <DashboardSkeleton />
+            {#if loading}
+              <DashboardSkeleton />
+            {/if}
           {/if}
         </tbody>
       </table>
