@@ -44,7 +44,7 @@
       <input
         {id}
         type="checkbox"
-        checked={checked}
+        bind:checked={checked}
         {disabled}
         class={`checkbox-input ${className} ${error ? "input-error" : ""}`}
         on:click={handleCheckbox}
