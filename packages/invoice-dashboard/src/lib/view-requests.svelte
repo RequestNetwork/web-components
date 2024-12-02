@@ -10,6 +10,7 @@
   import Switch from "@requestnetwork/shared-components/switch.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   import TxType from "@requestnetwork/shared-components/tx-type.svelte";
@@ -33,7 +34,6 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
@@ -670,7 +670,7 @@
                     type={signer === request.payer?.value ? "OUT" : "IN"}
                   />
                 </td>
-                <td> {checkStatus(request)}</td>
+                <td><StatusLabel status={checkStatus(request)} /></td>
                 <td>
                   {#if request.paymentCurrencies.length > 0}
                     <Network network={request.paymentCurrencies[0]?.network} />

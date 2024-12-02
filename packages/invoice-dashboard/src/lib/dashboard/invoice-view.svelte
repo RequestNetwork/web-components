@@ -15,6 +15,7 @@
   import { CurrencyTypes } from "@requestnetwork/types";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   // Components
+  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
@@ -371,9 +372,7 @@
   </div>
   <h2 class="invoice-number">
     Invoice #{request?.contentData?.invoiceNumber || "-"}
-    <p class={`invoice-status ${isPaid ? "bg-green" : "bg-zinc"}`}>
-      {status}
-    </p>
+    <StatusLabel status={checkStatus(request)} />
     <Tooltip text="Download PDF">
       <Download
         onClick={async () => {
@@ -648,21 +647,6 @@
   .invoice-number svg {
     width: 13px;
     height: 13px;
-  }
-
-  .invoice-status {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1;
-    text-align: center;
-    border-radius: 8px;
-    color: #ffffff;
-    width: fit-content;
-    margin: 0;
   }
 
   .invoice-address {
