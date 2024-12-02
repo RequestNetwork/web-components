@@ -51,7 +51,7 @@
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
   export let isDecryptionEnabled: boolean;
-  export let switchOnDecryption: (option: boolean) => void | undefined;
+  export let enableDecryption: (option: boolean) => void | undefined;
 
   let sliderValueForDecryption = isDecryptionEnabled ? "on" : "off";
 
@@ -394,9 +394,9 @@
 
   $: {
     if(sliderValueForDecryption === 'on') {
-      switchOnDecryption(true);
+      enableDecryption(true);
     } else {
-      switchOnDecryption(false);
+      enableDecryption(false);
     }
   }
 
