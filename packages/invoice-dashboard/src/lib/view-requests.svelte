@@ -50,10 +50,10 @@
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
-  export let isDecryptionSwitchedOn: boolean;
+  export let isDecryptionEnabled: boolean;
   export let switchOnDecryption: (option: boolean) => void | undefined;
 
-  let sliderValue = isDecryptionSwitchedOn ? "on" : "off";
+  let sliderValueForDecryption = isDecryptionEnabled ? "on" : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -390,10 +390,10 @@
   };
 
   
-  $: sliderValue, getRequests(); 
+  $: sliderValueForDecryption, getRequests(); 
 
   $: {
-    if(sliderValue === 'on') {
+    if(sliderValueForDecryption === 'on') {
       switchOnDecryption(true);
     } else {
       switchOnDecryption(false);
@@ -441,7 +441,7 @@
           </div>
         </Input>
         <div class="width: fit-content;">
-          <Switch bind:value={sliderValue} label="Show encrypted requests" fontSize={14} design="slider" />
+          <Switch bind:value={sliderValueForDecryption} label="Show encrypted requests" fontSize={14} design="slider" />
         </div>
       </div>
       
