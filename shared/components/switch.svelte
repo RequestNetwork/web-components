@@ -16,14 +16,9 @@
 
   const uniqueID = Date.now()
 
-  function handleClick(event){
-      const target = event.target
-
-      const state = target.getAttribute('aria-checked')
-
-      checked = state === 'true' ? false : true
-
-      value = checked === true ? 'on' : 'off'
+  function handleClick() {
+    checked = !checked;
+    value = checked ? 'on' : 'off';
   }
 
   const slugify = (str = "") =>
