@@ -6,7 +6,7 @@
 
 
   export let label;
-  export let design = 'inner label'
+  export let design = 'inner'
   export let options = [];
   export let fontSize = 16;
   export let value = 'off';
@@ -14,7 +14,7 @@
   let checked = value === 'on' ? true : false;
 
 
-  const uniqueID = Math.floor(Math.random() * 100)
+  const uniqueID = Date.now()
 
   function handleClick(event){
       const target = event.target
