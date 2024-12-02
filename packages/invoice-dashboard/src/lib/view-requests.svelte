@@ -45,6 +45,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
+    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
