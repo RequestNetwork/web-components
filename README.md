@@ -73,5 +73,21 @@ Run a command in the context of specific workspaces.
 npm run test --workspace=add-stakeholder --workspace=other
 ```
 
+## Release
+
+Run changeset command to create a changeset file.
+
+```bash
+npx changeset
+```
+
+Run changeset version command to bump the version of the packages that have changesets.
+
+```bash
+npx changeset version
+```
+
+Push the changes to the remote repository. Once the changes are merged, the new versions will be deployed automatically.
+
 For more info about workinng with NPM workspaces see:
 https://docs.npmjs.com/cli/v8/using-npm/workspaces
