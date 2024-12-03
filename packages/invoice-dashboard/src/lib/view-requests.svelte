@@ -717,6 +717,7 @@
         </tbody>
       </table>
       <Drawer
+        config={activeConfig}
         active={activeRequest !== undefined}
         onClose={handleRemoveSelectedRequest}
       >

@@ -1,9 +1,10 @@
 <script lang="ts">
+  import type { IConfig } from "@requestnetwork/shared-types";
   import Close from "@requestnetwork/shared-icons/close.svelte";
 
   export let active = false;
   export let onClose: () => void;
-
+  export let config: IConfig;
   let drawerElement: HTMLElement;
 </script>
 
@@ -11,7 +12,12 @@
   class={`drawer-overlay ${active ? "active-overlay" : "hidden"}`}
   on:click|stopPropagation={onClose}
 ></div>
-<div bind:this={drawerElement} class={`drawer ${active ? "active" : "hidden"}`}>
+<div
+  bind:this={drawerElement}
+  class={`drawer ${active ? "active" : "hidden"}`}
+  style="--mainColor: {config.colors.main}; --secondaryColor: {config.colors
+    .secondary};"
+>
   <div class="innerDrawer">
     <button class="close" on:click={onClose} aria-label="Close drawer">
       <Close />
@@ -54,7 +60,6 @@
     overflow-y: auto;
     overflow-x: hidden;
     transform: translateX(0);
-    padding-right: 20px;
   }
 
   @media only screen and (max-width: 880px) {
@@ -68,7 +73,6 @@
 
   .innerDrawer {
     position: relative;
-    width: 100%;
     height: 100%;
     padding: 1rem;
     overflow: hidden;
@@ -78,6 +82,7 @@
     box-shadow:
       0 10px 15px -3px rgb(0 0 0 / 0.1),
       0 4px 6px -4px rgb(0 0 0 / 0.1);
+    border-top: 6px solid var(--mainColor);
   }
 
   .close {
@@ -121,5 +126,22 @@
     display: none;
     visibility: hidden;
     transform: translateX(100%);
+  }
+
+  .drawer::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .drawer::-webkit-scrollbar-track {
+    padding-top: 20px;
+    background-color: white;
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+  }
+
+  .drawer::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    padding-top: 20px;
+    background-color: #888;
   }
 </style>
