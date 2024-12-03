@@ -53,5 +53,6 @@ export function getInitialFormData() {
       taxRegistration: "",
       email: "",
     },
+    isEncrypted: false,
   };
 }

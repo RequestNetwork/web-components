@@ -7,6 +7,7 @@
   // Components
   import Copy from "@requestnetwork/shared-components/copy.svelte";
   import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
+  import Switch from "@requestnetwork/shared-components/switch.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
   import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
@@ -35,7 +36,6 @@
   // Utils
   import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
   import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
@@ -45,11 +45,16 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
+    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
+  export let isDecryptionEnabled: boolean;
+  export let enableDecryption: (option: boolean) => void | undefined;
+
+  let sliderValueForDecryption = isDecryptionEnabled ? "on" : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -384,6 +389,18 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
+
+  
+  $: sliderValueForDecryption, getRequests(); 
+
+  $: {
+    if(sliderValueForDecryption === 'on') {
+      enableDecryption(true);
+    } else {
+      enableDecryption(false);
+    }
+  }
+
 </script>
 
 <div
@@ -412,17 +429,23 @@
       </li>
     </ul>
   </div>
-  <div style="display: flex; flex-direction: column; gap: 10px;">
+  <div style="display: flex; flex-direction: column;">
     <div class="search-wrapper">
-      <Input
-        placeholder="Search..."
-        width="w-[300px]"
-        handleInput={handleSearchChange}
-      >
-        <div slot="icon">
-          <Search />
+      <div class="search-wrapper" style="gap: 10px;">
+        <Input
+          placeholder="Search..."
+          width="w-[300px]"
+          handleInput={handleSearchChange}
+        >
+          <div slot="icon">
+            <Search />
+          </div>
+        </Input>
+        <div class="width: fit-content;">
+          <Switch bind:value={sliderValueForDecryption} label="Show encrypted requests" fontSize={14} design="slider" />
         </div>
-      </Input>
+      </div>
+      
       <Dropdown
         config={activeConfig}
         type="checkbox"
@@ -579,7 +602,7 @@
           </tr>
         </thead>
         <tbody>
-          {#if processedRequests.length > 0}
+          {#if !loading && processedRequests.length > 0}
             {#each processedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
@@ -687,7 +710,9 @@
               </tr>
             {/each}
           {:else}
-            <DashboardSkeleton />
+            {#if loading}
+              <DashboardSkeleton />
+            {/if}
           {/if}
         </tbody>
       </table>
