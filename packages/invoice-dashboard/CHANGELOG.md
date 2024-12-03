@@ -1,7 +1,7 @@
 # @requestnetwork/invoice-dashboard
 
-## 0.12.0
+## 0.11.2
 
-### Minor Changes
+### Patch Changes
 
 - Lit Protocol Encryption Integration

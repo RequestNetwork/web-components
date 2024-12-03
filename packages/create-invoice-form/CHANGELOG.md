@@ -1,7 +1,7 @@
 # @requestnetwork/create-invoice-form
 
-## 0.12.0
+## 0.11.4
 
-### Minor Changes
+### Patch Changes
 
 - Lit Protocol Encryption Integration
