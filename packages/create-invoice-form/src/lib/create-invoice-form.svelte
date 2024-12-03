@@ -186,11 +186,11 @@
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
         let request;
         if(formData.isEncrypted) {
-          const payeeEncryptionPublicKey = {
+          const payeeEncryptionParams = {
             key: requestCreateParameters.requestInfo.payee?.value!,
             method: EncryptionTypes.METHOD.KMS,
           };
-          const payerEncryptionPublicKey = {
+          const payerEncryptionParams = {
             key: requestCreateParameters.requestInfo.payer?.value!,
             method: EncryptionTypes.METHOD.KMS,
           };
