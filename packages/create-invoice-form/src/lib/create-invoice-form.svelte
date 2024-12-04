@@ -202,7 +202,7 @@
               paymentNetwork: requestCreateParameters.paymentNetwork,
               contentData: requestCreateParameters.contentData,
             },
-            [payeeEncryptionPublicKey, payerEncryptionPublicKey],
+            [payeeEncryptionParams, payerEncryptionParams],
           );
         } else {
           request = await requestNetwork.createRequest({
