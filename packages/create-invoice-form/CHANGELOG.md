@@ -1,5 +1,11 @@
 # @requestnetwork/create-invoice-form
 
+## 0.11.8
+
+### Patch Changes
+
+- Upgrade @requestnetwork/currency to 0.21.0
+
 ## 0.11.7
 
 ### Patch Changes
