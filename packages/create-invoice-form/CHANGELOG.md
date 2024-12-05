@@ -1,5 +1,11 @@
 # @requestnetwork/create-invoice-form
 
+## 0.11.7
+
+### Patch Changes
+
+- Upgrade SDK to version 0.52.0
+
 ## 0.11.6
 
 ### Patch Changes
