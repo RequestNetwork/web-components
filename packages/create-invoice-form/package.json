@@ -33,8 +33,8 @@
     "!dist/**/*.spec.*"
   ],
   "dependencies": {
-    "@requestnetwork/data-format": "0.19.2",
-    "@requestnetwork/request-client.js": "0.51.0",
+    "@requestnetwork/data-format": "0.19.3",
+    "@requestnetwork/request-client.js": "0.52.0",
     "@wagmi/core": "^2.15.2",
     "validator": "^13.12.0",
     "viem": "^2.21.53"
