@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.5
+
+### Patch Changes
+
+- Upgrade @requestnetwork/currency to 0.21.0
+
 ## 0.11.4
 
 ### Patch Changes
