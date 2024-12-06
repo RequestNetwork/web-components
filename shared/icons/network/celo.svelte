@@ -13,21 +13,21 @@
   height="24"
 >
   <style type="text/css">
-    .st0 {
+    .st0c {
       fill-rule: evenodd;
       clip-rule: evenodd;
       fill: #fcff52;
     }
-    .st1 {
+    .st1c {
       fill-rule: evenodd;
       clip-rule: evenodd;
     }
   </style>
   <g id="Layer_x0020_1">
     <g id="_1942792544736">
-      <circle class="st0" cx="1250" cy="1250" r="1250" />
+      <circle class="st0c" cx="1250" cy="1250" r="1250" />
       <path
-        class="st1"
+        class="st1c"
         d="M1949.3,546.2H550.7v1407.7h1398.7v-491.4h-232.1c-80,179.3-260.1,304.1-466.2,304.1    c-284.1,0-514.2-233.6-514.2-517.5c0-284,230.1-515.6,514.2-515.6c210.1,0,390.2,128.9,470.2,312.1h228.1V546.2z"
       />
     </g>
