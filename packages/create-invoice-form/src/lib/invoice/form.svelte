@@ -786,7 +786,7 @@
   }
 
   .invoice-form-table-body-quantity {
-    width: 80px !important;
+    width: 180px !important;
   }
 
   .invoice-form-table-body-amount {
