@@ -67,37 +67,17 @@ import { formattedCurrencyConversionPairs } from './currencyConversionPairs'
 export function initializeCurrencyManager(
   customCurrencies: CurrencyTypes.CurrencyInput[] = []
 ): CurrencyManager {
-  let currenciesToUse: any[];
+  // If customCurrencies is provided, use only those
+  if (customCurrencies?.length > 0) {
+    return new CurrencyManager(customCurrencies, {}, formattedCurrencyConversionPairs);
+  }
 
+  // Otherwise, use default currencies
   const defaultCurrencies = CurrencyManager.getDefaultList().filter(
     (currency) => defaultCurrencyIds.includes(currency.id)
   );
 
-  currenciesToUse = defaultCurrencies;
-
-  if (customCurrencies?.length > 0) {
-    currenciesToUse.push(...customCurrencies);
-  }
-
-  // Filter out duplicates based on a unique identifier
-  currenciesToUse = currenciesToUse.filter(
-    (currency, index, self) =>
-      index ===
-      self.findIndex((t) => {
-        if (currency.type === Types.RequestLogic.CURRENCY.ETH) {
-          return t.type === currency.type && t.network === currency.network;
-        } else if (currency.type === Types.RequestLogic.CURRENCY.ERC20) {
-          return (
-            t.network === currency.network &&
-            t.address?.toLowerCase() === currency.address?.toLowerCase()
-          );
-        } else if (currency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-          return t.type === currency.type && t.symbol === currency.symbol;
-        }
-      })
-  );
-
-  return new CurrencyManager(currenciesToUse, {}, formattedCurrencyConversionPairs);
+  return new CurrencyManager(defaultCurrencies, {}, formattedCurrencyConversionPairs);
 }
 
 export function initializeCurrencyManagerWithCurrencyIDS(
