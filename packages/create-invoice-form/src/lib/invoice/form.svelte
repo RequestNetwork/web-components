@@ -588,7 +588,7 @@
         max={200}
         id="note"
         {handleInput}
-        type="text"
+        type="textarea"
         label="Memo"
         value={formData.note}
       />
