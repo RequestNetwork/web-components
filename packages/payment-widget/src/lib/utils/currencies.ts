@@ -1,4 +1,4 @@
-import { initializeCurrencyManagerWithCurrencyIDS } from "@requestnetwork/shared-utils/initCurrencyManager";
+import { initializeCurrencyManagerWithCurrencyIDS } from "@requestnetwork/shared/utils/initCurrencyManager";
 import type { SupportedCurrencies, Currency } from "../types";
 import type { CurrencyManager } from "@requestnetwork/currency";
 

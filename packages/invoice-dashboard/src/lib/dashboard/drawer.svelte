@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { IConfig } from "@requestnetwork/shared-types";
-  import Close from "@requestnetwork/shared-icons/close.svelte";
+  import type { IConfig } from "@requestnetwork/shared/types";
+  import Close from "@requestnetwork/shared/icons/close.svelte";
 
   export let active = false;
   export let onClose: () => void;

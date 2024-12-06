@@ -5,8 +5,7 @@
   "description": "Request Network Web Components",
   "main": "index.js",
   "workspaces": [
-    "./packages/*",
-    "./shared/*"
+    "./packages/*"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -22,7 +21,8 @@
     "unlink:all": "for d in packages/*; do (cd $d && npm unlink); done"
   },
   "devDependencies": {
-    "turbo": "^2.0.6"
+    "turbo": "^2.0.6",
+    "graphql": "16.8.1"
   },
   "author": "",
   "license": "MIT",
@@ -32,4 +32,5 @@
     "@requestnetwork/currency": "0.21.0",
     "bits-ui": "^0.21.12"
   }
+  
 }

@@ -3,6 +3,9 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
+  resolve: {
+    preserveSymlinks: true,
+  },
   define: {
     global: "globalThis",
   },

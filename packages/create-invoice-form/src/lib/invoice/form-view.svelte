@@ -1,19 +1,19 @@
 <script lang="ts">
   // Components
-  import Button from "@requestnetwork/shared-components/button.svelte";
-  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
+  import Button from "@requestnetwork/shared/components/button.svelte";
+  import PoweredBy from "@requestnetwork/shared/components/powered-by.svelte";
 
   // Icons
-  import Close from "@requestnetwork/shared-icons/close.svelte";
+  import Close from "@requestnetwork/shared/icons/close.svelte";
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
   import { CurrencyTypes } from "@requestnetwork/types";
 
   // Utils
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import { config as defaultConfig } from "@requestnetwork/shared/utils/config";
+  import { calculateItemTotal } from "@requestnetwork/shared/utils/invoiceTotals";
+  import { formatDate } from "@requestnetwork/shared/utils/formatDate";
 
   export let defaultCurrencies;
   export let config: IConfig;

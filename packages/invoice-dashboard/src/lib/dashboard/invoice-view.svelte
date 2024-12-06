@@ -15,19 +15,19 @@
   import { CurrencyTypes } from "@requestnetwork/types";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   // Components
-  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
-  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
-  import Button from "@requestnetwork/shared-components/button.svelte";
-  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import StatusLabel from "@requestnetwork/shared/components/status-label.svelte";
+  import Accordion from "@requestnetwork/shared/components/accordion.svelte";
+  import Button from "@requestnetwork/shared/components/button.svelte";
+  import Tooltip from "@requestnetwork/shared/components/tooltip.svelte";
   // Icons
-  import Check from "@requestnetwork/shared-icons/check.svelte";
-  import Download from "@requestnetwork/shared-icons/download.svelte";
+  import Check from "@requestnetwork/shared/icons/check.svelte";
+  import Download from "@requestnetwork/shared/icons/download.svelte";
   // Utils
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
+  import { formatDate } from "@requestnetwork/shared/utils/formatDate";
+  import { checkStatus } from "@requestnetwork/shared/utils/checkStatus";
+  import { calculateItemTotal } from "@requestnetwork/shared/utils/invoiceTotals";
+  import { exportToPDF } from "@requestnetwork/shared/utils/generateInvoice";
+  import { getCurrencyFromManager } from "@requestnetwork/shared/utils/getCurrency";
   import { onMount } from "svelte";
   import { formatUnits } from "viem";
   import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";

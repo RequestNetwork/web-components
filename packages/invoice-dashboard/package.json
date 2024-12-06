@@ -40,6 +40,7 @@
     "@requestnetwork/payment-detection": "0.47.0",
     "@requestnetwork/payment-processor": "0.50.0",
     "@requestnetwork/request-client.js": "0.52.0",
+    "@requestnetwork/shared": "*",
     "@wagmi/connectors": "^5.5.3",
     "@wagmi/core": "^2.15.2",
     "ethers": "^5.7.2",

@@ -5,24 +5,24 @@
   import { Config as WagmiConfig } from "wagmi";
   // Types
   import { type GetAccountReturnType } from "@wagmi/core";
-  import type { IConfig } from "@requestnetwork/shared-types";
-  import { APP_STATUS } from "@requestnetwork/shared-types/enums";
+  import type { IConfig } from "@requestnetwork/shared/types";
+  import { APP_STATUS } from "@requestnetwork/shared/types/enums";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   import { Types } from "@requestnetwork/request-client.js";
   import { CurrencyTypes } from "@requestnetwork/types";
   // Utils
   import { getInitialFormData, prepareRequestParams } from "./utils";
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
+  import { config as defaultConfig } from "@requestnetwork/shared/utils/config";
+  import { calculateInvoiceTotals } from "@requestnetwork/shared/utils/invoiceTotals";
   import {
     getCurrencySupportedNetworksForConversion,
     initializeCurrencyManager,
-  } from "@requestnetwork/shared-utils/initCurrencyManager";
+  } from "@requestnetwork/shared/utils/initCurrencyManager";
   // Components
   import { InvoiceForm, InvoiceView } from "./invoice";
-  import Button from "@requestnetwork/shared-components/button.svelte";
-  import Status from "@requestnetwork/shared-components/status.svelte";
-  import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import Button from "@requestnetwork/shared/components/button.svelte";
+  import Status from "@requestnetwork/shared/components/status.svelte";
+  import Modal from "@requestnetwork/shared/components/modal.svelte";
   import { EncryptionTypes } from '@requestnetwork/types';
 
   export let config: IConfig;

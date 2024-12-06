@@ -1,5 +1,5 @@
 {
-  "name": "@requestnetwork/shared-components",
+  "name": "@requestnetwork/shared",
   "license": "MIT",
   "dependencies": {
     "clsx": "^2.1.1",

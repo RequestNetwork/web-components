@@ -5,25 +5,25 @@
 <script lang="ts">
   import { getAccount, watchAccount } from "@wagmi/core";
   // Components
-  import Copy from "@requestnetwork/shared-components/copy.svelte";
-  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
-  import Switch from "@requestnetwork/shared-components/switch.svelte";
-  import Input from "@requestnetwork/shared-components/input.svelte";
-  import PoweredBy from "@requestnetwork/shared-components/powered-by.svelte";
-  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
-  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
-  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
-  import TxType from "@requestnetwork/shared-components/tx-type.svelte";
-  import DashboardSkeleton from "@requestnetwork/shared-components/dashboard-skeleton.svelte";
+  import Copy from "@requestnetwork/shared/components/copy.svelte";
+  import Dropdown from "@requestnetwork/shared/components/dropdown.svelte";
+  import Switch from "@requestnetwork/shared/components/switch.svelte";
+  import Input from "@requestnetwork/shared/components/input.svelte";
+  import PoweredBy from "@requestnetwork/shared/components/powered-by.svelte";
+  import StatusLabel from "@requestnetwork/shared/components/status-label.svelte";
+  import Toaster from "@requestnetwork/shared/components/sonner.svelte";
+  import Tooltip from "@requestnetwork/shared/components/tooltip.svelte";
+  import TxType from "@requestnetwork/shared/components/tx-type.svelte";
+  import DashboardSkeleton from "@requestnetwork/shared/components/dashboard-skeleton.svelte";
   import { toast } from "svelte-sonner";
   // Icons
-  import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
-  import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
-  import ChevronRight from "@requestnetwork/shared-icons/chevron-right.svelte";
-  import ChevronUp from "@requestnetwork/shared-icons/chevron-up.svelte";
-  import Download from "@requestnetwork/shared-icons/download.svelte";
-  import Search from "@requestnetwork/shared-icons/search.svelte";
-  import Network from "@requestnetwork/shared-icons/network/network-icon.svelte";
+  import ChevronDown from "@requestnetwork/shared/icons/chevron-down.svelte";
+  import ChevronLeft from "@requestnetwork/shared/icons/chevron-left.svelte";
+  import ChevronRight from "@requestnetwork/shared/icons/chevron-right.svelte";
+  import ChevronUp from "@requestnetwork/shared/icons/chevron-up.svelte";
+  import Download from "@requestnetwork/shared/icons/download.svelte";
+  import Search from "@requestnetwork/shared/icons/search.svelte";
+  import Network from "@requestnetwork/shared/icons/network/network-icon.svelte";
   // Types
   import type {
     GetAccountReturnType,
@@ -31,13 +31,13 @@
     WatchAccountReturnType,
   } from "@wagmi/core";
   import { Types } from "@requestnetwork/request-client.js";
-  import type { IConfig } from "@requestnetwork/shared-types";
+  import type { IConfig } from "@requestnetwork/shared/types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
+  import { config as defaultConfig } from "@requestnetwork/shared/utils/config";
+  import { initializeCurrencyManager } from "@requestnetwork/shared/utils/initCurrencyManager";
+  import { exportToPDF } from "@requestnetwork/shared/utils/generateInvoice";
+  import { getCurrencyFromManager } from "@requestnetwork/shared/utils/getCurrency";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
@@ -45,7 +45,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
-    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
+  import { checkStatus } from "@requestnetwork/shared/utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
