@@ -100,7 +100,7 @@
   }
 </script>
 
-<div style="display: flex; flex-direction: column; gap: 30px;">
+<div class="invoice-form-container">
   <div class="invoice-form-wrapper">
     <div class="invoice-header">
       <div class="invoice-header-left">
@@ -139,7 +139,7 @@
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>From</span>
-        {formData.creatorId}
+        <span class="invoice-section-title-content">{formData.creatorId}</span>
       </p>
       <div class={`invoice-info`}>
         {#each sellerInfo as { value, isEmail, isCompany }}
@@ -157,7 +157,9 @@
     <div class="invoice-section">
       <p class="invoice-section-title">
         <span>Billed to</span>
-        {formData.payerAddress}
+        <span class="invoice-section-title-content">
+          {formData.payerAddress}
+        </span>
       </p>
       <div class={`invoice-info`}>
         {#each buyerInfo as { value, isEmail, isCompany }}
@@ -165,7 +167,12 @@
             {#if isEmail}
               <a href="mailto:{value}">{value}</a>
             {:else}
-              <span class:company={isCompany}>{value}</span>
+              <span
+                class:company={isCompany}
+                class="invoice-section-title-content"
+              >
+                {value}
+              </span>
             {/if}
           </p>
         {/each}
@@ -173,18 +180,24 @@
     </div>
     <p class="invoice-section-title">
       <span>Payment Chain</span>
-      {currency?.network
-        ? currency.network.charAt(0).toUpperCase() +
-          currency.network.slice(1).toLowerCase()
-        : ""}
+      <span class="invoice-section-title-content">
+        {currency?.network
+          ? currency.network.charAt(0).toUpperCase() +
+            currency.network.slice(1).toLowerCase()
+          : ""}
+      </span>
     </p>
     <p class="invoice-section-title">
       <span>Invoice Currency</span>
-      {invoiceCurrency ? invoiceCurrency.symbol : ""}
+      <span class="invoice-section-title-content">
+        {invoiceCurrency ? invoiceCurrency.symbol : ""}
+      </span>
     </p>
     <p class="invoice-section-title">
       <span>Settlement Currency</span>
-      {currency ? `${currency.symbol} (${currency.network})` : ""}
+      <span class="invoice-section-title-content">
+        {currency ? `${currency.symbol} (${currency.network})` : ""}
+      </span>
     </p>
     <div class="invoice-table-wrapper">
       <table class="invoice-table">
@@ -275,6 +288,16 @@
     border-collapse: collapse;
     border-spacing: 0;
   }
+
+  .invoice-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    border-top: 6px solid var(--mainColor);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
   .invoice-form-wrapper {
     height: fit-content;
     background-color: white;
@@ -390,6 +413,8 @@
   .invoice-table-wrapper {
     position: relative;
     overflow-x: auto;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
   }
 
   .invoice-table {
@@ -397,30 +422,38 @@
     font-size: 14px;
     line-height: 20px;
     text-align: left;
+    color: #6b7280;
+    border-radius: 8px;
+    overflow: hidden;
+    border-collapse: collapse;
+    border-spacing: 0;
   }
 
   .invoice-table-header {
-    font-size: 12px;
     line-height: 20px;
     text-transform: uppercase;
-    background-color: #e4e4e7;
+    background-color: #f6f6f7;
+    color: black;
+    border: none;
+    border-collapse: collapse;
   }
 
   .invoice-table-header tr {
     text-align: left;
-    white-space: nowrap;
+    font-size: 14px;
   }
 
   .invoice-table-header tr th {
-    padding: 12px 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    white-space: nowrap;
+    border: none;
+    border-spacing: 0;
+    background-color: #f6f6f7;
   }
 
   .invoice-table-header-tr:first-child {
     padding: 12px 8px 12px 8px;
-  }
-
-  .invoice-table-body-row {
-    border-bottom: 1px solid black;
   }
 
   .invoice-table-body-row th {
@@ -450,7 +483,6 @@
   .invoice-summary-item {
     display: flex;
     gap: 20px;
-    border-bottom: 1px solid black;
   }
 
   .invoice-summary-item-spaced {
@@ -529,5 +561,9 @@
     width: 100%;
     height: 1px;
     background-color: var(--mainColor);
+  }
+
+  .invoice-section-title-content {
+    color: #6e7480;
   }
 </style>

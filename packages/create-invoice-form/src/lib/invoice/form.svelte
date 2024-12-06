@@ -601,7 +601,7 @@
         id="note"
         {handleInput}
         type="textarea"
-        placeholder="Memo"
+        label="Memo"
         value={formData.note}
       />
       <Labels {config} bind:formData />
@@ -638,7 +638,7 @@
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     gap: 20px;
     box-sizing: border-box;
-    max-width: 700px;
+    min-width: 700px;
   }
 
   .invoice-form-container {
@@ -807,8 +807,8 @@
 
   .invoice-form-label-wrapper {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 8px;
     height: fit-content;
     width: 100%;
   }
@@ -818,23 +818,9 @@
     font-size: 12px;
   }
 
-  :global(.invoice-form-label-wrapper .input-wrapper) {
-    flex: 1;
-  }
-
   :global(.invoice-form-label-wrapper svg, .invoice-form-label-wrapper path) {
     color: white;
     fill: white;
-  }
-
-  :global(.invoice-form-label-wrapper .input-wrapper .textarea-input) {
-    width: 100%;
-    height: 107px;
-  }
-
-  :global(.invoice-form-label-wrapper .labels-wrapper) {
-    flex: 1;
-    margin-right: 8px;
   }
 
   :global(.invoice-form-table-body-add-item button) {
