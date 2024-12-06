@@ -577,7 +577,9 @@
         id="dueDate"
         type="date"
         min={inputDateFormat(formData.issuedOn)}
-        value={new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000}
+        value={inputDateFormat(
+          new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
+        )}
         label="Due Date"
         {handleInput}
       />
