@@ -1,8 +1,8 @@
 <svelte:options customElement="payment-widget" />
 
 <script lang="ts">
-  import Modal from "@requestnetwork/shared-components/modal.svelte";
-  import RNLogoWhite from "@requestnetwork/shared-icons/rn-logo-white.svelte";
+  import Modal from "@requestnetwork/shared/components/modal.svelte";
+  import RNLogoWhite from "@requestnetwork/shared/icons/rn-logo-white.svelte";
   import type { EventsControllerState } from "@web3modal/core";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { ethers } from "ethers";

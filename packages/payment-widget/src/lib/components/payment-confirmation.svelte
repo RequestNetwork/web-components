@@ -1,8 +1,8 @@
 <script lang="ts">
-  import CloseIcon from "@requestnetwork/shared-icons/close.svelte";
-  import CopyIcon from "@requestnetwork/shared-icons/copy-icon.svelte";
-  import ExchangeIcon from "@requestnetwork/shared-icons/exchange.svelte";
-  import InfoCircleIcon from "@requestnetwork/shared-icons/info-circle.svelte";
+  import CloseIcon from "@requestnetwork/shared/icons/close.svelte";
+  import CopyIcon from "@requestnetwork/shared/icons/copy-icon.svelte";
+  import ExchangeIcon from "@requestnetwork/shared/icons/exchange.svelte";
+  import InfoCircleIcon from "@requestnetwork/shared/icons/info-circle.svelte";
   import type { Web3Modal } from "@web3modal/ethers5";
   import { onDestroy, onMount } from "svelte";
   import type {

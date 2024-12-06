@@ -1,23 +1,23 @@
 <script lang="ts">
   // Components
-  import Button from "@requestnetwork/shared-components/button.svelte";
-  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
-  import Input from "@requestnetwork/shared-components/input.svelte";
-  import Labels from "@requestnetwork/shared-components/labels.svelte";
-  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import Button from "@requestnetwork/shared/components/button.svelte";
+  import Dropdown from "@requestnetwork/shared/components/dropdown.svelte";
+  import Input from "@requestnetwork/shared/components/input.svelte";
+  import Labels from "@requestnetwork/shared/components/labels.svelte";
+  import Accordion from "@requestnetwork/shared/components/accordion.svelte";
 
   // Icons
-  import Trash from "@requestnetwork/shared-icons/trash.svelte";
-  import Plus from "@requestnetwork/shared-icons/plus.svelte";
-  import Close from "@requestnetwork/shared-icons/close.svelte";
+  import Trash from "@requestnetwork/shared/icons/trash.svelte";
+  import Plus from "@requestnetwork/shared/icons/plus.svelte";
+  import Close from "@requestnetwork/shared/icons/close.svelte";
 
   // Types
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
 
   // Utils
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
-  import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import { calculateItemTotal } from "@requestnetwork/shared/utils/invoiceTotals";
+  import { checkAddress } from "@requestnetwork/shared/utils/checkEthAddress";
+  import { inputDateFormat } from "@requestnetwork/shared/utils/formatDate";
   import { Types } from "@requestnetwork/request-client.js";
   import { CurrencyTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";

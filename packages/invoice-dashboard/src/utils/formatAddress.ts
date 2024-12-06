@@ -1,5 +1,5 @@
 import { getAddress } from "viem";
-import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
+import { checkAddress } from "@requestnetwork/shared/utils/checkEthAddress";
 
 export const formatAddress = (
   address: string,
