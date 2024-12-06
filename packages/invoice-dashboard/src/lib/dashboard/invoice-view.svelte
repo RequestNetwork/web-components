@@ -122,8 +122,8 @@
   }
 
   $: {
-    sellerInfo = generateDetailParagraphs(request?.contentData.sellerInfo);
-    buyerInfo = generateDetailParagraphs(request?.contentData.buyerInfo);
+    sellerInfo = generateDetailParagraphs(request?.contentData?.sellerInfo);
+    buyerInfo = generateDetailParagraphs(request?.contentData?.buyerInfo);
   }
 
   onMount(() => {
@@ -555,11 +555,11 @@
       </Accordion>
     {/if}
   {/if}
-  {#if request?.contentData.note}
+  {#if request?.contentData?.note}
     <div class="note-container">
       <p class="note-content">
         <span class="note-title">Memo:</span> <br />
-        {request.contentData.note || "-"}
+        {request.contentData?.note || "-"}
       </p>
     </div>
   {/if}
@@ -712,50 +712,61 @@
   .table-container {
     position: relative;
     overflow-x: auto;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
   }
 
   .invoice-table {
     width: 100%;
+    font-size: 14px;
+    line-height: 20px;
     text-align: left;
-    font-size: 0.875rem;
+    color: #6b7280;
+    border-radius: 8px;
+    overflow: hidden;
+    border-collapse: collapse;
+    border-spacing: 0;
   }
 
   .table-header {
+    line-height: 20px;
     text-transform: uppercase;
-    background-color: #e0e0e0;
+    background-color: #f6f6f7;
+    color: black;
+    border: none;
+    border-collapse: collapse;
   }
 
-  .table-row {
+  .table-header tr {
     text-align: left;
+    font-size: 14px;
   }
 
-  .table-header-cell {
-    padding: 0.75rem 0.5rem;
+  .table-header tr th {
+    padding: 12px 16px;
+    font-size: 11px;
+    white-space: nowrap;
+    border: none;
+    border-spacing: 0;
+    background-color: #f6f6f7;
   }
 
-  @media only screen and (max-width: 880px) {
-    .table-header-cell {
-      white-space: nowrap;
-    }
+  .table-row th,
+  .table-row td {
+    padding: 12px 16px;
   }
 
-  .table-header-cell.description {
-    padding-left: 0.5rem;
-  }
-
-  .item-row {
-    border-bottom: 1px solid black;
+  .table-row th p {
+    margin: 0;
   }
 
   .item-description {
-    padding-left: 0.5rem;
-    font-weight: 500;
-    white-space: nowrap;
+    width: 250px !important;
+    font-weight: normal;
   }
 
   .truncate {
-    display: block;
-    width: 150px;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

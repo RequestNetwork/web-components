@@ -23,6 +23,7 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import { EncryptionTypes } from '@requestnetwork/types';
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -183,19 +184,41 @@
     if (requestNetwork) {
       try {
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
-        const request = await requestNetwork.createRequest({
-          requestInfo: requestCreateParameters.requestInfo,
-          paymentNetwork: requestCreateParameters.paymentNetwork,
-          contentData: requestCreateParameters.contentData,
-          signer: requestCreateParameters.signer,
-        });
+        let request;
+        if(formData.isEncrypted) {
+          const payeeEncryptionParams = {
+            key: requestCreateParameters.requestInfo.payee?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+          const payerEncryptionParams = {
+            key: requestCreateParameters.requestInfo.payer?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+
+          request = await requestNetwork._createEncryptedRequest(
+            {
+              requestInfo: requestCreateParameters.requestInfo,
+              signer: requestCreateParameters.signer,
+              paymentNetwork: requestCreateParameters.paymentNetwork,
+              contentData: requestCreateParameters.contentData,
+            },
+            [payeeEncryptionParams, payerEncryptionParams],
+          );
+        } else {
+          request = await requestNetwork.createRequest({
+            requestInfo: requestCreateParameters.requestInfo,
+            paymentNetwork: requestCreateParameters.paymentNetwork,
+            contentData: requestCreateParameters.contentData,
+            signer: requestCreateParameters.signer,
+          });
+        }
 
         activeRequest = request;
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error: any) {
-        if (error.message.includes("Transactioon confirmation not received")) {
+        if (error.message.includes("Transaction confirmation not received")) {
           isTimeout = true;
           removeAllStatuses();
         } else {
