@@ -32,6 +32,9 @@ cd web-components
 # Install all dependencies
 npm install
 
+# Use local packages instead of the deployed ones
+npm link @requestnetwork/payment-detection @requestnetwork/payment-processor @requestnetwork/web3-signature @requestnetwork/currency @requestnetwork/request-client.js  @requestnetwork/types @requestnetwork/smart-contracts
+
 # Build all packages locally
 npm run build
 
