@@ -453,6 +453,13 @@
           }))}
           onchange={handleCurrencyChange}
         />
+
+        <Input
+          type="checkbox"
+          id="isEncrypted"
+          label="Encrypt invoice"
+          bind:checked={formData.isEncrypted}
+          />
       </div>
     </div>
     <div class="invoice-form-dates">
