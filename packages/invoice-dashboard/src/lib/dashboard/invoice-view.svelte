@@ -22,6 +22,7 @@
   // Icons
   import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
+  import InfoCircle from "@requestnetwork/shared-icons/info-circle.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
@@ -40,7 +41,6 @@
   }
 
   interface BuyerInfo extends EntityInfo {}
-
   interface SellerInfo extends EntityInfo {}
 
   export let config;
@@ -55,7 +55,6 @@
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
     getCurrencyFromManager(request.currencyInfo, currencyManager);
   let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
-  let statuses: any = [];
   let isPaid = false;
   let loading = false;
   let requestData: any = null;
@@ -74,6 +73,23 @@
   let paymentNetworkExtension:
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
+  let statuses: any[] = [
+    {
+      name: "SIGN_TRANSACTION",
+      message: "Sign Transaction",
+      done: false,
+    },
+    {
+      name: "PAYMENT_DETECTED",
+      message: "Payment Detected",
+      done: false,
+    },
+    {
+      name: "CORRECT_NETWORK",
+      message: "Correct Network",
+      done: false,
+    },
+  ];
 
   let status = checkStatus(requestData || request);
 
@@ -198,7 +214,7 @@
         unsupportedNetwork = true;
       }
     } finally {
-      loading = false;
+      // loading = false;
     }
   };
 
@@ -208,8 +224,6 @@
       const _request = await requestNetwork?.fromRequestId(
         requestData?.requestId!
       );
-
-      statuses = [...statuses, "Waiting for payment"];
 
       let paymentSettings = undefined;
       if (
@@ -236,18 +250,25 @@
         undefined,
         paymentSettings
       );
+
+      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
+      if (signStatus) signStatus.done = true;
+
       await paymentTx.wait();
 
-      statuses = [...statuses, "Payment detected"];
+      const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
+      if (paymentStatus) paymentStatus.done = true;
+
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      statuses = [...statuses, "Payment confirmed"];
+      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
+      if (networkStatus) networkStatus.done = true;
+
       isPaid = true;
       loading = false;
-      statuses = [];
       isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
@@ -356,6 +377,8 @@
       ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
       : value;
   }
+
+  const currentStatusIndex = statuses.length - 1;
 </script>
 
 <div
@@ -574,24 +597,65 @@
   </div>
   <div class="status-container">
     <div class="statuses">
-      {#if statuses.length > 0 && loading}
-        {#each statuses as status, index (index)}
-          <div class="status">
-            {status || "-"}
-            {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
-              <i>
-                <Check />
-              </i>
-            {/if}
-          </div>
-        {/each}
+      {#if statuses[0].done}
+        <ul class="status-list">
+          {#each statuses as status, index}
+            <li class="status-item">
+              <span
+                class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+              >
+                {#if status.done}
+                  <svg
+                    width="24"
+                    height="25"
+                    viewBox="0 0 24 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 12.5L10.2426 16.7426L18.727 8.25732"
+                      stroke="#328965"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                {:else}
+                  <svg
+                    width="25"
+                    height="25"
+                    viewBox="0 0 25 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
+                      stroke="#3D72FF"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                {/if}
+              </span>
+              <span class="status-text">{status.message}</span>
+              <div
+                class={`progress-line ${
+                  status.done || statuses[index + 1]?.done
+                    ? "bg-green"
+                    : index <= currentStatusIndex
+                      ? "bg-blue"
+                      : "bg-zinc-light"
+                }`}
+              ></div>
+            </li>
+          {/each}
+        </ul>
       {/if}
     </div>
 
     <div class="invoice-view-actions">
-      {#if loading}
-        <div class="loading">Loading...</div>
-      {:else if !correctChain && !isPayee}
+      {#if !correctChain && !isPayee}
         <Button
           type="button"
           text="Switch Network"
@@ -605,7 +669,7 @@
           padding="px-[12px] py-[6px]"
           onClick={approve}
         />
-      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork}
+      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork && !statuses[0].done}
         <Button
           type="button"
           text="Pay"
@@ -810,8 +874,7 @@
   .status-container {
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: 1rem;
   }
 
@@ -819,6 +882,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    margin-bottom: 32px;
   }
 
   .status {
@@ -832,6 +897,72 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  .status-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-align: center;
+    width: 45%;
+  }
+
+  .status-item:first-child {
+    padding-left: 50px;
+  }
+
+  .status-item:first-child .status-text {
+    padding-left: 50px;
+  }
+
+  .status-item:last-child {
+    width: 20%;
+  }
+
+  .status-item:last-child .progress-line {
+    width: 170px;
+  }
+
+  .progress-line {
+    position: absolute;
+    left: 40%;
+    height: 8px;
+    z-index: 0;
+    transform: translateX(-50%);
+    width: 300px;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    padding: 4px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .status-text {
+    font-size: 14px;
+    color: #272d41;
+    position: absolute;
+    top: -30px;
+    left: -30px;
+  }
+
+  .checkmark {
+    margin-left: 5px;
+    color: #58e1a5;
   }
 
   .invoice-view-actions {
@@ -848,17 +979,6 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
-  }
-
-  .loading {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-align: center;
-    border-radius: 0.5rem;
-    background-color: var(--mainColor);
-    color: white;
-    animation: pulse 1s infinite;
   }
 
   .unsupported-network {
@@ -884,8 +1004,20 @@
     background-color: var(--secondaryColor);
   }
 
+  .bg-blue {
+    background-color: #759aff;
+  }
+
   .bg-green {
     background-color: #0bb489;
+  }
+
+  .bg-success {
+    background-color: #cdf6e4;
+  }
+
+  .bg-waiting {
+    background-color: #c7e7ff;
   }
 
   .bg-zinc {
