@@ -23,12 +23,13 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
-  import { EncryptionTypes } from '@requestnetwork/types';
+  import { EncryptionTypes, CipherProviderTypes } from '@requestnetwork/types';
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
+  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined = requestNetwork?.getCipherProvider();
 
   let account: GetAccountReturnType;
   let isTimeout = false;
@@ -185,7 +186,7 @@
       try {
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
         let request;
-        if(formData.isEncrypted) {
+        if(cipherProvider && formData.isEncrypted) {
           const payeeEncryptionParams = {
             key: requestCreateParameters.requestInfo.payee?.value!,
             method: EncryptionTypes.METHOD.KMS,
@@ -247,6 +248,7 @@
       {networks}
       {currencyManager}
       {invoiceCurrency}
+      {cipherProvider}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
