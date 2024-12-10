@@ -44,17 +44,20 @@
   import { debounce, formatAddress } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
-  import { CurrencyTypes } from "@requestnetwork/types";
+  import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
-  export let isDecryptionEnabled: boolean;
-  export let enableDecryption: (option: boolean) => void | undefined;
 
-  let sliderValueForDecryption = isDecryptionEnabled ? "on" : "off";
+  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined =
+    requestNetwork?.getCipherProvider();
+
+  let sliderValueForDecryption = cipherProvider?.isDecryptionEnabled()
+    ? "on"
+    : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -394,9 +397,9 @@
 
   $: {
     if (sliderValueForDecryption === "on") {
-      enableDecryption(true);
+      cipherProvider?.enableDecryption(true);
     } else {
-      enableDecryption(false);
+      cipherProvider?.enableDecryption(false);
     }
   }
 </script>
@@ -439,14 +442,16 @@
             <Search />
           </div>
         </Input>
-        <div class="width: fit-content;">
-          <Switch
-            bind:value={sliderValueForDecryption}
-            label="Show encrypted requests"
-            fontSize={14}
-            design="slider"
-          />
-        </div>
+        {#if cipherProvider}
+          <div class="width: fit-content;">
+            <Switch
+              bind:value={sliderValueForDecryption}
+              label="Show encrypted requests"
+              fontSize={14}
+              design="slider"
+            />
+          </div>
+        {/if}
       </div>
 
       <Dropdown
