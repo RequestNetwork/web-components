@@ -14,7 +14,7 @@ import OptimismIcon from "../icons/network/optimism.svelte";
 import ArbitrumIcon from "../icons/network/arbitrum.svelte";
 import MoonbeamIcon from "../icons/network/moonbeam.svelte";
 import FantomIcon from "../icons/network/fantom.svelte";
-
+import Unkown from "../icons/unkown.svelte";
 export const getNetworkIcon = (network: string) => {
   const icons = {
     bsc: BscIcon,
@@ -35,5 +35,5 @@ export const getNetworkIcon = (network: string) => {
     moonbeam: MoonbeamIcon,
   };
 
-  return icons[network] || EthereumIcon;
+  return icons[network] || Unkown;
 };
