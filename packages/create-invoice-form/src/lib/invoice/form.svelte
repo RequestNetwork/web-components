@@ -5,6 +5,7 @@
   import Input from "@requestnetwork/shared-components/input.svelte";
   import Labels from "@requestnetwork/shared-components/labels.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import SearchableDropdown from "@requestnetwork/shared-components/searchable-dropdown.svelte";
 
   // Icons
   import Trash from "@requestnetwork/shared-icons/trash.svelte";
@@ -410,76 +411,64 @@
             </div>
           </Accordion>
         </div>
-        <Dropdown
-          {config}
-          placeholder="Payment chain"
-          selectedValue={network}
-          options={networks
-            .filter((networkItem) => networkItem)
-            .map((networkItem) => ({
-              value: networkItem,
-              label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
-            }))}
-          onchange={handleNetworkChange}
-        />
-        <Dropdown
-          {config}
-          selectedValue={invoiceCurrency
-            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
-            : undefined}
-          placeholder="Invoice currency (labeling)"
-          options={defaultCurrencies
-            ?.filter((curr) => {
-              if (!curr) return false;
-              return (
-                curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-                (curr.network && curr.network === network)
-              );
-            })
-            .map((currency) => ({
+
+        <div class="searchable-dropdown-container">
+          <SearchableDropdown
+            getValue={(currency) => currency.value.symbol}
+            getDisplayValue={(currency) =>
+              `${currency.value.symbol} ${currency.value.network ? `(${currency.value.network})` : ""}`}
+            placeholder="Invoice currency"
+            items={defaultCurrencies
+              ?.filter((curr) => {
+                if (!curr) return false;
+                return (
+                  curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+                  (curr.network && curr.network === network)
+                );
+              })
+              .map((currency) => ({
+                value: currency,
+                label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
+                type: "invoiceCurrency",
+              })) ?? []}
+            onSelect={handleInvoiceCurrencyChange}
+          />
+          <SearchableDropdown
+            items={networks
+              .filter((networkItem) => networkItem)
+              .map((networkItem) => {
+                return {
+                  value: networkItem,
+                  label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+                  type: "network",
+                };
+              })}
+            placeholder="Payment chain"
+            getValue={(network) => network.value}
+            getDisplayValue={(network) => network.label}
+            onSelect={handleNetworkChange}
+          />
+          <SearchableDropdown
+            items={filteredSettlementCurrencies.map((currency) => ({
               value: currency,
-              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
-            })) ?? []}
-          onchange={handleInvoiceCurrencyChange}
-        />
-        <Dropdown
-          {config}
-          placeholder="Settlement currency"
-          selectedValue={currency
-            ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
-            : undefined}
-          options={filteredSettlementCurrencies.map((currency) => ({
-            value: currency,
-            label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
-          }))}
-          onchange={handleCurrencyChange}
-        />
-        {#if cipherProvider}
-          <Input
-            type="checkbox"
-            id="isEncrypted"
-            label="Encrypt invoice"
-            bind:checked={formData.isEncrypted}
+              type: "settlementCurrency",
+            }))}
+            placeholder="Settlement currency"
+            getValue={(currency) => currency.value.symbol}
+            getDisplayValue={(currency) =>
+              `${currency.value.symbol} (${currency.value.network})`}
+            onSelect={handleCurrencyChange}
+          />
+          {#if cipherProvider}
+            <Input
+              type="checkbox"
+              id="isEncrypted"
+              label="Encrypt invoice"
+              bind:checked={formData.isEncrypted}
             />
-        {/if}
+          {/if}
+        </div>
       </div>
-    </div>
-    <div class="invoice-form-dates">
-      <Input
-        id="issuedOn"
-        type="date"
-        value={inputDateFormat(new Date())}
-        label="Issued Date"
-        {handleInput}
-      />
-      <Input
-        id="dueDate"
-        type="date"
-        min={inputDateFormat(formData.issuedOn)}
-        value={new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000}
-        label="Due Date"
-        {handleInput}
-      />
     </div>
   </div>
   <div class="invoice-form-table-section">
@@ -579,6 +568,25 @@
         </tbody>
       </table>
     </div>
+    <div class="invoice-form-dates">
+      <Input
+        id="issuedOn"
+        type="date"
+        value={inputDateFormat(new Date())}
+        label="Issued Date"
+        {handleInput}
+      />
+      <Input
+        id="dueDate"
+        type="date"
+        min={inputDateFormat(formData.issuedOn)}
+        value={inputDateFormat(
+          new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
+        )}
+        label="Due Date"
+        {handleInput}
+      />
+    </div>
     <div class="flex justify-between invoice-form-table-body-add-item">
       <Button
         text="Add Item"
@@ -658,15 +666,17 @@
 
   .invoice-form-dates {
     display: flex;
-    flex-direction: column;
-    gap: 9px;
-    margin-left: auto;
-    width: 260px;
+    gap: 16px;
+    width: 100%;
+  }
+
+  :global(.invoice-form-dates .input-wrapper) {
+    width: 100%;
   }
 
   @media only screen and (max-width: 1300px) {
     .invoice-form-dates {
-      margin-left: 0;
+      flex-direction: column;
     }
 
     .invoice-form-container {
@@ -781,7 +791,7 @@
   }
 
   .invoice-form-table-body-quantity {
-    width: 80px !important;
+    width: 180px !important;
   }
 
   .invoice-form-table-body-amount {
@@ -867,5 +877,21 @@
 
   :global(.invoice-form-close-recipient-button div) {
     padding: 4px !important;
+  }
+
+  .searchable-dropdown-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+  }
+
+  @media only screen and (max-width: 1300px) {
+    .searchable-dropdown-container {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  :global(.danger) {
+    color: #ff0000;
   }
 </style>
