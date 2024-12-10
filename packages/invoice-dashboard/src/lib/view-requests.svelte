@@ -45,7 +45,7 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyTypes } from "@requestnetwork/types";
-    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -329,7 +329,7 @@
           BigInt(request.expectedAmount),
           currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo!.symbol,
+        currencySymbol: currencyInfo?.symbol,
         paymentCurrencies,
       };
     }
@@ -390,17 +390,15 @@
     activeRequest = undefined;
   };
 
-  
-  $: sliderValueForDecryption, getRequests(); 
+  $: sliderValueForDecryption, getRequests();
 
   $: {
-    if(sliderValueForDecryption === 'on') {
+    if (sliderValueForDecryption === "on") {
       enableDecryption(true);
     } else {
       enableDecryption(false);
     }
   }
-
 </script>
 
 <div
@@ -442,10 +440,15 @@
           </div>
         </Input>
         <div class="width: fit-content;">
-          <Switch bind:value={sliderValueForDecryption} label="Show encrypted requests" fontSize={14} design="slider" />
+          <Switch
+            bind:value={sliderValueForDecryption}
+            label="Show encrypted requests"
+            fontSize={14}
+            design="slider"
+          />
         </div>
       </div>
-      
+
       <Dropdown
         config={activeConfig}
         type="checkbox"
@@ -709,10 +712,8 @@
                 >
               </tr>
             {/each}
-          {:else}
-            {#if loading}
-              <DashboardSkeleton />
-            {/if}
+          {:else if loading}
+            <DashboardSkeleton />
           {/if}
         </tbody>
       </table>

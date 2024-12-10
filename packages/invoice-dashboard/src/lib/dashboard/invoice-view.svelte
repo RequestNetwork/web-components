@@ -41,7 +41,6 @@
   }
 
   interface BuyerInfo extends EntityInfo {}
-
   interface SellerInfo extends EntityInfo {}
 
   export let config;
@@ -145,7 +144,6 @@
 
   onMount(() => {
     checkInvoice();
-    updateStatuses();
   });
 
   $: request, checkInvoice();
@@ -227,8 +225,6 @@
         requestData?.requestId!
       );
 
-      // statuses = [...statuses, "SIGN_TRANSACTION"];
-
       let paymentSettings = undefined;
       if (
         paymentNetworkExtension?.id ===
@@ -247,6 +243,7 @@
         paymentSettings = conversion;
       }
 
+      // Get the transaction object but don't send it yet
       const paymentTx = await payRequest(
         requestData,
         signer,
@@ -254,19 +251,30 @@
         undefined,
         paymentSettings
       );
+
+      // Update first status after user has signed (transaction is created)
+      statuses[0].done = true;
+      statuses = statuses;
+
+      // Wait for transaction to be mined
       await paymentTx.wait();
 
-      // statuses = [...statuses, "PAYMENT_DETECTED"];
+      // Update second status after payment is confirmed
+      statuses[1].done = true;
+      statuses = statuses;
 
+      // Wait for balance update
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      // statuses = [...statuses, "CORRECT_NETWORK"];
+      // Update final status when everything is complete
+      statuses[2].done = true;
+      statuses = statuses;
+
       isPaid = true;
       loading = false;
-      statuses = [];
       isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
@@ -377,26 +385,6 @@
   }
 
   const currentStatusIndex = statuses.length - 1;
-
-  const getStatusColor = (index: number) => {
-    if (statuses[index].done) return "green";
-    return "blue";
-  };
-
-  const updateStatuses = async () => {
-    statuses[0].done = true;
-    statuses = statuses;
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    statuses[1].done = true;
-    statuses = statuses;
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    statuses[2].done = true;
-    statuses = statuses;
-  };
 </script>
 
 <div
@@ -615,26 +603,60 @@
   </div>
   <div class="status-container">
     <div class="statuses">
-      {#if statuses.length > 0 && loading}
-        <div class="status-wrapper">
-          <ol class="status-list">
-            {#each statuses as status, index}
-              <li class="status-item">
-                <span class={`status-icon-wrapper ${getStatusColor(index)}`}>
-                  {#if status.done}
-                    <Check />
-                  {:else}
-                    <InfoCircle />
-                  {/if}
-                </span>
-                <span class="status-text">{status.message}</span>
-                {#if index < 2}
-                  <div class={`progress-line ${getStatusColor(index)}`}></div>
+      {#if statuses[0].done}
+        <ul class="status-list">
+          {#each statuses as status, index}
+            <li class="status-item">
+              <span
+                class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+              >
+                {#if status.done}
+                  <svg
+                    width="24"
+                    height="25"
+                    viewBox="0 0 24 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 12.5L10.2426 16.7426L18.727 8.25732"
+                      stroke="#328965"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                {:else}
+                  <svg
+                    width="25"
+                    height="25"
+                    viewBox="0 0 25 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
+                      stroke="#3D72FF"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
                 {/if}
-              </li>
-            {/each}
-          </ol>
-        </div>
+              </span>
+              <span class="status-text">{status.message}</span>
+              <div
+                class={`progress-line ${
+                  status.done || statuses[index + 1]?.done
+                    ? "bg-green"
+                    : index <= currentStatusIndex
+                      ? "bg-blue"
+                      : "bg-zinc-light"
+                }`}
+              ></div>
+            </li>
+          {/each}
+        </ul>
       {/if}
     </div>
 
@@ -653,7 +675,7 @@
           padding="px-[12px] py-[6px]"
           onClick={approve}
         />
-      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork}
+      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork && !statuses[0].done}
         <Button
           type="button"
           text="Pay"
@@ -858,7 +880,6 @@
   .status-container {
     display: flex;
     align-items: center;
-    gap: 10px;
     justify-content: center;
     margin-top: 1rem;
   }
@@ -867,6 +888,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    margin-bottom: 32px;
   }
 
   .status {
@@ -880,6 +903,72 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  .status-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-align: center;
+    width: 45%;
+  }
+
+  .status-item:first-child {
+    padding-left: 50px;
+  }
+
+  .status-item:first-child .status-text {
+    padding-left: 50px;
+  }
+
+  .status-item:last-child {
+    width: 20%;
+  }
+
+  .status-item:last-child .progress-line {
+    width: 170px;
+  }
+
+  .progress-line {
+    position: absolute;
+    left: 40%;
+    height: 8px;
+    z-index: 0;
+    transform: translateX(-50%);
+    width: 300px;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    padding: 4px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .status-text {
+    font-size: 14px;
+    color: #272d41;
+    position: absolute;
+    top: -30px;
+    left: -30px;
+  }
+
+  .checkmark {
+    margin-left: 5px;
+    color: #58e1a5;
   }
 
   .invoice-view-actions {
@@ -921,8 +1010,20 @@
     background-color: var(--secondaryColor);
   }
 
+  .bg-blue {
+    background-color: #759aff;
+  }
+
   .bg-green {
     background-color: #0bb489;
+  }
+
+  .bg-success {
+    background-color: #cdf6e4;
+  }
+
+  .bg-waiting {
+    background-color: #c7e7ff;
   }
 
   .bg-zinc {
@@ -943,64 +1044,5 @@
 
   .email-link:hover {
     text-decoration: underline;
-  }
-
-  .status-wrapper {
-    margin-bottom: 32px;
-  }
-
-  .status-list {
-    display: flex;
-    align-items: center;
-    list-style: none;
-    padding: 0;
-  }
-
-  .status-item {
-    display: flex;
-    align-items: center;
-    position: relative;
-    text-align: center; /* Center text under icons */
-    width: 150px;
-  }
-
-  .progress-line {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    height: 6px;
-    background-color: #759aff; /* Default line color */
-    z-index: 0;
-    transform: translateX(-50%);
-    width: 180px;
-    border-radius: 100px;
-    z-index: 10;
-  }
-
-  .status-icon-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 29px;
-    height: 29px;
-    background-color: #dbeafe;
-    border-radius: 9999px;
-    padding: 4px;
-    box-shadow: 0 0 0 8px white;
-    position: relative;
-    z-index: 20;
-  }
-
-  .status-text {
-    font-size: 14px; /* Adjust font size */
-    color: #272d41; /* Text color */
-    position: absolute;
-    top: -30px;
-    left: -25px;
-  }
-
-  .checkmark {
-    margin-left: 5px; /* Space between icon and checkmark */
-    color: #58e1a5; /* Checkmark color */
   }
 </style>
