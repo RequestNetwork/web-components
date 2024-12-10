@@ -75,10 +75,8 @@
   .labels-wrapper {
     display: flex;
     flex-direction: column;
-    width: 700px;
     justify-content: end;
     gap: 10px;
-    min-height: 104px;
   }
 
   .labels-container {
@@ -109,7 +107,6 @@
     border: 1px solid #d1d5db;
     border-radius: 4px;
     padding: 4px 8px;
-    width: 100%;
   }
 
   .label-input:hover {

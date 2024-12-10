@@ -17,6 +17,7 @@ export interface CustomFormData extends Omit<Invoice, "meta" | "creationDate"> {
   invoiceItems: InvoiceItem[];
   buyerInfo?: ActorInfo;
   sellerInfo?: ActorInfo;
+  isEncrypted?: boolean;
 }
 
 export interface IConfig {
