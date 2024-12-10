@@ -19,7 +19,7 @@
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
   import { Types } from "@requestnetwork/request-client.js";
-  import { CurrencyTypes } from "@requestnetwork/types";
+  import { CurrencyTypes, CipherProviderTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";
 
   export let config: IConfig;
@@ -37,6 +37,7 @@
     | CurrencyTypes.NativeCurrency
     | undefined;
   export let network: any;
+  export let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
 
   let validationErrors = {
     payeeAddress: false,
@@ -453,13 +454,14 @@
           }))}
           onchange={handleCurrencyChange}
         />
-
-        <Input
-          type="checkbox"
-          id="isEncrypted"
-          label="Encrypt invoice"
-          bind:checked={formData.isEncrypted}
-          />
+        {#if cipherProvider}
+          <Input
+            type="checkbox"
+            id="isEncrypted"
+            label="Encrypt invoice"
+            bind:checked={formData.isEncrypted}
+            />
+        {/if}
       </div>
     </div>
     <div class="invoice-form-dates">
