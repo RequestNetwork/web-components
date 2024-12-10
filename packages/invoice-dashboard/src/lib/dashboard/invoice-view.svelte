@@ -243,7 +243,6 @@
         paymentSettings = conversion;
       }
 
-      // Get the transaction object but don't send it yet
       const paymentTx = await payRequest(
         requestData,
         signer,
@@ -252,26 +251,21 @@
         paymentSettings
       );
 
-      // Update first status after user has signed (transaction is created)
-      statuses[0].done = true;
-      statuses = statuses;
+      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
+      if (signStatus) signStatus.done = true;
 
-      // Wait for transaction to be mined
       await paymentTx.wait();
 
-      // Update second status after payment is confirmed
-      statuses[1].done = true;
-      statuses = statuses;
+      const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
+      if (paymentStatus) paymentStatus.done = true;
 
-      // Wait for balance update
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      // Update final status when everything is complete
-      statuses[2].done = true;
-      statuses = statuses;
+      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
+      if (networkStatus) networkStatus.done = true;
 
       isPaid = true;
       loading = false;
