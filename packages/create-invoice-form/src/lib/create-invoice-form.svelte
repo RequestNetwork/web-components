@@ -23,6 +23,7 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import { EncryptionTypes } from '@requestnetwork/types';
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
@@ -58,15 +59,16 @@
 
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
-      const newCurrencies = currencyManager.knownCurrencies.filter(
-        (currency: CurrencyTypes.CurrencyDefinition) =>
-          currency.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-          currency.network === newNetwork
-      );
-
       network = newNetwork;
-      defaultCurrencies = newCurrencies;
+
+      invoiceCurrency = undefined;
       currency = undefined;
+
+      defaultCurrencies = currencyManager.knownCurrencies.filter(
+        (curr: CurrencyTypes.CurrencyDefinition) =>
+          curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+          curr.network === newNetwork
+      );
     }
   };
 
@@ -74,36 +76,37 @@
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let defaultCurrencies = currencyManager.knownCurrencies.filter(
-    (currency: CurrencyTypes.CurrencyDefinition) =>
-      currency.type === Types.RequestLogic.CURRENCY.ISO4217 || network
-        ? currency.network === network
-        : true
-  );
+  let defaultCurrencies = currencyManager.knownCurrencies;
 
   const handleInvoiceCurrencyChange = (
     value: CurrencyTypes.CurrencyDefinition
   ) => {
-    invoiceCurrency = value;
-    network = undefined;
-    currency = undefined;
+    if (value !== invoiceCurrency) {
+      invoiceCurrency = value;
+      currency = undefined;
 
-    if (
-      invoiceCurrency &&
-      invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-    ) {
-      networks = getCurrencySupportedNetworksForConversion(
-        invoiceCurrency.hash,
-        currencyManager
-      );
-    } else {
-      networks = extractUniqueNetworkNames();
+      if (value.type !== Types.RequestLogic.CURRENCY.ISO4217) {
+        network = value.network;
+      }
     }
   };
 
   const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
+
+  $: {
+    if (invoiceCurrency) {
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        networks = getCurrencySupportedNetworksForConversion(
+          invoiceCurrency.hash,
+          currencyManager
+        );
+      } else {
+        networks = extractUniqueNetworkNames();
+      }
+    }
+  }
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -181,19 +184,41 @@
     if (requestNetwork) {
       try {
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
-        const request = await requestNetwork.createRequest({
-          requestInfo: requestCreateParameters.requestInfo,
-          paymentNetwork: requestCreateParameters.paymentNetwork,
-          contentData: requestCreateParameters.contentData,
-          signer: requestCreateParameters.signer,
-        });
+        let request;
+        if(formData.isEncrypted) {
+          const payeeEncryptionParams = {
+            key: requestCreateParameters.requestInfo.payee?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+          const payerEncryptionParams = {
+            key: requestCreateParameters.requestInfo.payer?.value!,
+            method: EncryptionTypes.METHOD.KMS,
+          };
+
+          request = await requestNetwork._createEncryptedRequest(
+            {
+              requestInfo: requestCreateParameters.requestInfo,
+              signer: requestCreateParameters.signer,
+              paymentNetwork: requestCreateParameters.paymentNetwork,
+              contentData: requestCreateParameters.contentData,
+            },
+            [payeeEncryptionParams, payerEncryptionParams],
+          );
+        } else {
+          request = await requestNetwork.createRequest({
+            requestInfo: requestCreateParameters.requestInfo,
+            paymentNetwork: requestCreateParameters.paymentNetwork,
+            contentData: requestCreateParameters.contentData,
+            signer: requestCreateParameters.signer,
+          });
+        }
 
         activeRequest = request;
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
       } catch (error: any) {
-        if (error.message.includes("Transactioon confirmation not received")) {
+        if (error.message.includes("Transaction confirmation not received")) {
           isTimeout = true;
           removeAllStatuses();
         } else {
@@ -212,16 +237,16 @@
   <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
+      bind:currency
       config={activeConfig}
       bind:defaultCurrencies
+      bind:network
       {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
       {networks}
       {currencyManager}
       {invoiceCurrency}
-      {currency}
-      {network}
     />
     <div class="invoice-view-wrapper">
       <InvoiceView

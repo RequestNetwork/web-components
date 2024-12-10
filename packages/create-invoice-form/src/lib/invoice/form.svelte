@@ -27,7 +27,6 @@
   export let formData: CustomFormData;
   export let handleInvoiceCurrencyChange: (value: string) => void;
   export let handleCurrencyChange: (value: string) => void;
-
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
@@ -51,6 +50,7 @@
   };
 
   let showPayeeAddressInput = false;
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
     validationErrors[`${type}`].email = !isEmail(email);
@@ -117,21 +117,6 @@
     }
   };
 
-  const filterSettlementCurrencies = (
-    currency: CurrencyTypes.CurrencyDefinition
-  ) => {
-    return invoiceCurrency
-      ? invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217
-        ? currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
-          currencyManager?.getConversionPath(
-            invoiceCurrency,
-            currency,
-            currency.network
-          )?.length > 0
-        : invoiceCurrency.hash === currency.hash
-      : false;
-  };
-
   const addInvoiceItem = () => {
     const newItem = {
       name: "",
@@ -161,6 +146,32 @@
 
   $: if (!showPayeeAddressInput && formData.creatorId) {
     formData.payeeAddress = formData.creatorId;
+  }
+
+  $: {
+    // Filter settlement currencies whenever network, invoiceCurrency, or currencyManager changes
+    filteredSettlementCurrencies = defaultCurrencies.filter((currency) => {
+      if (!invoiceCurrency) {
+        return false;
+      }
+
+      // For ISO4217 currencies (like EUR)
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        const hasValidPath =
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency.network
+          )?.length > 0;
+
+        return (
+          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
+        );
+      }
+
+      // For other currency types (like ERC20)
+      return invoiceCurrency.hash === currency.hash;
+    });
   }
 </script>
 
@@ -398,32 +409,37 @@
             </div>
           </Accordion>
         </div>
-
-        <Dropdown
-          {config}
-          selectedValue={invoiceCurrency
-            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
-            : undefined}
-          placeholder="Invoice currency (labeling)"
-          options={defaultCurrencies.map((currency) => ({
-            value: currency,
-            label: `${currency.symbol} ${currency?.network ? `(${currency?.network})` : ""}`,
-          }))}
-          onchange={handleInvoiceCurrencyChange}
-        />
         <Dropdown
           {config}
           placeholder="Payment chain"
           selectedValue={network}
           options={networks
             .filter((networkItem) => networkItem)
-            .map((networkItem) => {
-              return {
-                value: networkItem,
-                label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
-              };
-            })}
+            .map((networkItem) => ({
+              value: networkItem,
+              label: networkItem[0]?.toUpperCase() + networkItem?.slice(1),
+            }))}
           onchange={handleNetworkChange}
+        />
+        <Dropdown
+          {config}
+          selectedValue={invoiceCurrency
+            ? `${invoiceCurrency.symbol} ${invoiceCurrency?.network ? `(${invoiceCurrency?.network})` : ""}`
+            : undefined}
+          placeholder="Invoice currency (labeling)"
+          options={defaultCurrencies
+            ?.filter((curr) => {
+              if (!curr) return false;
+              return (
+                curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
+                (curr.network && curr.network === network)
+              );
+            })
+            .map((currency) => ({
+              value: currency,
+              label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
+            })) ?? []}
+          onchange={handleInvoiceCurrencyChange}
         />
         <Dropdown
           {config}
@@ -431,14 +447,19 @@
           selectedValue={currency
             ? `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`
             : undefined}
-          options={defaultCurrencies
-            .filter((currency) => filterSettlementCurrencies(currency))
-            .map((currency) => ({
-              value: currency,
-              label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
-            }))}
+          options={filteredSettlementCurrencies.map((currency) => ({
+            value: currency,
+            label: `${currency.symbol ?? "Unknown"} (${currency?.network ?? "Unknown"})`,
+          }))}
           onchange={handleCurrencyChange}
         />
+
+        <Input
+          type="checkbox"
+          id="isEncrypted"
+          label="Encrypt invoice"
+          bind:checked={formData.isEncrypted}
+          />
       </div>
     </div>
     <div class="invoice-form-dates">
@@ -575,7 +596,7 @@
         id="note"
         {handleInput}
         type="textarea"
-        placeholder="Memo"
+        label="Memo"
         value={formData.note}
       />
       <Labels {config} bind:formData />
@@ -612,6 +633,7 @@
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     gap: 20px;
     box-sizing: border-box;
+    min-width: 700px;
   }
 
   .invoice-form-container {
@@ -778,8 +800,8 @@
 
   .invoice-form-label-wrapper {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 8px;
     height: fit-content;
     width: 100%;
   }
@@ -789,23 +811,9 @@
     font-size: 12px;
   }
 
-  :global(.invoice-form-label-wrapper .input-wrapper) {
-    flex: 1;
-  }
-
   :global(.invoice-form-label-wrapper svg, .invoice-form-label-wrapper path) {
     color: white;
     fill: white;
-  }
-
-  :global(.invoice-form-label-wrapper .input-wrapper .textarea-input) {
-    width: 100%;
-    height: 107px;
-  }
-
-  :global(.invoice-form-label-wrapper .labels-wrapper) {
-    flex: 1;
-    margin-right: 8px;
   }
 
   :global(.invoice-form-table-body-add-item button) {
