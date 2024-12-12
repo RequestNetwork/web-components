@@ -5,9 +5,7 @@ export const formatAddress = (
   first: number = 6,
   last: number = 4
 ): string => {
-  if (!checkAddress(address)) {
-    console.error("Invalid address!");
-  }
+  if (!address) return "";
 
   return `${address.slice(0, first)}...${address.slice(-last)}`;
 };
