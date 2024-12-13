@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.7
+
+### Patch Changes
+
+- Fix InvoiceDashboardProps types
+
 ## 0.11.6
 
 ### Patch Changes
