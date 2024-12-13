@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.6
+
+### Patch Changes
+
+- Upgrade SDK to 0.53.0
+
 ## 0.11.5
 
 ### Patch Changes
