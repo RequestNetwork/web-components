@@ -75,6 +75,11 @@
     | undefined;
   let statuses: any[] = [
     {
+      name: "CORRECT_NETWORK",
+      message: "Correct Network",
+      done: false,
+    },
+    {
       name: "SIGN_TRANSACTION",
       message: "Sign Transaction",
       done: false,
@@ -82,11 +87,6 @@
     {
       name: "PAYMENT_DETECTED",
       message: "Payment Detected",
-      done: false,
-    },
-    {
-      name: "CORRECT_NETWORK",
-      message: "Correct Network",
       done: false,
     },
   ];
@@ -225,6 +225,9 @@
         requestData?.requestId!
       );
 
+      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
+      if (networkStatus) networkStatus.done = true;
+
       let paymentSettings = undefined;
       if (
         paymentNetworkExtension?.id ===
@@ -263,9 +266,6 @@
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-
-      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
-      if (networkStatus) networkStatus.done = true;
 
       isPaid = true;
       loading = false;
@@ -306,6 +306,12 @@
     try {
       loading = true;
 
+      statuses.push({
+        name: "APPROVE_ERC20",
+        message: "Approve ERC20",
+        done: false,
+      });
+
       const approvers: { [key: string]: () => Promise<void> } = {
         [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
           async () => {
@@ -330,6 +336,9 @@
       ) {
         await approvers[paymentNetworkExtension.id]();
       }
+
+      const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+      if (approveStatus) approveStatus.done = true;
     } catch (err) {
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
@@ -379,6 +388,30 @@
   }
 
   const currentStatusIndex = statuses.length - 1;
+
+  async function handlePayment() {
+    try {
+      if (!correctChain) {
+        await switchNetworkIfNeeded(network || "mainnet");
+        return;
+      }
+
+      if (
+        !approved &&
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+      ) {
+        await approve();
+        return;
+      }
+
+      await payTheRequest();
+    } catch (err) {
+      console.error("Error during payment process:", err);
+      toast.error("Payment process failed", {
+        description: String(err),
+      });
+    }
+  }
 </script>
 
 <div
@@ -655,26 +688,17 @@
     </div>
 
     <div class="invoice-view-actions">
-      {#if !correctChain && !isPayee}
+      {#if !isPayee && !unsupportedNetwork && !isPaid}
         <Button
           type="button"
-          text="Switch Network"
+          text={!correctChain
+            ? "Switch Network"
+            : !approved &&
+                paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+              ? "Approve"
+              : "Pay Now"}
           padding="px-[12px] py-[6px]"
-          onClick={() => switchNetworkIfNeeded(network || "mainnet")}
-        />
-      {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
-        <Button
-          type="button"
-          text="Approve"
-          padding="px-[12px] py-[6px]"
-          onClick={approve}
-        />
-      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork && !statuses[0].done}
-        <Button
-          type="button"
-          text="Pay"
-          padding="px-[12px] py-[6px]"
-          onClick={payTheRequest}
+          onClick={handlePayment}
         />
       {/if}
     </div>
