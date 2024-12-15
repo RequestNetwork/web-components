@@ -29,7 +29,7 @@
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined = requestNetwork?.getCipherProvider();
+  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
 
   let account: GetAccountReturnType;
   let isTimeout = false;
@@ -114,6 +114,8 @@
     totalTaxAmount: 0,
     totalAmount: 0,
   };
+
+  $: cipherProvider = requestNetwork?.getCipherProvider();
 
   $: {
     if (wagmiConfig) {
