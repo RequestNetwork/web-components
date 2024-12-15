@@ -1,5 +1,11 @@
 # @requestnetwork/create-invoice-form
 
+## 0.11.10
+
+### Patch Changes
+
+- Fix enbable decryption
+
 ## 0.11.9
 
 ### Patch Changes
