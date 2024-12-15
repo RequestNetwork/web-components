@@ -413,6 +413,9 @@
         }
       } catch (error) {
         console.error("Failed to enable decryption:", error);
+        toast.error("Failed to enable decryption.");
+        loading = false;
+        return;
       }
     } else {
       cipherProvider?.enableDecryption(false);
