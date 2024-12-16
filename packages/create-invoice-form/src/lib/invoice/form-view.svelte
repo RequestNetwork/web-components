@@ -194,7 +194,7 @@
       </span>
     </p>
     <p class="invoice-section-title">
-      <span>Settlement Currency</span>
+      <span>Payment Currency</span>
       <span class="invoice-section-title-content">
         {currency ? `${currency.symbol} (${currency.network})` : ""}
       </span>
