@@ -102,18 +102,27 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
-  $: {
-    if (wagmiConfig) {
-      account = getAccount(wagmiConfig);
-    }
-  }
+  let previousAddress: string | undefined;
 
   $: {
-    if (account?.address) {
-      tick().then(() => {
-        enableDecryption();
-        getRequests();
-      });
+    if (wagmiConfig) {
+      const newAccount = getAccount(wagmiConfig);
+      if (newAccount?.address !== previousAddress) {
+        account = newAccount;
+        previousAddress = newAccount?.address;
+
+        if (newAccount?.address) {
+          tick().then(() => {
+            enableDecryption();
+            getRequests();
+          });
+        } else {
+          requests = [];
+          activeRequest = undefined;
+          previousWalletAddress = undefined;
+          previousNetwork = undefined;
+        }
+      }
     }
   }
 
@@ -122,9 +131,11 @@
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
       onChange(data) {
-        if (data?.address !== account?.address) {
+        if (data?.address !== previousAddress) {
           account = data;
-          if (account?.address) {
+          previousAddress = data?.address;
+
+          if (data?.address) {
             getRequests();
           } else {
             requests = [];
@@ -141,13 +152,7 @@
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
-  $: cipherProvider =
-    requestNetwork?.getCipherProvider() as CipherProviderTypes.ICipherProvider & {
-      getSessionSignatures: (
-        signer: ethers.Signer,
-        walletAddress: `0x${string}`
-      ) => Promise<any>;
-    };
+  $: cipherProvider = undefined;
 
   $: {
     signer = account?.address;

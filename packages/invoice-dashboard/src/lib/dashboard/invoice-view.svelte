@@ -20,9 +20,7 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   // Icons
-  import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
-  import InfoCircle from "@requestnetwork/shared-icons/info-circle.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
@@ -77,7 +75,7 @@
     {
       name: "CORRECT_NETWORK",
       message: "Correct Network",
-      done: false,
+      done: correctChain,
     },
     {
       name: "SIGN_TRANSACTION",
@@ -92,6 +90,8 @@
   ];
 
   let status = checkStatus(requestData || request);
+
+  let isSigningTransaction = false;
 
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
@@ -142,11 +142,14 @@
     buyerInfo = generateDetailParagraphs(request?.contentData?.buyerInfo);
   }
 
-  onMount(() => {
-    checkInvoice();
-  });
+  let previousRequestId: string | null = null;
 
-  $: request, checkInvoice();
+  $: {
+    if (request?.requestId !== previousRequestId) {
+      previousRequestId = request?.requestId;
+      checkInvoice();
+    }
+  }
 
   $: {
     account = account;
@@ -158,6 +161,7 @@
     try {
       unsupportedNetwork = false;
       loading = true;
+
       const singleRequest = await requestNetwork?.fromRequestId(
         request!.requestId
       );
@@ -167,6 +171,9 @@
       requestData = singleRequest?.getData();
       paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
+      isPaid = requestData?.balance?.balance >= requestData?.expectedAmount;
+
+      // Handle payment currencies setup
       if (
         paymentNetworkExtension?.id ===
         Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
@@ -201,12 +208,49 @@
 
       network = paymentCurrencies[0]?.network || "mainnet";
 
+      // Check ERC20 approval if needed
       if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
         approved = await checkApproval(requestData, paymentCurrencies, signer);
       } else {
         approved = true;
       }
 
+      // Build status flow based on conditions
+      const baseStatuses = [
+        {
+          name: "CORRECT_NETWORK",
+          message: "Correct Network",
+          done: correctChain,
+        },
+      ];
+
+      // Add ERC20 approval status if needed
+      if (
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+        !approved
+      ) {
+        baseStatuses.push({
+          name: "APPROVE_ERC20",
+          message: "Approve ERC20",
+          done: false,
+        });
+      }
+
+      // Add transaction and payment detection statuses
+      baseStatuses.push(
+        {
+          name: "SIGN_TRANSACTION",
+          message: "Sign Transaction",
+          done: false,
+        },
+        {
+          name: "PAYMENT_DETECTED",
+          message: "Payment Detected",
+          done: false,
+        }
+      );
+
+      statuses = baseStatuses;
       status = checkStatus(requestData || request);
     } catch (err: any) {
       console.error("Error while checking invoice: ", err);
@@ -214,19 +258,25 @@
         unsupportedNetwork = true;
       }
     } finally {
-      // loading = false;
+      loading = false;
     }
   };
 
   const payTheRequest = async () => {
     try {
       loading = true;
-      const _request = await requestNetwork?.fromRequestId(
-        requestData?.requestId!
-      );
+      isSigningTransaction = true;
 
-      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
-      if (networkStatus) networkStatus.done = true;
+      if (!requestNetwork || !requestData?.requestId) {
+        throw new Error("Request network or request data not available");
+      }
+
+      const _request = await requestNetwork?.fromRequestId(
+        requestData.requestId
+      );
+      if (!_request) {
+        throw new Error("Could not fetch request details");
+      }
 
       let paymentSettings = undefined;
       if (
@@ -235,10 +285,14 @@
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
       ) {
+        if (!currency || !paymentCurrencies[0]) {
+          throw new Error("Currency information not available");
+        }
+
         const { conversion } = await getConversionPaymentValues({
-          baseAmount: requestData?.expectedAmount,
-          denominationCurrency: currency!,
-          selectedPaymentCurrency: paymentCurrencies[0]!,
+          baseAmount: requestData.expectedAmount,
+          denominationCurrency: currency,
+          selectedPaymentCurrency: paymentCurrencies[0],
           currencyManager,
           provider: signer,
           fromAddress: address,
@@ -254,26 +308,56 @@
         paymentSettings
       );
 
+      // Update sign transaction status
       const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
       if (signStatus) signStatus.done = true;
+      statuses = [...statuses];
 
       await paymentTx.wait();
 
+      // Update payment detected status
       const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
       if (paymentStatus) paymentStatus.done = true;
+      statuses = [...statuses];
 
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
+      // Add a 2-second delay before completing
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Refresh the request data one final time
+      requestData = await _request?.refresh();
+      request = requestData; // Update the parent request object too
+
       isPaid = true;
-      loading = false;
+      status = checkStatus(requestData);
       isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
+
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Payment failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+
+      statuses = statuses.map((status) => ({
+        ...status,
+        done: false,
+      }));
+    } finally {
       loading = false;
-      statuses = [];
+      isSigningTransaction = false;
     }
   };
 
@@ -306,12 +390,6 @@
     try {
       loading = true;
 
-      statuses.push({
-        name: "APPROVE_ERC20",
-        message: "Approve ERC20",
-        done: false,
-      });
-
       const approvers: { [key: string]: () => Promise<void> } = {
         [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
           async () => {
@@ -338,7 +416,9 @@
       }
 
       const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+
       if (approveStatus) approveStatus.done = true;
+      statuses = [...statuses];
     } catch (err) {
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
@@ -353,8 +433,14 @@
       signer = await getEthersSigner(wagmiConfig);
 
       correctChain = true;
+
+      // Update network switch status
+      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
+      if (networkStatus) networkStatus.done = true;
     } catch (err) {
       console.error("Something went wrong while switching networks: ", err);
+      toast.error("Failed to switch network");
+      throw err;
     }
   }
 
@@ -387,20 +473,19 @@
       : value;
   }
 
-  const currentStatusIndex = statuses.length - 1;
-
   async function handlePayment() {
     try {
-      if (!correctChain) {
-        await switchNetworkIfNeeded(network || "mainnet");
-        return;
-      }
+      await switchNetworkIfNeeded(network || "mainnet");
 
       if (
         !approved &&
         paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
       ) {
         await approve();
+
+        const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+        if (approveStatus) approveStatus.done = true;
+
         return;
       }
 
@@ -410,6 +495,11 @@
       toast.error("Payment process failed", {
         description: String(err),
       });
+      // Reset statuses on error make them all false
+      statuses = statuses.map((status) => ({
+        ...status,
+        done: false,
+      }));
     }
   }
 </script>
@@ -628,81 +718,83 @@
       {/each}
     {/if}
   </div>
-  <div class="status-container">
-    <div class="statuses">
-      {#if statuses[0].done}
-        <ul class="status-list">
-          {#each statuses as status, index}
-            <li class="status-item">
-              <span
-                class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+  {#if !isPaid && !isPayee}
+    <div class="status-container">
+      <div class="statuses">
+        {#if statuses?.length > 0}
+          <ul class="status-list">
+            {#each statuses as status, index}
+              <li
+                class="status-item"
+                style="width: {statuses.length === 3 ? '35%' : '45%'}"
               >
-                {#if status.done}
-                  <svg
-                    width="24"
-                    height="25"
-                    viewBox="0 0 24 25"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M6 12.5L10.2426 16.7426L18.727 8.25732"
-                      stroke="#328965"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                {:else}
-                  <svg
-                    width="25"
-                    height="25"
-                    viewBox="0 0 25 25"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
-                      stroke="#3D72FF"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                {/if}
-              </span>
-              <span class="status-text">{status.message}</span>
-              <div
-                class={`progress-line ${
-                  status.done || statuses[index + 1]?.done
-                    ? "bg-green"
-                    : index <= currentStatusIndex
-                      ? "bg-blue"
-                      : "bg-zinc-light"
-                }`}
-              ></div>
-            </li>
-          {/each}
-        </ul>
-      {/if}
+                <span
+                  class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+                >
+                  {#if status.done}
+                    <svg
+                      width="24"
+                      height="25"
+                      viewBox="0 0 24 25"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6 12.5L10.2426 16.7426L18.727 8.25732"
+                        stroke="#328965"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  {:else}
+                    <svg
+                      width="25"
+                      height="25"
+                      viewBox="0 0 25 25"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
+                        stroke="#3D72FF"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  {/if}
+                </span>
+                <span class="status-text">{status.message}</span>
+                <div
+                  class={`progress-line ${
+                    status.done || statuses[index + 1]?.done
+                      ? "bg-green"
+                      : "bg-blue"
+                  }`}
+                ></div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
     </div>
+  {/if}
+  {#if !isPayee && !unsupportedNetwork && !isPaid && !isSigningTransaction}
+    <Button
+      className="pay-button"
+      type="button"
+      text={!correctChain
+        ? "Switch Network"
+        : !approved &&
+            paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+          ? "Approve"
+          : "Pay Now"}
+      padding="px-[12px] py-[6px]"
+      onClick={handlePayment}
+    />
+  {/if}
 
-    <div class="invoice-view-actions">
-      {#if !isPayee && !unsupportedNetwork && !isPaid}
-        <Button
-          type="button"
-          text={!correctChain
-            ? "Switch Network"
-            : !approved &&
-                paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
-              ? "Approve"
-              : "Pay Now"}
-          padding="px-[12px] py-[6px]"
-          onClick={handlePayment}
-        />
-      {/if}
-    </div>
-  </div>
   {#if unsupportedNetwork}
     <div class="unsupported-network">Unsupported payment network!</div>
   {/if}
@@ -927,6 +1019,8 @@
     display: flex;
     align-items: center;
     list-style: none;
+    padding: 0;
+    margin-left: 85px;
   }
 
   .status-item {
@@ -935,6 +1029,10 @@
     position: relative;
     text-align: center;
     width: 45%;
+  }
+
+  .status-list:has(:nth-child(3):last-child) .status-item {
+    width: 35%;
   }
 
   .status-item:first-child {
@@ -1062,5 +1160,11 @@
 
   .email-link:hover {
     text-decoration: underline;
+  }
+
+  :global(.pay-button) {
+    padding: 8px 12px !important;
+    width: fit-content;
+    margin-left: auto;
   }
 </style>
