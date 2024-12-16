@@ -41,20 +41,23 @@
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { debounce, formatAddress } from "../utils";
+  import { debounce, formatAddress, getEthersSigner } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
-    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
+  import { ethers } from "ethers";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined = requestNetwork?.getCipherProvider();
+  let cipherProvider: CipherProviderTypes.ICipherProvider & {
+    getSessionSignatures: (signer: ethers.Signer, walletAddress: `0x${string}`) => Promise<any>;
+  } | undefined;
 
-  let sliderValueForDecryption = cipherProvider?.isDecryptionEnabled() ? "on" : "off";
+  let sliderValueForDecryption = JSON.parse(localStorage?.getItem('isDecryptionEnabled') ?? "false") ? "on" : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -99,6 +102,7 @@
   $: {
     if (account?.address) {
       tick().then(() => {
+        enableDecryption();
         getRequests();
       });
     }
@@ -127,6 +131,13 @@
   onDestroy(() => {
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
+
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProviderTypes.ICipherProvider & {
+    getSessionSignatures: (
+      signer: ethers.Signer,
+      walletAddress: `0x${string}`
+    ) => Promise<any>;
+  };
 
   $: {
     signer = account?.address;
@@ -389,17 +400,31 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
-
   
-  $: sliderValueForDecryption, getRequests(); 
-
-  $: {
+  const enableDecryption = async () => {
+    loading = true;
     if(sliderValueForDecryption === 'on') {
-      cipherProvider?.enableDecryption(true);
+      try {
+        const signer = await getEthersSigner(wagmiConfig);
+        if (signer && account?.address) {
+          await cipherProvider?.getSessionSignatures(signer, account.address);
+          cipherProvider?.enableDecryption(true);
+          localStorage?.setItem('isDecryptionEnabled',  JSON.stringify(true));
+        }
+      } catch (error) {
+        console.error("Failed to enable decryption:", error);
+        toast.error("Failed to enable decryption.");
+        loading = false;
+        return;
+      }
     } else {
       cipherProvider?.enableDecryption(false);
+      localStorage?.setItem('isDecryptionEnabled',  JSON.stringify(false));
     }
+    await getRequests();
+    loading = false;
   }
+  $: sliderValueForDecryption, enableDecryption();
 
 </script>
 
