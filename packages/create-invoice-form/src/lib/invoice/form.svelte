@@ -453,7 +453,7 @@
               value: currency,
               type: "settlementCurrency",
             }))}
-            placeholder="Settlement currency"
+            placeholder="Payment currency"
             getValue={(currency) => currency.value.symbol}
             getDisplayValue={(currency) =>
               `${currency.value.symbol} (${currency.value.network})`}
