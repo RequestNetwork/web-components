@@ -43,12 +43,15 @@
 
 <style>
   .status-indicator {
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
     padding: 6px 12px;
     text-align: center;
     width: fit-content;
     border-radius: 8px;
     font-weight: 500;
+    white-space: nowrap;
+    font-size: 14px;
   }
 
   .status-paid {

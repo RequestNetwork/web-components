@@ -53,8 +53,14 @@
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined =
-    requestNetwork?.getCipherProvider();
+  let cipherProvider:
+    | (CipherProviderTypes.ICipherProvider & {
+        getSessionSignatures: (
+          signer: ethers.Signer,
+          walletAddress: `0x${string}`
+        ) => Promise<any>;
+      })
+    | undefined;
 
   let sliderValueForDecryption = JSON.parse(
     localStorage?.getItem("isDecryptionEnabled") ?? "false"
@@ -96,18 +102,27 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
-  $: {
-    if (wagmiConfig) {
-      account = getAccount(wagmiConfig);
-    }
-  }
+  let previousAddress: string | undefined;
 
   $: {
-    if (account?.address) {
-      tick().then(() => {
-        enableDecryption();
-        getRequests();
-      });
+    if (wagmiConfig) {
+      const newAccount = getAccount(wagmiConfig);
+      if (newAccount?.address !== previousAddress) {
+        account = newAccount;
+        previousAddress = newAccount?.address;
+
+        if (newAccount?.address) {
+          tick().then(() => {
+            enableDecryption();
+            getRequests();
+          });
+        } else {
+          requests = [];
+          activeRequest = undefined;
+          previousWalletAddress = undefined;
+          previousNetwork = undefined;
+        }
+      }
     }
   }
 
@@ -116,9 +131,11 @@
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
       onChange(data) {
-        if (data?.address !== account?.address) {
+        if (data?.address !== previousAddress) {
           account = data;
-          if (account?.address) {
+          previousAddress = data?.address;
+
+          if (data?.address) {
             getRequests();
           } else {
             requests = [];
@@ -344,7 +361,7 @@
           BigInt(request.expectedAmount),
           currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo!.symbol,
+        currencySymbol: currencyInfo?.symbol,
         paymentCurrencies,
       };
     }
@@ -851,7 +868,7 @@
   }
 
   .tabs ul li {
-    width: 100px;
+    width: 110px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
