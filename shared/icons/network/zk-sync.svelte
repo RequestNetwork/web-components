@@ -12,23 +12,23 @@
   height="24"
 >
   <style type="text/css">
-    .st0 {
+    .st0z {
       fill-rule: evenodd;
       clip-rule: evenodd;
       fill: #ffffff;
     }
-    .st1 {
+    .st1z {
       fill-rule: evenodd;
       clip-rule: evenodd;
     }
   </style>
   <g>
     <path
-      class="st1"
+      class="st1z"
       d="M316,199l-66.7-66.4v48.6l-66.2,48.7l66.2,0v35.5L316,199z"
     />
     <path
-      class="st1"
+      class="st1z"
       d="M81,199l66.7,66.4v-48.3l66.2-49.1l-66.2,0v-35.5L81,199z"
     />
   </g>

@@ -23,13 +23,13 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
-  import { EncryptionTypes, CipherProviderTypes } from '@requestnetwork/types';
+  import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined = requestNetwork?.getCipherProvider();
+  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
 
   let account: GetAccountReturnType;
   let isTimeout = false;
@@ -115,6 +115,8 @@
     totalAmount: 0,
   };
 
+  $: cipherProvider = requestNetwork?.getCipherProvider();
+
   $: {
     if (wagmiConfig) {
       account = getAccount(wagmiConfig);
@@ -186,7 +188,7 @@
       try {
         addToStatus(APP_STATUS.PERSISTING_TO_IPFS);
         let request;
-        if(cipherProvider && formData.isEncrypted) {
+        if (cipherProvider && formData.isEncrypted) {
           const payeeEncryptionParams = {
             key: requestCreateParameters.requestInfo.payee?.value!,
             method: EncryptionTypes.METHOD.KMS,
@@ -203,7 +205,7 @@
               paymentNetwork: requestCreateParameters.paymentNetwork,
               contentData: requestCreateParameters.contentData,
             },
-            [payeeEncryptionParams, payerEncryptionParams],
+            [payeeEncryptionParams, payerEncryptionParams]
           );
         } else {
           request = await requestNetwork.createRequest({

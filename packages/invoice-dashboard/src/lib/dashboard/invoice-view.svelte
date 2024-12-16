@@ -20,7 +20,6 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   // Icons
-  import Check from "@requestnetwork/shared-icons/check.svelte";
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
   import { formatDate } from "@requestnetwork/shared-utils/formatDate";
@@ -40,7 +39,6 @@
   }
 
   interface BuyerInfo extends EntityInfo {}
-
   interface SellerInfo extends EntityInfo {}
 
   export let config;
@@ -55,7 +53,6 @@
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
     getCurrencyFromManager(request.currencyInfo, currencyManager);
   let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
-  let statuses: any = [];
   let isPaid = false;
   let loading = false;
   let requestData: any = null;
@@ -74,8 +71,27 @@
   let paymentNetworkExtension:
     | Types.Extension.IPaymentNetworkState<any>
     | undefined;
+  let statuses: any[] = [
+    {
+      name: "CORRECT_NETWORK",
+      message: "Correct Network",
+      done: correctChain,
+    },
+    {
+      name: "SIGN_TRANSACTION",
+      message: "Sign Transaction",
+      done: false,
+    },
+    {
+      name: "PAYMENT_DETECTED",
+      message: "Payment Detected",
+      done: false,
+    },
+  ];
 
   let status = checkStatus(requestData || request);
+
+  let isSigningTransaction = false;
 
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
@@ -126,11 +142,14 @@
     buyerInfo = generateDetailParagraphs(request?.contentData?.buyerInfo);
   }
 
-  onMount(() => {
-    checkInvoice();
-  });
+  let previousRequestId: string | null = null;
 
-  $: request, checkInvoice();
+  $: {
+    if (request?.requestId !== previousRequestId) {
+      previousRequestId = request?.requestId;
+      checkInvoice();
+    }
+  }
 
   $: {
     account = account;
@@ -142,6 +161,7 @@
     try {
       unsupportedNetwork = false;
       loading = true;
+
       const singleRequest = await requestNetwork?.fromRequestId(
         request!.requestId
       );
@@ -151,6 +171,9 @@
       requestData = singleRequest?.getData();
       paymentNetworkExtension = getPaymentNetworkExtension(requestData);
 
+      isPaid = requestData?.balance?.balance >= requestData?.expectedAmount;
+
+      // Handle payment currencies setup
       if (
         paymentNetworkExtension?.id ===
         Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
@@ -185,12 +208,49 @@
 
       network = paymentCurrencies[0]?.network || "mainnet";
 
+      // Check ERC20 approval if needed
       if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
         approved = await checkApproval(requestData, paymentCurrencies, signer);
       } else {
         approved = true;
       }
 
+      // Build status flow based on conditions
+      const baseStatuses = [
+        {
+          name: "CORRECT_NETWORK",
+          message: "Correct Network",
+          done: correctChain,
+        },
+      ];
+
+      // Add ERC20 approval status if needed
+      if (
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+        !approved
+      ) {
+        baseStatuses.push({
+          name: "APPROVE_ERC20",
+          message: "Approve ERC20",
+          done: false,
+        });
+      }
+
+      // Add transaction and payment detection statuses
+      baseStatuses.push(
+        {
+          name: "SIGN_TRANSACTION",
+          message: "Sign Transaction",
+          done: false,
+        },
+        {
+          name: "PAYMENT_DETECTED",
+          message: "Payment Detected",
+          done: false,
+        }
+      );
+
+      statuses = baseStatuses;
       status = checkStatus(requestData || request);
     } catch (err: any) {
       console.error("Error while checking invoice: ", err);
@@ -205,11 +265,18 @@
   const payTheRequest = async () => {
     try {
       loading = true;
-      const _request = await requestNetwork?.fromRequestId(
-        requestData?.requestId!
-      );
+      isSigningTransaction = true;
 
-      statuses = [...statuses, "Waiting for payment"];
+      if (!requestNetwork || !requestData?.requestId) {
+        throw new Error("Request network or request data not available");
+      }
+
+      const _request = await requestNetwork?.fromRequestId(
+        requestData.requestId
+      );
+      if (!_request) {
+        throw new Error("Could not fetch request details");
+      }
 
       let paymentSettings = undefined;
       if (
@@ -218,10 +285,14 @@
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
       ) {
+        if (!currency || !paymentCurrencies[0]) {
+          throw new Error("Currency information not available");
+        }
+
         const { conversion } = await getConversionPaymentValues({
-          baseAmount: requestData?.expectedAmount,
-          denominationCurrency: currency!,
-          selectedPaymentCurrency: paymentCurrencies[0]!,
+          baseAmount: requestData.expectedAmount,
+          denominationCurrency: currency,
+          selectedPaymentCurrency: paymentCurrencies[0],
           currencyManager,
           provider: signer,
           fromAddress: address,
@@ -236,23 +307,53 @@
         undefined,
         paymentSettings
       );
+
+      // Update sign transaction status
+      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
+      if (signStatus) signStatus.done = true;
+      statuses = [...statuses];
+
       await paymentTx.wait();
 
-      statuses = [...statuses, "Payment detected"];
+      // Update payment detected status
+      const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
+      if (paymentStatus) paymentStatus.done = true;
+      statuses = [...statuses];
+
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      statuses = [...statuses, "Payment confirmed"];
+      requestData = await _request?.refresh();
+      request = requestData; // Update the parent request object
+
       isPaid = true;
-      loading = false;
-      statuses = [];
+      status = checkStatus(requestData);
       isRequestPayed = true;
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
+
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Payment failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+
+      statuses = statuses.map((status) => ({
+        ...status,
+        done: false,
+      }));
+    } finally {
       loading = false;
-      statuses = [];
+      isSigningTransaction = false;
     }
   };
 
@@ -309,6 +410,11 @@
       ) {
         await approvers[paymentNetworkExtension.id]();
       }
+
+      const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+
+      if (approveStatus) approveStatus.done = true;
+      statuses = [...statuses];
     } catch (err) {
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
@@ -323,8 +429,14 @@
       signer = await getEthersSigner(wagmiConfig);
 
       correctChain = true;
+
+      // Update network switch status
+      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
+      if (networkStatus) networkStatus.done = true;
     } catch (err) {
       console.error("Something went wrong while switching networks: ", err);
+      toast.error("Failed to switch network");
+      throw err;
     }
   }
 
@@ -355,6 +467,36 @@
     return decimalPart
       ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
       : value;
+  }
+
+  async function handlePayment() {
+    try {
+      await switchNetworkIfNeeded(network || "mainnet");
+
+      if (
+        !approved &&
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+      ) {
+        await approve();
+
+        const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+        if (approveStatus) approveStatus.done = true;
+
+        return;
+      }
+
+      await payTheRequest();
+    } catch (err) {
+      console.error("Error during payment process:", err);
+      toast.error("Payment process failed", {
+        description: String(err),
+      });
+      // Reset statuses on error make them all false
+      statuses = statuses.map((status) => ({
+        ...status,
+        done: false,
+      }));
+    }
   }
 </script>
 
@@ -572,49 +714,83 @@
       {/each}
     {/if}
   </div>
-  <div class="status-container">
-    <div class="statuses">
-      {#if statuses.length > 0 && loading}
-        {#each statuses as status, index (index)}
-          <div class="status">
-            {status || "-"}
-            {#if (index === 0 && statuses.length === 2) || (index === 1 && statuses.length === 3)}
-              <i>
-                <Check />
-              </i>
-            {/if}
-          </div>
-        {/each}
-      {/if}
+  {#if !isPaid && !isPayee}
+    <div class="status-container">
+      <div class="statuses">
+        {#if statuses?.length > 0}
+          <ul class="status-list">
+            {#each statuses as status, index}
+              <li
+                class="status-item"
+                style="width: {statuses.length === 3 ? '35%' : '45%'}"
+              >
+                <span
+                  class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+                >
+                  {#if status.done}
+                    <svg
+                      width="24"
+                      height="25"
+                      viewBox="0 0 24 25"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6 12.5L10.2426 16.7426L18.727 8.25732"
+                        stroke="#328965"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  {:else}
+                    <svg
+                      width="25"
+                      height="25"
+                      viewBox="0 0 25 25"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
+                        stroke="#3D72FF"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  {/if}
+                </span>
+                <span class="status-text">{status.message}</span>
+                <div
+                  class={`progress-line ${
+                    status.done || statuses[index + 1]?.done
+                      ? "bg-green"
+                      : "bg-blue"
+                  }`}
+                ></div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
     </div>
+  {/if}
+  {#if !isPayee && !unsupportedNetwork && !isPaid && !isSigningTransaction}
+    <Button
+      className="pay-button"
+      type="button"
+      text={!correctChain
+        ? "Switch Network"
+        : !approved &&
+            paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+          ? "Approve"
+          : "Pay Now"}
+      padding="px-[12px] py-[6px]"
+      onClick={handlePayment}
+    />
+  {/if}
 
-    <div class="invoice-view-actions">
-      {#if loading}
-        <div class="loading">Loading...</div>
-      {:else if !correctChain && !isPayee}
-        <Button
-          type="button"
-          text="Switch Network"
-          padding="px-[12px] py-[6px]"
-          onClick={() => switchNetworkIfNeeded(network || "mainnet")}
-        />
-      {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
-        <Button
-          type="button"
-          text="Approve"
-          padding="px-[12px] py-[6px]"
-          onClick={approve}
-        />
-      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork}
-        <Button
-          type="button"
-          text="Pay"
-          padding="px-[12px] py-[6px]"
-          onClick={payTheRequest}
-        />
-      {/if}
-    </div>
-  </div>
   {#if unsupportedNetwork}
     <div class="unsupported-network">Unsupported payment network!</div>
   {/if}
@@ -810,8 +986,7 @@
   .status-container {
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: 1rem;
   }
 
@@ -819,6 +994,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    margin-bottom: 32px;
   }
 
   .status {
@@ -832,6 +1009,78 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  .status-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin-left: 85px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-align: center;
+    width: 45%;
+  }
+
+  .status-list:has(:nth-child(3):last-child) .status-item {
+    width: 35%;
+  }
+
+  .status-item:first-child {
+    padding-left: 50px;
+  }
+
+  .status-item:first-child .status-text {
+    padding-left: 50px;
+  }
+
+  .status-item:last-child {
+    width: 20%;
+  }
+
+  .status-item:last-child .progress-line {
+    width: 170px;
+  }
+
+  .progress-line {
+    position: absolute;
+    left: 40%;
+    height: 8px;
+    z-index: 0;
+    transform: translateX(-50%);
+    width: 300px;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    padding: 4px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .status-text {
+    font-size: 14px;
+    color: #272d41;
+    position: absolute;
+    top: -30px;
+    left: -30px;
+  }
+
+  .checkmark {
+    margin-left: 5px;
+    color: #58e1a5;
   }
 
   .invoice-view-actions {
@@ -848,17 +1097,6 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
-  }
-
-  .loading {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-align: center;
-    border-radius: 0.5rem;
-    background-color: var(--mainColor);
-    color: white;
-    animation: pulse 1s infinite;
   }
 
   .unsupported-network {
@@ -884,8 +1122,20 @@
     background-color: var(--secondaryColor);
   }
 
+  .bg-blue {
+    background-color: #759aff;
+  }
+
   .bg-green {
     background-color: #0bb489;
+  }
+
+  .bg-success {
+    background-color: #cdf6e4;
+  }
+
+  .bg-waiting {
+    background-color: #c7e7ff;
   }
 
   .bg-zinc {
@@ -906,5 +1156,11 @@
 
   .email-link:hover {
     text-decoration: underline;
+  }
+
+  :global(.pay-button) {
+    padding: 8px 12px !important;
+    width: fit-content;
+    margin-left: auto;
   }
 </style>
