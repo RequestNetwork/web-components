@@ -1,5 +1,11 @@
 # @requestnetwork/payment-widget
 
+## 0.3.6
+
+### Patch Changes
+
+- Upgrade SDK to 0.53.0
+
 ## 0.3.5
 
 ### Patch Changes
