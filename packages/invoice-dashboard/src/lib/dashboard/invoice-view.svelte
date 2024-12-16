@@ -325,12 +325,8 @@
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      // Add a 2-second delay before completing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Refresh the request data one final time
       requestData = await _request?.refresh();
-      request = requestData; // Update the parent request object too
+      request = requestData; // Update the parent request object
 
       isPaid = true;
       status = checkStatus(requestData);
