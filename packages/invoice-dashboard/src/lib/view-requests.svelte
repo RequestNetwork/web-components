@@ -53,11 +53,20 @@
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
-  let cipherProvider: CipherProviderTypes.ICipherProvider & {
-    getSessionSignatures: (signer: ethers.Signer, walletAddress: `0x${string}`) => Promise<any>;
-  } | undefined;
+  let cipherProvider:
+    | (CipherProviderTypes.ICipherProvider & {
+        getSessionSignatures: (
+          signer: ethers.Signer,
+          walletAddress: `0x${string}`
+        ) => Promise<any>;
+      })
+    | undefined;
 
-  let sliderValueForDecryption = JSON.parse(localStorage?.getItem('isDecryptionEnabled') ?? "false") ? "on" : "off";
+  let sliderValueForDecryption = JSON.parse(
+    localStorage?.getItem("isDecryptionEnabled") ?? "false"
+  )
+    ? "on"
+    : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -93,18 +102,27 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
-  $: {
-    if (wagmiConfig) {
-      account = getAccount(wagmiConfig);
-    }
-  }
+  let previousAddress: string | undefined;
 
   $: {
-    if (account?.address) {
-      tick().then(() => {
-        enableDecryption();
-        getRequests();
-      });
+    if (wagmiConfig) {
+      const newAccount = getAccount(wagmiConfig);
+      if (newAccount?.address !== previousAddress) {
+        account = newAccount;
+        previousAddress = newAccount?.address;
+
+        if (newAccount?.address) {
+          tick().then(() => {
+            enableDecryption();
+            getRequests();
+          });
+        } else {
+          requests = [];
+          activeRequest = undefined;
+          previousWalletAddress = undefined;
+          previousNetwork = undefined;
+        }
+      }
     }
   }
 
@@ -113,9 +131,11 @@
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
       onChange(data) {
-        if (data?.address !== account?.address) {
+        if (data?.address !== previousAddress) {
           account = data;
-          if (account?.address) {
+          previousAddress = data?.address;
+
+          if (data?.address) {
             getRequests();
           } else {
             requests = [];
@@ -132,12 +152,7 @@
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
-  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProviderTypes.ICipherProvider & {
-    getSessionSignatures: (
-      signer: ethers.Signer,
-      walletAddress: `0x${string}`
-    ) => Promise<any>;
-  };
+  $: cipherProvider = undefined;
 
   $: {
     signer = account?.address;
@@ -340,7 +355,7 @@
           BigInt(request.expectedAmount),
           currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo!.symbol,
+        currencySymbol: currencyInfo?.symbol,
         paymentCurrencies,
       };
     }
@@ -400,16 +415,16 @@
   const handleRemoveSelectedRequest = () => {
     activeRequest = undefined;
   };
-  
+
   const enableDecryption = async () => {
     loading = true;
-    if(sliderValueForDecryption === 'on') {
+    if (sliderValueForDecryption === "on") {
       try {
         const signer = await getEthersSigner(wagmiConfig);
         if (signer && account?.address) {
           await cipherProvider?.getSessionSignatures(signer, account.address);
           cipherProvider?.enableDecryption(true);
-          localStorage?.setItem('isDecryptionEnabled',  JSON.stringify(true));
+          localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
         }
       } catch (error) {
         console.error("Failed to enable decryption:", error);
@@ -419,13 +434,12 @@
       }
     } else {
       cipherProvider?.enableDecryption(false);
-      localStorage?.setItem('isDecryptionEnabled',  JSON.stringify(false));
+      localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
     }
     await getRequests();
     loading = false;
-  }
+  };
   $: sliderValueForDecryption, enableDecryption();
-
 </script>
 
 <div
@@ -468,11 +482,16 @@
         </Input>
         {#if cipherProvider}
           <div class="width: fit-content;">
-            <Switch bind:value={sliderValueForDecryption} label="Show encrypted requests" fontSize={14} design="slider" />
+            <Switch
+              bind:value={sliderValueForDecryption}
+              label="Show encrypted requests"
+              fontSize={14}
+              design="slider"
+            />
           </div>
         {/if}
       </div>
-      
+
       <Dropdown
         config={activeConfig}
         type="checkbox"
@@ -736,10 +755,8 @@
                 >
               </tr>
             {/each}
-          {:else}
-            {#if loading}
-              <DashboardSkeleton />
-            {/if}
+          {:else if loading}
+            <DashboardSkeleton />
           {/if}
         </tbody>
       </table>
