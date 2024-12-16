@@ -1,5 +1,6 @@
 <script lang="ts">
   import { toast } from "svelte-sonner";
+  import { getBalance } from "@wagmi/core";
   import type { GetAccountReturnType } from "@wagmi/core";
   import {
     approveErc20,
@@ -76,6 +77,8 @@
     | undefined;
 
   let status = checkStatus(requestData || request);
+  let hasEnoughBalance = false;
+  let userBalance = "0";
 
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
@@ -130,7 +133,16 @@
     checkInvoice();
   });
 
-  $: request, checkInvoice();
+  $: {
+    request, account;
+    checkInvoice();
+  }
+
+  $: {
+    if (account && network && paymentCurrencies[0]) {
+      checkBalance();
+    }
+  }
 
   $: {
     account = account;
@@ -246,6 +258,8 @@
 
       statuses = [...statuses, "Payment confirmed"];
       isPaid = true;
+      await checkInvoice();
+      requestData = await _request?.refresh();
       loading = false;
       statuses = [];
       isRequestPayed = true;
@@ -355,6 +369,77 @@
     return decimalPart
       ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
       : value;
+  }
+
+  async function checkBalance() {
+    try {
+      if (!address || !paymentCurrencies[0] || !network) {
+        console.log("Missing required parameters for balance check:", {
+          address,
+          paymentCurrency: paymentCurrencies[0],
+          network,
+        });
+        return;
+      }
+
+      const invoiceNetworkId = Number(getNetworkIdFromNetworkName(network));
+
+      if (account.chainId !== invoiceNetworkId) {
+        hasEnoughBalance = false;
+        console.log("Wrong network - balance check skipped");
+        return;
+      }
+
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          token: paymentCurrencies[0].address as `0x${string}`,
+          chainId: invoiceNetworkId,
+        });
+        userBalance = Number(balance.formatted).toFixed(4);
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      } else {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          chainId: invoiceNetworkId,
+        });
+        userBalance = Number(balance.formatted).toFixed(4);
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      }
+    } catch (err) {
+      console.error("Error checking balance:", err);
+      hasEnoughBalance = false;
+      userBalance = "0.0000";
+    }
+  }
+
+  const currentStatusIndex = statuses.length - 1;
+
+  async function handlePayment() {
+    try {
+      if (!correctChain) {
+        await switchNetworkIfNeeded(network || "mainnet");
+        return;
+      }
+      if (
+        !approved &&
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+      ) {
+        await approve();
+        return;
+      }
+      await payTheRequest();
+    } catch (err) {
+      console.error("Error during payment process:", err);
+      toast.error("Payment process failed", {
+        description: String(err),
+      });
+    }
+  }
+
+  $: {
+    requestData, request;
+    status = checkStatus(requestData || request);
   }
 </script>
 
@@ -591,26 +676,24 @@
     <div class="invoice-view-actions">
       {#if loading}
         <div class="loading">Loading...</div>
-      {:else if !correctChain && !isPayee}
+      {:else if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed}
+        {#if !hasEnoughBalance}
+          <div class="balance-warning">
+            Insufficient funds: {userBalance}
+            {paymentCurrencies[0]?.symbol || "ETH"}
+          </div>
+        {/if}
         <Button
           type="button"
-          text="Switch Network"
+          text={!correctChain
+            ? "Switch Network"
+            : !approved &&
+                paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+              ? "Approve"
+              : "Pay Now"}
           padding="px-[12px] py-[6px]"
-          onClick={() => switchNetworkIfNeeded(network || "mainnet")}
-        />
-      {:else if !approved && !isPaid && !isPayee && !unsupportedNetwork}
-        <Button
-          type="button"
-          text="Approve"
-          padding="px-[12px] py-[6px]"
-          onClick={approve}
-        />
-      {:else if approved && !isPaid && !isPayee && !unsupportedNetwork}
-        <Button
-          type="button"
-          text="Pay"
-          padding="px-[12px] py-[6px]"
-          onClick={payTheRequest}
+          onClick={handlePayment}
+          disabled={!hasEnoughBalance}
         />
       {/if}
     </div>
@@ -906,5 +989,20 @@
 
   .email-link:hover {
     text-decoration: underline;
+  }
+
+  .balance-warning {
+    color: #ef4444;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #fee2e2;
+    margin-right: 0.5rem;
+  }
+
+  :global(.invoice-view-actions button[disabled]) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #71717a !important;
   }
 </style>

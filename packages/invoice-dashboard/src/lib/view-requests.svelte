@@ -45,16 +45,19 @@
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
-    import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
+  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
 
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined = requestNetwork?.getCipherProvider();
+  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined =
+    requestNetwork?.getCipherProvider();
 
-  let sliderValueForDecryption = cipherProvider?.isDecryptionEnabled() ? "on" : "off";
+  let sliderValueForDecryption = cipherProvider?.isDecryptionEnabled()
+    ? "on"
+    : "off";
 
   let signer: `0x${string}` | undefined;
   let activeConfig = config ? config : defaultConfig;
@@ -390,17 +393,15 @@
     activeRequest = undefined;
   };
 
-  
-  $: sliderValueForDecryption, getRequests(); 
+  $: sliderValueForDecryption, getRequests();
 
   $: {
-    if(sliderValueForDecryption === 'on') {
+    if (sliderValueForDecryption === "on") {
       cipherProvider?.enableDecryption(true);
     } else {
       cipherProvider?.enableDecryption(false);
     }
   }
-
 </script>
 
 <div
@@ -443,11 +444,16 @@
         </Input>
         {#if cipherProvider}
           <div class="width: fit-content;">
-            <Switch bind:value={sliderValueForDecryption} label="Show encrypted requests" fontSize={14} design="slider" />
+            <Switch
+              bind:value={sliderValueForDecryption}
+              label="Show encrypted requests"
+              fontSize={14}
+              design="slider"
+            />
           </div>
         {/if}
       </div>
-      
+
       <Dropdown
         config={activeConfig}
         type="checkbox"
@@ -711,10 +717,8 @@
                 >
               </tr>
             {/each}
-          {:else}
-            {#if loading}
-              <DashboardSkeleton />
-            {/if}
+          {:else if loading}
+            <DashboardSkeleton />
           {/if}
         </tbody>
       </table>
