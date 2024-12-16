@@ -11,6 +11,8 @@
   let searchTerm = "";
   let isOpen = false;
   let filteredItems: any[] = [];
+  let selectedIndex = -1;
+  let dropdownElement: HTMLDivElement;
 
   $: filteredItems = searchTerm
     ? items.filter((item) => {
@@ -24,6 +26,54 @@
         );
       })
     : items;
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (!isOpen) return;
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, filteredItems.length - 1);
+        scrollSelectedIntoView();
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        scrollSelectedIntoView();
+        break;
+      case "Enter":
+        event.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < filteredItems.length) {
+          selectItem(filteredItems[selectedIndex]);
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        isOpen = false;
+        selectedIndex = -1;
+        break;
+    }
+  }
+
+  function scrollSelectedIntoView() {
+    if (dropdownElement && selectedIndex >= 0) {
+      const selectedElement = dropdownElement.children[
+        selectedIndex
+      ] as HTMLElement;
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }
+
+  function selectItem(item: any) {
+    onSelect(item.value);
+    searchTerm = getValue(item);
+    isOpen = false;
+    selectedIndex = -1;
+  }
+
+  $: if (!isOpen) selectedIndex = -1;
 </script>
 
 {#if isOpen && !disabled}
@@ -37,6 +87,7 @@
       {placeholder}
       bind:value={searchTerm}
       on:focus={() => !disabled && (isOpen = true)}
+      on:keydown={handleKeydown}
       {disabled}
     />
     <svg
@@ -55,15 +106,13 @@
     </svg>
   </div>
   {#if isOpen && !disabled}
-    <div class="dropdown-list">
-      {#each filteredItems as item}
+    <div class="dropdown-list" bind:this={dropdownElement}>
+      {#each filteredItems as item, index}
         <div
           class="dropdown-item"
-          on:click={() => {
-            onSelect(item.value);
-            searchTerm = getValue(item);
-            isOpen = false;
-          }}
+          class:selected={index === selectedIndex}
+          on:click={() => selectItem(item)}
+          on:mouseenter={() => (selectedIndex = index)}
         >
           {#if item.type === "network"}
             <Network network={item.value} showLabel={false} />
@@ -162,5 +211,9 @@
     color: #666;
     pointer-events: none;
     z-index: 1;
+  }
+
+  .dropdown-item.selected {
+    background-color: #f0f0f0;
   }
 </style>

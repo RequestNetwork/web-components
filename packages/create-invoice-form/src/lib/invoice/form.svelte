@@ -568,6 +568,19 @@
         </tbody>
       </table>
     </div>
+    <div class="flex justify-between invoice-form-table-body-add-item">
+      <Button
+        text="Add Item"
+        type="button"
+        onClick={() => {
+          addInvoiceItem();
+        }}
+      >
+        <div slot="icon">
+          <Plus />
+        </div>
+      </Button>
+    </div>
     <div class="invoice-form-dates">
       <Input
         id="issuedOn"
@@ -587,19 +600,7 @@
         {handleInput}
       />
     </div>
-    <div class="flex justify-between invoice-form-table-body-add-item">
-      <Button
-        text="Add Item"
-        type="button"
-        onClick={() => {
-          addInvoiceItem();
-        }}
-      >
-        <div slot="icon">
-          <Plus />
-        </div>
-      </Button>
-    </div>
+
     <div class="invoice-form-label-wrapper">
       <Input
         max={200}
@@ -643,7 +644,7 @@
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
     gap: 20px;
     box-sizing: border-box;
-    min-width: 700px;
+    min-width: 760px;
   }
 
   .invoice-form-container {
