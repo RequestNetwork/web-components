@@ -152,7 +152,13 @@
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
-  $: cipherProvider = undefined;
+  $: cipherProvider =
+    requestNetwork?.getCipherProvider() as CipherProviderTypes.ICipherProvider & {
+      getSessionSignatures: (
+        signer: ethers.Signer,
+        walletAddress: `0x${string}`
+      ) => Promise<any>;
+    };
 
   $: {
     signer = account?.address;
@@ -355,7 +361,7 @@
           BigInt(request.expectedAmount),
           currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo?.symbol,
+        currencySymbol: currencyInfo?.symbol ?? "-",
         paymentCurrencies,
       };
     }

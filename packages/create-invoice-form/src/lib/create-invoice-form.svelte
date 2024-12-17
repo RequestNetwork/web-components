@@ -115,7 +115,7 @@
     totalAmount: 0,
   };
 
-  $: cipherProvider = undefined;
+  $: cipherProvider = requestNetwork?.getCipherProvider();
 
   $: {
     if (wagmiConfig) {
