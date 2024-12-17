@@ -445,6 +445,7 @@
     await getRequests();
     loading = false;
   };
+
   $: sliderValueForDecryption, enableDecryption();
 </script>
 
@@ -726,7 +727,10 @@
                 <td><StatusLabel status={checkStatus(request)} /></td>
                 <td>
                   {#if request.paymentCurrencies.length > 0}
-                    <Network network={request.paymentCurrencies[0]?.network} />
+                    <Network
+                      network={request.paymentCurrencies[0]?.network}
+                      showLabel={true}
+                    />
                   {:else}
                     <span class="text-gray-400">-</span>
                   {/if}

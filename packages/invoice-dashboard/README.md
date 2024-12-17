@@ -24,6 +24,12 @@ npm install @requestnetwork/invoice-dashboard
 
 You can directly pass props into the invoice-dashboard web component without needing to create references or use workarounds.
 
+##### Important Note on Currencies Prop
+
+- The currencies prop is now optional.
+- If you include the currencies prop and follow the proper format, it will override the default currencies.
+- To use the default currencies list, simply omit the currencies prop.
+
 ```tsx
 import Head from "next/head";
 import { config } from "@/utils/config";
@@ -52,6 +58,30 @@ export default function InvoiceDashboardPage() {
   );
 }
 ```
+
+#### Example Override for Currencies
+
+If you need to customize the currencies list, ensure you follow the correct format:
+
+```ts
+export const currencies: CurrencyTypes.CurrencyInput[] = [
+  {
+    symbol: "FAU",
+    address: "0x370DE27fdb7D1Ff1e1BaA7D11c5820a324Cf623C",
+    network: "sepolia",
+    decimals: 18,
+    type: RequestLogicTypes.CURRENCY.ERC20,
+  },
+  {
+    symbol: "ETH",
+    network: "sepolia",
+    decimals: 18,
+    type: RequestLogicTypes.CURRENCY.ETH,
+  },
+];
+```
+
+When added, this will replace the default currencies list. To retain the defaults, do not include the `currencies` prop.
 
 #### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/initializeRN.ts)
 
@@ -124,14 +154,14 @@ export const config: IConfig = {
 | Cancel Request                       | ❌     |
 | Add Stakeholder                      | ❌     |
 | Native Payment                       | ❌     |
-| Conversion Payment                   | ❌     |
+| Conversion Payment                   | ✅     |
 | Batch Payment                        | ❌     |
 | Declarative Payment                  | ❌     |
 | Swap-to-Pay Payment                  | ❌     |
 | Swap-to-Conversion Payment           | ❌     |
 | Escrow Payment                       | ❌     |
-| Improved UI and UX                   | ❌     |
-| More Chains and Currencies           | ❌     |
+| Improved UI and UX                   | ✅     |
+| More Chains and Currencies           | ✅     |
 | More Configuration Options           | ❌     |
 | Attachments                          | ❌     |
 

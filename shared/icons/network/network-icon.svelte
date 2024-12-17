@@ -12,7 +12,7 @@
   <div class="network-icon" aria-label={`Network: ${capitalize(network)}`}>
     <svelte:component this={icon} />
     {#if showLabel}
-      <span>{capitalize(network)}</span>
+      <span>{capitalize(network) || "Unknown"}</span>
     {/if}
   </div>
 {/if}
