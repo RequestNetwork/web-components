@@ -1,5 +1,6 @@
 <script lang="ts">
   import { toast } from "svelte-sonner";
+  import { getBalance } from "@wagmi/core";
   import type { GetAccountReturnType } from "@wagmi/core";
   import {
     approveErc20,
@@ -90,6 +91,8 @@
   ];
 
   let status = checkStatus(requestData || request);
+  let hasEnoughBalance = false;
+  let userBalance = "0";
 
   let isSigningTransaction = false;
 
@@ -148,6 +151,12 @@
     if (request?.requestId !== previousRequestId) {
       previousRequestId = request?.requestId;
       checkInvoice();
+    }
+  }
+
+  $: {
+    if (account && network) {
+      checkBalance();
     }
   }
 
@@ -252,6 +261,7 @@
 
       statuses = baseStatuses;
       status = checkStatus(requestData || request);
+      await checkBalance();
     } catch (err: any) {
       console.error("Error while checking invoice: ", err);
       if (String(err).includes("Unsupported payment")) {
@@ -468,6 +478,58 @@
       ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
       : value;
   }
+
+  function formatBalance(value: number, maxDecimals: number = 4): string {
+    return Number.isInteger(value)
+      ? value.toString()
+      : value.toFixed(maxDecimals);
+  }
+
+  async function checkBalance() {
+    try {
+      if (!address || !paymentCurrencies[0] || !network) {
+        console.log("Missing required parameters for balance check:", {
+          address,
+          paymentCurrency: paymentCurrencies[0],
+          network,
+        });
+        return;
+      }
+
+      const invoiceNetworkId = Number(getNetworkIdFromNetworkName(network));
+
+      if (account.chainId !== invoiceNetworkId) {
+        hasEnoughBalance = false;
+        console.log("Wrong network - balance check skipped");
+        return;
+      }
+
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          token: paymentCurrencies[0].address as `0x${string}`,
+          chainId: invoiceNetworkId,
+        });
+        const balanceNum = BigInt(balance.formatted);
+        userBalance = formatBalance(balanceNum);
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      } else {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          chainId: invoiceNetworkId,
+        });
+        const balanceNum = BigInt(balance.formatted);
+        userBalance = formatBalance(balanceNum);
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      }
+    } catch (err) {
+      console.error("Error checking balance:", err);
+      hasEnoughBalance = false;
+      userBalance = "0";
+    }
+  }
+
+  const currentStatusIndex = statuses.length - 1;
 
   async function handlePayment() {
     try {
@@ -776,20 +838,28 @@
       </div>
     </div>
   {/if}
-  {#if !isPayee && !unsupportedNetwork && !isPaid && !isSigningTransaction}
-    <Button
-      className="pay-button"
-      type="button"
-      text={!correctChain
-        ? "Switch Network"
-        : !approved &&
-            paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
-          ? "Approve"
-          : "Pay Now"}
-      padding="px-[12px] py-[6px]"
-      onClick={handlePayment}
-    />
-  {/if}
+  <div class="invoice-view-actions">
+    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
+      {#if !hasEnoughBalance}
+        <div class="balance-warning">
+          Insufficient funds: {userBalance}
+          {paymentCurrencies[0]?.symbol || "-"}
+        </div>
+      {/if}
+      <Button
+        type="button"
+        text={!correctChain
+          ? "Switch Network"
+          : !approved &&
+              paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+            ? "Approve"
+            : "Pay Now"}
+        padding="px-[12px] py-[6px]"
+        onClick={handlePayment}
+        disabled={!hasEnoughBalance}
+      />
+    {/if}
+  </div>
 
   {#if unsupportedNetwork}
     <div class="unsupported-network">Unsupported payment network!</div>
@@ -995,7 +1065,6 @@
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-bottom: 32px;
   }
 
   .status {
@@ -1091,6 +1160,7 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    justify-content: end;
   }
 
   :global(.invoice-view-actions button) {
@@ -1156,6 +1226,21 @@
 
   .email-link:hover {
     text-decoration: underline;
+  }
+
+  .balance-warning {
+    color: #ef4444;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #fee2e2;
+    margin-right: 0.5rem;
+  }
+
+  :global(.invoice-view-actions button[disabled]) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #71717a !important;
   }
 
   :global(.pay-button) {
