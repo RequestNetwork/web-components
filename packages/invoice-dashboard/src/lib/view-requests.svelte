@@ -361,7 +361,7 @@
           BigInt(request.expectedAmount),
           currencyInfo?.decimals ?? 18
         ),
-        currencySymbol: currencyInfo?.symbol,
+        currencySymbol: currencyInfo?.symbol ?? "-",
         paymentCurrencies,
       };
     }
