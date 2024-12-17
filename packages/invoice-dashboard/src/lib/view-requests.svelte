@@ -721,6 +721,7 @@
                 <td>
                   <TxType
                     type={signer === request.payer?.value ? "OUT" : "IN"}
+                    showBoth={request.payer?.value === request.payee?.value}
                   />
                 </td>
                 <td><StatusLabel status={checkStatus(request)} /></td>

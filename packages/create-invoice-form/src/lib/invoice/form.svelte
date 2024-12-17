@@ -43,6 +43,7 @@
   let validationErrors = {
     payeeAddress: false,
     clientAddress: false,
+    sameAddress: false,
     sellerInfo: {
       email: false,
     },
@@ -60,10 +61,16 @@
 
   const checkPayeeAddress = () => {
     validationErrors.payeeAddress = !checkAddress(formData.payeeAddress);
+    validationErrors.sameAddress =
+      formData.payerAddress.toLowerCase() ===
+      formData.payeeAddress.toLowerCase();
   };
 
   const checkClientAddress = () => {
     validationErrors.clientAddress = !checkAddress(formData.payerAddress);
+    validationErrors.sameAddress =
+      formData.payerAddress.toLowerCase() ===
+      formData.payeeAddress.toLowerCase();
   };
 
   const calculateInputWidth = (value: string) => {
@@ -328,7 +335,9 @@
             onBlur={checkClientAddress}
             error={validationErrors.clientAddress
               ? "Please enter a valid Ethereum address"
-              : ""}
+              : validationErrors.sameAddress
+                ? "Payer address cannot be the same as recipient address"
+                : ""}
           />
           <Accordion title="Add Client Info">
             <div class="invoice-form-info">
