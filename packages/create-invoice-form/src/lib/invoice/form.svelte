@@ -59,18 +59,21 @@
     validationErrors[`${type}`].email = !isEmail(email);
   };
 
+  const checkSameAddress = () => {
+    return (
+      formData.payerAddress.toLowerCase() ===
+      formData.payeeAddress.toLowerCase()
+    );
+  };
+
   const checkPayeeAddress = () => {
     validationErrors.payeeAddress = !checkAddress(formData.payeeAddress);
-    validationErrors.sameAddress =
-      formData.payerAddress.toLowerCase() ===
-      formData.payeeAddress.toLowerCase();
+    validationErrors.sameAddress = checkSameAddress();
   };
 
   const checkClientAddress = () => {
     validationErrors.clientAddress = !checkAddress(formData.payerAddress);
-    validationErrors.sameAddress =
-      formData.payerAddress.toLowerCase() ===
-      formData.payeeAddress.toLowerCase();
+    validationErrors.sameAddress = checkSameAddress();
   };
 
   const calculateInputWidth = (value: string) => {
