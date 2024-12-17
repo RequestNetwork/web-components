@@ -21,16 +21,36 @@
     position: relative;
     display: inline-flex;
     align-items: center;
+    margin-bottom: 6px;
   }
 
   .tx {
-    padding: 8px 0px;
+    padding: 6px 0px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
     max-width: 40px;
     width: 100%;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tx::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 5px,
+      rgba(255, 255, 255, 0.1) 5px,
+      rgba(255, 255, 255, 0.1) 10px
+    );
+    z-index: 1;
   }
 
   .out {
@@ -50,9 +70,11 @@
 
   .overlap.in {
     left: -14px;
+    background-color: rgba(11, 180, 137, 0.35);
   }
 
   .overlap.out {
     left: 14px;
+    background-color: rgba(255, 197, 49, 0.35);
   }
 </style>

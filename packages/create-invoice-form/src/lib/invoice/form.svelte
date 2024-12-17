@@ -349,7 +349,7 @@
             error={validationErrors.clientAddress
               ? "Please enter a valid Ethereum address"
               : validationErrors.sameAddress
-                ? "Payer address cannot be the same as recipient address"
+                ? "Payer address cannot be the same as Payee address"
                 : ""}
           />
           <Accordion title="Add Client Info">
