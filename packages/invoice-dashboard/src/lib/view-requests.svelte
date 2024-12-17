@@ -869,7 +869,7 @@
   }
 
   .tabs ul li {
-    width: 100px;
+    width: 110px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

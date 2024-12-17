@@ -185,6 +185,16 @@
       return invoiceCurrency.hash === currency.hash;
     });
   }
+
+  $: if (!formData.issuedOn) {
+    formData.issuedOn = inputDateFormat(new Date());
+  }
+
+  $: if (!formData.dueDate) {
+    formData.dueDate = inputDateFormat(
+      new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
+    );
+  }
 </script>
 
 <form class="invoice-form">
@@ -597,17 +607,15 @@
       <Input
         id="issuedOn"
         type="date"
-        value={inputDateFormat(new Date())}
+        value={formData.issuedOn}
         label="Issued Date"
         {handleInput}
       />
       <Input
         id="dueDate"
         type="date"
-        min={inputDateFormat(formData.issuedOn)}
-        value={inputDateFormat(
-          new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
-        )}
+        min={formData.issuedOn}
+        value={formData.dueDate}
         label="Due Date"
         {handleInput}
       />
