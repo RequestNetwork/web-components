@@ -1,7 +1,7 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
-  import { getAccount } from "@wagmi/core";
+  import { getAccount, watchAccount, WatchAccountReturnType } from "@wagmi/core";
   import { Config as WagmiConfig } from "wagmi";
   // Types
   import { type GetAccountReturnType } from "@wagmi/core";
@@ -24,6 +24,7 @@
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
+    import { onDestroy, onMount, tick } from "svelte";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
     disconnectWallet: () => void;
@@ -35,7 +36,7 @@
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
   let cipherProvider: CipherProvider | undefined;
 
-  let account: GetAccountReturnType;
+  let account: GetAccountReturnType | undefined = wagmiConfig && getAccount(wagmiConfig);
   let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
@@ -121,12 +122,38 @@
 
   $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
-  $: {
-    if (wagmiConfig) {
-      account = getAccount(wagmiConfig);
-      cipherProvider?.disconnectWallet();
+  const handleWalletConnection = async () => {
+    account = getAccount(wagmiConfig);
+  };
+
+  const handleWalletDisconnection = () => {
+    cipherProvider?.disconnectWallet();
+  };
+
+  const handleWalletChange = (data: any) => {
+    if (data?.address) {
+      handleWalletConnection();
+    } else {
+      handleWalletDisconnection();
     }
-  }
+  };
+
+  onMount(() => {
+    unwatchAccount = watchAccount(wagmiConfig, {
+      onChange(data) {
+        tick().then(() => {
+          console.log("Wallet changed");
+          handleWalletChange(data);
+        });
+      },
+    });
+  });
+
+  let unwatchAccount: WatchAccountReturnType | undefined;
+
+  onDestroy(() => {
+    if (typeof unwatchAccount === "function") unwatchAccount();
+  });
 
   $: {
     formData.creatorId = (account?.address ?? "") as string;

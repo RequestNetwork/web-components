@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/invoice-dashboard",
-  "version": "0.11.9",
+  "version": "0.11.10",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",

@@ -109,11 +109,11 @@
   };
 
   const handleWalletDisconnection = () => {
-    cipherProvider?.disconnectWallet();
+    account = undefined;
     requests = [];
     activeRequest = undefined;
+    cipherProvider?.disconnectWallet();
     cipherProvider = undefined;
-    account = undefined;
   };
 
   const handleWalletChange = (data: any) => {
@@ -384,7 +384,7 @@
   };
 
   const loadRequests = async (sliderValue: string, currentAccount: GetAccountReturnType, currentRequestNetwork: RequestNetwork | undefined | null) => {
-    if (!currentAccount?.address || !currentRequestNetwork && !cipherProvider) return;
+    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider) return;
 
     loading = true;
     if (sliderValue === "on") {

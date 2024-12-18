@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.10
+
+### Patch Changes
+
+- Fix Lit Encryption and Wallet Connections
+
 ## 0.11.9
 
 ### Patch Changes
