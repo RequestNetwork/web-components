@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.11
+
+### Patch Changes
+
+- Fix Currency Selection and Invalid Address
+
 ## 0.11.10
 
 ### Patch Changes
