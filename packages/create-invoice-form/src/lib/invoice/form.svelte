@@ -61,8 +61,8 @@
 
   const checkSameAddress = () => {
     return (
-      formData.payerAddress.toLowerCase() ===
-      formData.payeeAddress.toLowerCase()
+      formData.payerAddress?.toLowerCase() ===
+      formData.payeeAddress?.toLowerCase()
     );
   };
 
