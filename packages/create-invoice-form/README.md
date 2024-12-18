@@ -24,12 +24,6 @@ npm install @requestnetwork/create-invoice-form
 
 You can directly pass props into the create-invoice-form web component without needing to create references or use workarounds.
 
-##### Important Note on Currencies Prop
-
-- The currencies prop is now optional.
-- If you include the currencies prop and follow the proper format, it will override the default currencies.
-- To use the default currencies list, simply omit the currencies prop.
-
 ```tsx
 import Head from "next/head";
 import { config } from "@/utils/config";
@@ -58,6 +52,12 @@ export default function CreateInvoice() {
   );
 }
 ```
+
+### Important Note on Currencies Prop
+
+- The currencies prop is now optional.
+- If you include the currencies prop and follow the proper format, it will override the default currencies.
+- To use the default currencies list, simply omit the currencies prop.
 
 #### Example Override for Currencies
 

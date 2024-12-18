@@ -24,12 +24,6 @@ npm install @requestnetwork/invoice-dashboard
 
 You can directly pass props into the invoice-dashboard web component without needing to create references or use workarounds.
 
-##### Important Note on Currencies Prop
-
-- The currencies prop is now optional.
-- If you include the currencies prop and follow the proper format, it will override the default currencies.
-- To use the default currencies list, simply omit the currencies prop.
-
 ```tsx
 import Head from "next/head";
 import { config } from "@/utils/config";
@@ -58,6 +52,12 @@ export default function InvoiceDashboardPage() {
   );
 }
 ```
+
+### Important Note on Currencies Prop
+
+- The currencies prop is now optional.
+- If you include the currencies prop and follow the proper format, it will override the default currencies.
+- To use the default currencies list, simply omit the currencies prop.
 
 #### Example Override for Currencies
 
@@ -153,7 +153,7 @@ export const config: IConfig = {
 | Accept Request                       | ❌     |
 | Cancel Request                       | ❌     |
 | Add Stakeholder                      | ❌     |
-| Native Payment                       | ❌     |
+| Native Payment                       | ✅     |
 | Conversion Payment                   | ✅     |
 | Batch Payment                        | ❌     |
 | Declarative Payment                  | ❌     |
