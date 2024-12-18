@@ -1,5 +1,35 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.10
+
+### Patch Changes
+
+- Fix Lit Encryption and Wallet Connections
+
+## 0.11.9
+
+### Patch Changes
+
+- Fix Lit Protocol Encryption Issues
+
+## 0.11.8
+
+### Patch Changes
+
+- Fix enbable decryption
+
+## 0.11.7
+
+### Patch Changes
+
+- Fix InvoiceDashboardProps types
+
+## 0.11.6
+
+### Patch Changes
+
+- Upgrade SDK to 0.53.0
+
 ## 0.11.5
 
 ### Patch Changes

@@ -194,7 +194,7 @@
       </span>
     </p>
     <p class="invoice-section-title">
-      <span>Settlement Currency</span>
+      <span>Payment Currency</span>
       <span class="invoice-section-title-content">
         {currency ? `${currency.symbol} (${currency.network})` : ""}
       </span>
@@ -457,7 +457,7 @@
   }
 
   .invoice-table-body-row th {
-    padding: 8px 0px 8px 8px;
+    padding: 12px 16px;
     font-weight: 500;
     white-space: nowrap;
   }
@@ -469,7 +469,7 @@
   }
 
   .invoice-table-body td {
-    padding: 8px 0px;
+    padding: 12px 16px;
   }
 
   .invoice-summary {

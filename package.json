@@ -30,7 +30,7 @@
   "packageManager": "npm@10.5.0",
   "dependencies": {
     "@changesets/cli": "^2.27.10",
-    "@requestnetwork/currency": "0.21.0",
+    "@requestnetwork/currency": "0.22.0",
     "bits-ui": "^0.21.12"
   }
 }

@@ -6,7 +6,7 @@ export function getInitialFormData() {
     payerAddress: "",
     payeeAddress: "",
     dueDate: "",
-    issuedOn: new Date().toISOString(),
+    issuedOn: "",
     miscellaneous: {
       labels: [],
       builderId: "",

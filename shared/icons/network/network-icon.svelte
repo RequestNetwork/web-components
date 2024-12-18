@@ -3,6 +3,7 @@
   import { getNetworkIcon } from "../../utils/getNetworkIcon";
 
   export let network = "mainnet";
+  export let showLabel = true;
 
   $: icon = getNetworkIcon(network);
 </script>
@@ -10,7 +11,9 @@
 {#if icon}
   <div class="network-icon" aria-label={`Network: ${capitalize(network)}`}>
     <svelte:component this={icon} />
-    <span>{capitalize(network)}</span>
+    {#if showLabel}
+      <span>{capitalize(network) || "Unknown"}</span>
+    {/if}
   </div>
 {/if}
 

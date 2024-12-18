@@ -53,6 +53,36 @@ export default function CreateInvoice() {
 }
 ```
 
+### Important Note on Currencies Prop
+
+- The currencies prop is now optional.
+- If you include the currencies prop and follow the proper format, it will override the default currencies.
+- To use the default currencies list, simply omit the currencies prop.
+
+#### Example Override for Currencies
+
+If you need to customize the currencies list, ensure you follow the correct format:
+
+```ts
+export const currencies: CurrencyTypes.CurrencyInput[] = [
+  {
+    symbol: "FAU",
+    address: "0x370DE27fdb7D1Ff1e1BaA7D11c5820a324Cf623C",
+    network: "sepolia",
+    decimals: 18,
+    type: RequestLogicTypes.CURRENCY.ERC20,
+  },
+  {
+    symbol: "ETH",
+    network: "sepolia",
+    decimals: 18,
+    type: RequestLogicTypes.CURRENCY.ETH,
+  },
+];
+```
+
+When added, this will replace the default currencies list. To retain the defaults, do not include the `currencies` prop.
+
 #### [initializeRN.ts](https://github.com/RequestNetwork/invoicing-template/blob/main/utils/initializeRN.ts)
 
 Initialize the `RequestNetwork` object using an Ethers `Signer` or Viem `WalletClient`.
