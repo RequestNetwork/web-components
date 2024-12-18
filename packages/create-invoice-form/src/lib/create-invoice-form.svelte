@@ -25,11 +25,15 @@
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
 
+  interface CipherProvider extends CipherProviderTypes.ICipherProvider {
+    disconnectWallet: () => void;
+  }
+
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
-  let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
+  let cipherProvider: CipherProvider | undefined;
 
   let account: GetAccountReturnType;
   let isTimeout = false;
@@ -115,11 +119,12 @@
     totalAmount: 0,
   };
 
-  $: cipherProvider = requestNetwork?.getCipherProvider();
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
   $: {
     if (wagmiConfig) {
       account = getAccount(wagmiConfig);
+      cipherProvider?.disconnectWallet();
     }
   }
 

@@ -1,5 +1,11 @@
 # @requestnetwork/invoice-dashboard
 
+## 0.11.9
+
+### Patch Changes
+
+- Fix Lit Protocol Encryption Issues
+
 ## 0.11.8
 
 ### Patch Changes
