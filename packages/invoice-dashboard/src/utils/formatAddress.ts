@@ -6,7 +6,7 @@ export const formatAddress = (
   first: number = 6,
   last: number = 4
 ): string => {
-  if (!checkAddress(address)) {
+  if (!address || address.length === 0 || !checkAddress(address)) {
     console.error("Invalid address!");
   }
 
