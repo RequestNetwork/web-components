@@ -427,7 +427,7 @@
       title="Lit Protocol Signature Required"
     >
       <div class="modal-content">
-        <p>This signature is required only once and will allow you to:</p>
+        <p>This signature is required only once per session and will allow you to:</p>
         <ul>
           <li>Access encrypted invoice details</li>
         </ul>
