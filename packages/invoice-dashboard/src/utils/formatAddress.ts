@@ -5,10 +5,16 @@ export const formatAddress = (
   first: number = 6,
   last: number = 4
 ): string => {
-  if (!address || address.length === 0) {
-    console.warn("Address not set");
+export const formatAddress = (
+   address: string,
+   first: number = 6,
+   last: number = 4
+): string | '-' => {
+   if (!address || address.length === 0) {
+    // Consider using a proper logging service
+    console.warn("[formatAddress] No address provided");
     return '-';
-  } else {
+   } else {
     try {
       const checksumAddress = getAddress(address);
       return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
