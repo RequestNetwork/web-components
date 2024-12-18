@@ -43,6 +43,10 @@
   let secondaryColor = activeConfig.colors.secondary;
   let currencyManager = initializeCurrencyManager(currencies);
 
+  let invoiceCurrencyDropdown: { clear: () => void; };
+  let networkDropdown: { clear: () => void; };
+  let currencyDropdown: { clear: () => void; };
+
   const extractUniqueNetworkNames = (): string[] => {
     const networkSet = new Set<string>();
 
@@ -65,16 +69,33 @@
 
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
+      currencyDropdown.clear();
       network = newNetwork;
 
-      invoiceCurrency = undefined;
       currency = undefined;
 
-      defaultCurrencies = currencyManager.knownCurrencies.filter(
-        (curr: CurrencyTypes.CurrencyDefinition) =>
-          curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-          curr.network === newNetwork
-      );
+      filteredSettlementCurrencies = currencyManager.knownCurrencies.filter((currency: CurrencyTypes.CurrencyDefinition) => {
+      if (!invoiceCurrency) {
+        return false;
+      }
+
+      // For ISO4217 currencies (like EUR)
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        const hasValidPath =
+          currencyManager?.getConversionPath(
+            invoiceCurrency,
+            currency,
+            currency?.network
+          )?.length > 0;
+
+        return (
+          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
+        );
+      }
+
+      // For other currency types (like ERC20)
+      return invoiceCurrency.hash === currency?.hash;
+    });;
     }
   };
 
@@ -83,16 +104,28 @@
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
   let defaultCurrencies = currencyManager.knownCurrencies;
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const handleInvoiceCurrencyChange = (
     value: CurrencyTypes.CurrencyDefinition
   ) => {
     if (value !== invoiceCurrency) {
+      networkDropdown.clear();
+      currencyDropdown.clear();
+
       invoiceCurrency = value;
       currency = undefined;
+      filteredSettlementCurrencies = [];
+      network = undefined;
+      networks = [];
 
-      if (value.type !== Types.RequestLogic.CURRENCY.ISO4217) {
-        network = value.network;
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        networks = (getCurrencySupportedNetworksForConversion(
+          invoiceCurrency.hash,
+          currencyManager
+        ) ?? []) as string[];
+      } else {
+        networks = extractUniqueNetworkNames();
       }
     }
   };
@@ -100,19 +133,6 @@
   const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
-
-  $: {
-    if (invoiceCurrency) {
-      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-        networks = getCurrencySupportedNetworksForConversion(
-          invoiceCurrency.hash,
-          currencyManager
-        );
-      } else {
-        networks = extractUniqueNetworkNames();
-      }
-    }
-  }
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -272,17 +292,17 @@
   <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
-      bind:currency
       config={activeConfig}
       bind:defaultCurrencies
-      bind:network
+      bind:filteredSettlementCurrencies
       {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
-      {networks}
-      {currencyManager}
-      {invoiceCurrency}
+      bind:networks
       {cipherProvider}
+      bind:invoiceCurrencyDropdown
+      bind:networkDropdown
+      bind:currencyDropdown
     />
     <div class="invoice-view-wrapper">
       <InvoiceView
