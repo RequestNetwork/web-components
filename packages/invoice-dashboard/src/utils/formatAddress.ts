@@ -5,11 +5,17 @@ export const formatAddress = (
   first: number = 6,
   last: number = 4
 ): string => {
-  try {
-    const checksumAddress = getAddress(address);
-    return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
-  } catch (error) {
-    console.error("Invalid address: ", error);
+  if (!address || address.length === 0) {
+    console.warn("Address not set");
     return '-';
+  } else {
+    try {
+      const checksumAddress = getAddress(address);
+      return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
+    } catch (error) {
+     
+      console.error("Invalid address: ", error);
+      return '-';
+    }
   }
 };
