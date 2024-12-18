@@ -1,17 +1,15 @@
 import { getAddress } from "viem";
-import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
 
 export const formatAddress = (
   address: string,
   first: number = 6,
   last: number = 4
 ): string => {
-  if (!address || address.length === 0 || !checkAddress(address)) {
+  try {
+    const checksumAddress = getAddress(address);
+    return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
+  } catch (error) {
     console.error("Invalid address!");
-    return address;
+    return '-';
   }
-
-  const checksumAddress = getAddress(address);
-
-  return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
 };
