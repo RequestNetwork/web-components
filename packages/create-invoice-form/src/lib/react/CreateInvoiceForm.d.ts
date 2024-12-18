@@ -8,7 +8,7 @@ export interface CreateInvoiceFormProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies: CurrencyTypes.CurrencyInput[];
+  currencies?: CurrencyTypes.CurrencyInput[];
 }
 
 /**
