@@ -13,7 +13,6 @@ export const formatAddress = (
       const checksumAddress = getAddress(address);
       return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
     } catch (error) {
-     
       console.error("Invalid address: ", error);
       return '-';
     }
