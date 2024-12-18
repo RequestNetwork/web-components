@@ -76,7 +76,8 @@
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let account: GetAccountReturnType | undefined = wagmiConfig && getAccount(wagmiConfig);
+  let account: GetAccountReturnType | undefined =
+    wagmiConfig && getAccount(wagmiConfig);
 
   let loading = false;
   let searchQuery = "";
@@ -142,8 +143,7 @@
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
-  $: cipherProvider =
-    requestNetwork?.getCipherProvider() as CipherProvider;
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
   $: {
     signer = account?.address;
@@ -155,7 +155,10 @@
     currencyManager = initializeCurrencyManager(currencies);
   });
 
-  const getRequests = async (account: GetAccountReturnType, requestNetwork: RequestNetwork | undefined | null) => {
+  const getRequests = async (
+    account: GetAccountReturnType,
+    requestNetwork: RequestNetwork | undefined | null
+  ) => {
     if (!account?.address || !requestNetwork) return;
 
     try {
@@ -385,16 +388,27 @@
     activeRequest = undefined;
   };
 
-  const loadRequests = async (sliderValue: string, currentAccount: GetAccountReturnType | undefined, currentRequestNetwork: RequestNetwork | undefined | null) => {
-    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider) return;
+  const loadRequests = async (
+    sliderValue: string,
+    currentAccount: GetAccountReturnType | undefined,
+    currentRequestNetwork: RequestNetwork | undefined | null
+  ) => {
+    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider)
+      return;
 
     loading = true;
     if (sliderValue === "on") {
       try {
         const signer = await getEthersSigner(wagmiConfig);
         if (signer && currentAccount?.address) {
-          loadSessionSignatures = localStorage?.getItem("lit-wallet-sig") === null;
-          await cipherProvider?.getSessionSignatures(signer, currentAccount.address, window.location.host, "Sign in to Lit Protocol through Request Network");
+          loadSessionSignatures =
+            localStorage?.getItem("lit-wallet-sig") === null;
+          await cipherProvider?.getSessionSignatures(
+            signer,
+            currentAccount.address,
+            window.location.host,
+            "Sign in to Lit Protocol through Request Network"
+          );
           cipherProvider?.enableDecryption(true);
           localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
         }
@@ -413,6 +427,7 @@
     await getRequests(currentAccount, currentRequestNetwork);
     loading = false;
   };
+
   $: loadRequests(sliderValueForDecryption, account, requestNetwork);
 </script>
 
@@ -421,13 +436,12 @@
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}; "
 >
   {#if loadSessionSignatures}
-    <Modal
-      config={config}
-      isOpen={true}
-      title="Lit Protocol Signature Required"
-    >
+    <Modal {config} isOpen={true} title="Lit Protocol Signature Required">
       <div class="modal-content">
-        <p>This signature is required only once per session and will allow you to:</p>
+        <p>
+          This signature is required only once per session and will allow you
+          to:
+        </p>
         <ul>
           <li>Access encrypted invoice details</li>
         </ul>
@@ -708,7 +722,10 @@
                 <td><StatusLabel status={checkStatus(request)} /></td>
                 <td>
                   {#if request.paymentCurrencies.length > 0}
-                    <Network network={request.paymentCurrencies[0]?.network} />
+                    <Network
+                      network={request.paymentCurrencies[0]?.network}
+                      showLabel={true}
+                    />
                   {:else}
                     <span class="text-gray-400">-</span>
                   {/if}
@@ -1068,6 +1085,6 @@
 
   .modal-content li {
     margin-bottom: 0.5rem;
-    color: #4B5563;
+    color: #4b5563;
   }
 </style>
