@@ -1,5 +1,11 @@
 # @requestnetwork/payment-widget
 
+## 0.3.7
+
+### Patch Changes
+
+- Fix Lit Protocol Encryption Issues
+
 ## 0.3.6
 
 ### Patch Changes

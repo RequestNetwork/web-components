@@ -16,6 +16,7 @@
   import TxType from "@requestnetwork/shared-components/tx-type.svelte";
   import DashboardSkeleton from "@requestnetwork/shared-components/dashboard-skeleton.svelte";
   import { toast } from "svelte-sonner";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
   // Icons
   import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
   import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
@@ -48,19 +49,22 @@
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { ethers } from "ethers";
 
+  interface CipherProvider extends CipherProviderTypes.ICipherProvider {
+    getSessionSignatures: (
+      signer: ethers.Signer,
+      walletAddress: `0x${string}`,
+      domain: string,
+      statement: string
+    ) => Promise<any>;
+    disconnectWallet: () => void;
+  }
+
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
-  let cipherProvider:
-    | (CipherProviderTypes.ICipherProvider & {
-        getSessionSignatures: (
-          signer: ethers.Signer,
-          walletAddress: `0x${string}`
-        ) => Promise<any>;
-      })
-    | undefined;
+  let cipherProvider: CipherProvider | undefined;
 
   let sliderValueForDecryption = JSON.parse(
     localStorage?.getItem("isDecryptionEnabled") ?? "false"
@@ -72,7 +76,8 @@
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
-  let account: GetAccountReturnType = wagmiConfig && getAccount(wagmiConfig);
+  let account: GetAccountReturnType | undefined =
+    wagmiConfig && getAccount(wagmiConfig);
 
   let loading = false;
   let searchQuery = "";
@@ -87,8 +92,7 @@
       })
     | undefined;
   let currencyManager: CurrencyManager;
-  let previousWalletAddress: string | undefined;
-  let previousNetwork: string | undefined;
+  let loadSessionSignatures = false;
 
   let columns = {
     issuedAt: false,
@@ -102,63 +106,44 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
-  let previousAddress: string | undefined;
+  const handleWalletConnection = async () => {
+    account = getAccount(wagmiConfig);
+    await loadRequests(sliderValueForDecryption, account, requestNetwork);
+  };
 
-  $: {
-    if (wagmiConfig) {
-      const newAccount = getAccount(wagmiConfig);
-      if (newAccount?.address !== previousAddress) {
-        account = newAccount;
-        previousAddress = newAccount?.address;
+  const handleWalletDisconnection = () => {
+    account = undefined;
+    requests = [];
+    activeRequest = undefined;
+    cipherProvider?.disconnectWallet();
+    cipherProvider = undefined;
+  };
 
-        if (newAccount?.address) {
-          tick().then(() => {
-            enableDecryption();
-            getRequests();
-          });
-        } else {
-          requests = [];
-          activeRequest = undefined;
-          previousWalletAddress = undefined;
-          previousNetwork = undefined;
-        }
-      }
+  const handleWalletChange = (data: any) => {
+    if (data?.address) {
+      handleWalletConnection();
+    } else {
+      handleWalletDisconnection();
     }
-  }
-
-  let unwatchAccount: WatchAccountReturnType | undefined;
+  };
 
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
       onChange(data) {
-        if (data?.address !== previousAddress) {
-          account = data;
-          previousAddress = data?.address;
-
-          if (data?.address) {
-            getRequests();
-          } else {
-            requests = [];
-            activeRequest = undefined;
-            previousWalletAddress = undefined;
-            previousNetwork = undefined;
-          }
-        }
+        tick().then(() => {
+          handleWalletChange(data);
+        });
       },
     });
   });
+
+  let unwatchAccount: WatchAccountReturnType | undefined;
 
   onDestroy(() => {
     if (typeof unwatchAccount === "function") unwatchAccount();
   });
 
-  $: cipherProvider =
-    requestNetwork?.getCipherProvider() as CipherProviderTypes.ICipherProvider & {
-      getSessionSignatures: (
-        signer: ethers.Signer,
-        walletAddress: `0x${string}`
-      ) => Promise<any>;
-    };
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
   $: {
     signer = account?.address;
@@ -170,9 +155,11 @@
     currencyManager = initializeCurrencyManager(currencies);
   });
 
-  const getRequests = async () => {
+  const getRequests = async (
+    account: GetAccountReturnType,
+    requestNetwork: RequestNetwork | undefined | null
+  ) => {
     if (!account?.address || !requestNetwork) return;
-    loading = true;
 
     try {
       const requestsData = await requestNetwork?.fromIdentity({
@@ -184,8 +171,6 @@
         .sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
       console.error("Failed to fetch requests:", error);
-    } finally {
-      loading = false;
     }
   };
 
@@ -210,25 +195,6 @@
   const itemsPerPage = 10;
   let currentPage = 1;
   let totalPages = 1;
-
-  $: {
-    const currentWalletAddress = account?.address;
-    const currentNetwork = account?.chainId?.toString();
-
-    if (
-      currentWalletAddress &&
-      currentWalletAddress !== previousWalletAddress
-    ) {
-      getRequests();
-      previousWalletAddress = currentWalletAddress;
-
-      activeRequest = undefined;
-    }
-
-    if (currentNetwork && currentNetwork !== previousNetwork) {
-      previousNetwork = currentNetwork;
-    }
-  }
 
   $: {
     if (sortColumn && sortOrder) {
@@ -422,13 +388,27 @@
     activeRequest = undefined;
   };
 
-  const enableDecryption = async () => {
+  const loadRequests = async (
+    sliderValue: string,
+    currentAccount: GetAccountReturnType | undefined,
+    currentRequestNetwork: RequestNetwork | undefined | null
+  ) => {
+    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider)
+      return;
+
     loading = true;
-    if (sliderValueForDecryption === "on") {
+    if (sliderValue === "on") {
       try {
         const signer = await getEthersSigner(wagmiConfig);
-        if (signer && account?.address) {
-          await cipherProvider?.getSessionSignatures(signer, account.address);
+        if (signer && currentAccount?.address) {
+          loadSessionSignatures =
+            localStorage?.getItem("lit-wallet-sig") === null;
+          await cipherProvider?.getSessionSignatures(
+            signer,
+            currentAccount.address,
+            window.location.host,
+            "Sign in to Lit Protocol through Request Network"
+          );
           cipherProvider?.enableDecryption(true);
           localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
         }
@@ -437,22 +417,37 @@
         toast.error("Failed to enable decryption.");
         loading = false;
         return;
+      } finally {
+        loadSessionSignatures = false;
       }
     } else {
       cipherProvider?.enableDecryption(false);
       localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
     }
-    await getRequests();
+    await getRequests(currentAccount, currentRequestNetwork);
     loading = false;
   };
 
-  $: sliderValueForDecryption, enableDecryption();
+  $: loadRequests(sliderValueForDecryption, account, requestNetwork);
 </script>
 
 <div
   class="main-table"
   style="--mainColor: {mainColor}; --secondaryColor: {secondaryColor}; "
 >
+  {#if loadSessionSignatures}
+    <Modal {config} isOpen={true} title="Lit Protocol Signature Required">
+      <div class="modal-content">
+        <p>
+          This signature is required only once per session and will allow you
+          to:
+        </p>
+        <ul>
+          <li>Access encrypted invoice details</li>
+        </ul>
+      </div>
+    </Modal>
+  {/if}
   <div class="tabs">
     <ul>
       <li
@@ -1076,5 +1071,20 @@
     color: black;
     font-size: 20px;
     margin-bottom: 0;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-content ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .modal-content li {
+    margin-bottom: 0.5rem;
+    color: #4b5563;
   }
 </style>
