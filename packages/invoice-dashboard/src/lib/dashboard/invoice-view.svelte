@@ -372,24 +372,78 @@
     paymentCurrencies: any[],
     signer: any
   ) => {
-    const approvalCheckers: { [key: string]: () => Promise<boolean> } = {
-      [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: () =>
-        hasErc20Approval(requestData!, address!, signer),
-      [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: () =>
-        hasErc20ApprovalForProxyConversion(
-          requestData!,
-          address!,
-          paymentCurrencies[0]?.address,
-          signer,
-          requestData.expectedAmount
-        ),
-    };
+    try {
+      if (!paymentNetworkExtension?.id || !address || !signer) {
+        console.log("Missing dependencies:", {
+          network: paymentNetworkExtension?.id,
+          address,
+          signer: !!signer,
+        });
+        return false;
+      }
 
-    return (
-      (paymentNetworkExtension?.id &&
-        (await approvalCheckers[paymentNetworkExtension.id]?.())) ||
-      false
-    );
+      // Skip approval check if payment is not required
+      if (requestData?.balance?.balance >= requestData?.expectedAmount) {
+        console.log("Payment already completed, skipping approval check");
+        return true;
+      }
+
+      // Validate payment currency
+      if (!paymentCurrencies[0]?.address) {
+        console.log("Invalid payment currency:", paymentCurrencies[0]);
+        return false;
+      }
+
+      // Check if we're on the correct network
+      const chainId = await signer.getChainId();
+      const expectedChainId = getNetworkIdFromNetworkName(network);
+      const expectedChainIdNumber = parseInt(expectedChainId, 16);
+
+      if (chainId !== expectedChainIdNumber) {
+        console.log("Wrong network:", {
+          current: `0x${chainId.toString(16)}`,
+          expected: expectedChainId,
+        });
+        return false;
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        try {
+          return await hasErc20Approval(requestData!, address!, signer).catch(
+            () => false
+          );
+        } catch {
+          console.log("ERC20_FEE_PROXY_CONTRACT approval check failed");
+          return false;
+        }
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        try {
+          return await hasErc20ApprovalForProxyConversion(
+            requestData!,
+            address!,
+            paymentCurrencies[0]?.address,
+            signer,
+            requestData.expectedAmount
+          ).catch(() => false);
+        } catch {
+          console.log("ANY_TO_ERC20_PROXY approval check failed");
+          return false;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.log("General approval check error:", error);
+      return false;
+    }
   };
 
   async function approve() {
@@ -485,49 +539,74 @@
       : value.toFixed(maxDecimals);
   }
 
-  async function checkBalance() {
+  const checkBalance = async () => {
     try {
-      if (!address || !paymentCurrencies[0] || !network) {
-        console.log("Missing required parameters for balance check:", {
-          address,
-          paymentCurrency: paymentCurrencies[0],
-          network,
+      if (!account?.address || !requestData || !paymentCurrencies?.[0]) {
+        console.log("Missing dependencies for balance check:", {
+          hasAddress: !!account?.address,
+          hasRequestData: !!requestData,
+          hasPaymentCurrency: !!paymentCurrencies?.[0],
         });
         return;
       }
 
-      const invoiceNetworkId = Number(getNetworkIdFromNetworkName(network));
+      // Check if we're on the correct network
+      const hexStringChain = "0x" + account.chainId.toString(16);
+      const expectedChainId = getNetworkIdFromNetworkName(network);
 
-      if (account.chainId !== invoiceNetworkId) {
+      if (hexStringChain !== String(expectedChainId)) {
+        console.log("Wrong network for balance check:", {
+          current: hexStringChain,
+          expected: expectedChainId,
+        });
+        userBalance = "0";
         hasEnoughBalance = false;
-        console.log("Wrong network - balance check skipped");
         return;
       }
 
-      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+      // Rest of the balance check logic...
+      if (
+        !paymentCurrencies[0].address ||
+        paymentCurrencies[0].type === Types.RequestLogic.CURRENCY.ETH
+      ) {
         const balance = await getBalance(wagmiConfig, {
-          address,
-          token: paymentCurrencies[0].address as `0x${string}`,
-          chainId: invoiceNetworkId,
+          address: account.address,
         });
-        const balanceNum = BigInt(balance.formatted);
-        userBalance = formatBalance(balanceNum);
-        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
-      } else {
-        const balance = await getBalance(wagmiConfig, {
-          address,
-          chainId: invoiceNetworkId,
-        });
-        const balanceNum = BigInt(balance.formatted);
-        userBalance = formatBalance(balanceNum);
-        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+
+        userBalance = formatUnits(balance.value, balance.decimals);
+        const balanceInWei = BigInt(Math.floor(Number(balance.value)));
+        const expectedAmountBigInt = BigInt(requestData.expectedAmount || 0);
+        hasEnoughBalance = balanceInWei >= expectedAmountBigInt;
+
+        return;
       }
-    } catch (err) {
-      console.error("Error checking balance:", err);
-      hasEnoughBalance = false;
+
+      // For ERC20 tokens
+      try {
+        const balance = await getBalance(wagmiConfig, {
+          address: account.address,
+          token: paymentCurrencies[0].address,
+        });
+
+        if (balance && typeof balance.value !== "undefined") {
+          userBalance = formatUnits(balance.value, balance.decimals);
+          const balanceInWei = BigInt(Math.floor(Number(balance.value)));
+          const expectedAmountBigInt = BigInt(requestData.expectedAmount || 0);
+          hasEnoughBalance = balanceInWei >= expectedAmountBigInt;
+        } else {
+          throw new Error("Invalid balance response");
+        }
+      } catch (tokenError) {
+        console.error("Error checking ERC20 balance:", tokenError);
+        userBalance = "0";
+        hasEnoughBalance = false;
+      }
+    } catch (error) {
+      console.error("Error checking balance:", error);
       userBalance = "0";
+      hasEnoughBalance = false;
     }
-  }
+  };
 
   const currentStatusIndex = statuses.length - 1;
 
