@@ -1,5 +1,17 @@
 # @requestnetwork/create-invoice-form
 
+## 0.11.12
+
+### Patch Changes
+
+- Fix Lit Encryption and Wallet Connections
+
+## 0.11.11
+
+### Patch Changes
+
+- Fix Lit Protocol Encryption Issues
+
 ## 0.11.10
 
 ### Patch Changes
