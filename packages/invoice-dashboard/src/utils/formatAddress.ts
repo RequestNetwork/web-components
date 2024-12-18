@@ -8,6 +8,7 @@ export const formatAddress = (
 ): string => {
   if (!address || address.length === 0 || !checkAddress(address)) {
     console.error("Invalid address!");
+    return address;
   }
 
   const checksumAddress = getAddress(address);
