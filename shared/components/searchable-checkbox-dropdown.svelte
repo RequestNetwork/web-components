@@ -22,6 +22,7 @@
   let isOpen = false;
   let searchTerm = "";
   let dropdownContainer: HTMLElement;
+  let focusedIndex = -1;
 
   $: filteredOptions = options.filter((option) =>
     option.value.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,17 +40,59 @@
     onchange(selectedValues);
   };
 
+  function handleKeydown(event: KeyboardEvent) {
+    if (!isOpen) {
+      if (
+        event.key === "Enter" ||
+        event.key === " " ||
+        event.key === "ArrowDown"
+      ) {
+        event.preventDefault();
+        isOpen = true;
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        focusedIndex = Math.min(focusedIndex + 1, filteredOptions.length - 1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        focusedIndex = Math.max(focusedIndex - 1, 0);
+        break;
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        if (focusedIndex >= 0) {
+          const option = filteredOptions[focusedIndex];
+          selectOption(option.value);
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        closeDropdown();
+        break;
+    }
+  }
+
   function handleSearchInput(event: Event) {
     const input = event.target as HTMLInputElement;
     searchTerm = input.value;
+    focusedIndex = -1; // Reset focus when searching
   }
 
   function closeDropdown() {
     isOpen = false;
+    focusedIndex = -1;
   }
 
   function toggleDropdown(event: Event) {
     event.stopPropagation();
+    if (!isOpen) {
+      focusedIndex = -1;
+    }
     isOpen = !isOpen;
   }
 </script>
@@ -64,7 +107,14 @@
   bind:this={dropdownContainer}
   class="dropdown-wrapper"
 >
-  <button type="button" on:click={toggleDropdown} class="dropdown-button">
+  <button
+    type="button"
+    on:click={toggleDropdown}
+    on:keydown={handleKeydown}
+    class="dropdown-button"
+    aria-haspopup="listbox"
+    aria-expanded={isOpen}
+  >
     {placeholder}
     <svg class="dropdown-button-icon" fill="none" viewBox="0 0 20 20">
       <path
@@ -78,7 +128,7 @@
   </button>
 
   {#if isOpen}
-    <div class="dropdown-menu">
+    <div class="dropdown-menu" role="listbox" tabindex="-1">
       {#if !noSearch}
         <div class="search-container">
           <Input
@@ -89,11 +139,15 @@
         </div>
       {/if}
       <ul class="dropdown-list">
-        {#each filteredOptions as option}
+        {#each filteredOptions as option, index}
           <li
             class="dropdown-item"
             class:selected={option.checked}
+            class:focused={index === focusedIndex}
             on:click={() => selectOption(option.value)}
+            role="option"
+            aria-selected={option.checked}
+            tabindex="-1"
           >
             {#if type === "network"}
               <div class="network-icon">
@@ -102,9 +156,7 @@
             {:else if type === "transaction"}
               <TxType type={option.value} />
             {:else if type === "status"}
-              <div class="status-label-wrapper">
-                <StatusLabel status={option.value} />
-              </div>
+              <StatusLabel status={option.value} />
             {/if}
             <div class="custom-checkbox" class:checked={option.checked}>
               {@html option.checked ? CheckIcon : ""}
@@ -152,7 +204,7 @@
 
   .dropdown-button:focus {
     outline: none;
-    box-shadow: 0 0 0 1px var(--secondaryColor);
+    box-shadow: 0 0 0 2px var(--secondaryColor);
   }
 
   .dropdown-button-icon {
@@ -233,5 +285,14 @@
 
   .network-icon :global(span) {
     font-size: 14px !important;
+  }
+
+  .dropdown-item.focused {
+    background-color: #f3f4f6;
+  }
+
+  .dropdown-item:focus {
+    outline: none;
+    background-color: #f3f4f6;
   }
 </style>

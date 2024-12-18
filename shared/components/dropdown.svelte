@@ -20,6 +20,7 @@
   let isOpen = false;
   let dropdownContainer: HTMLElement;
   let localOptions = options;
+  let focusedIndex = -1;
 
   const selectOption = (value: string, checked?: boolean) => {
     if (type === "checkbox") {
@@ -37,13 +38,54 @@
     }
   };
 
+  function handleKeydown(event: KeyboardEvent) {
+    if (!isOpen) {
+      if (
+        event.key === "Enter" ||
+        event.key === " " ||
+        event.key === "ArrowDown"
+      ) {
+        event.preventDefault();
+        openDropdown.set(dropdownId);
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        focusedIndex = Math.min(focusedIndex + 1, localOptions.length - 1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        focusedIndex = Math.max(focusedIndex - 1, 0);
+        break;
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        if (focusedIndex >= 0) {
+          const option = localOptions[focusedIndex];
+          selectOption(option.value, option.checked);
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        closeDropdown();
+        break;
+    }
+  }
+
   function closeDropdown() {
     isOpen = false;
     openDropdown.set(null);
+    focusedIndex = -1;
   }
 
   function toggleDropdown(event: Event) {
     event.stopPropagation();
+    if (!isOpen) {
+      focusedIndex = -1;
+    }
     openDropdown.set(isOpen ? null : dropdownId);
   }
 
@@ -72,7 +114,14 @@
   bind:this={dropdownContainer}
   class="dropdown-wrapper"
 >
-  <button type="button" on:click={toggleDropdown} class="dropdown-button">
+  <button
+    type="button"
+    on:click={toggleDropdown}
+    on:keydown={handleKeydown}
+    class="dropdown-button"
+    aria-haspopup="listbox"
+    aria-expanded={isOpen}
+  >
     {type === "default" ? selectedValue || placeholder : placeholder}
     <svg class="dropdown-button-icon" fill="none" viewBox="0 0 20 20">
       <path
@@ -86,14 +135,18 @@
   </button>
 
   {#if isOpen}
-    <div class="dropdown-menu">
+    <div class="dropdown-menu" role="listbox" tabindex="-1">
       <ul class="dropdown-list">
         {#if type === "checkbox"}
-          {#each localOptions as option}
+          {#each localOptions as option, index}
             <li
               class="dropdown-item"
               class:selected={option.checked}
+              class:focused={index === focusedIndex}
               on:click={() => selectOption(option.value, option.checked)}
+              role="option"
+              aria-selected={option.checked}
+              tabindex="-1"
             >
               <span>{option.label}</span>
               <div class="custom-checkbox" class:checked={option.checked}>
@@ -152,7 +205,7 @@
 
   .dropdown-button:focus {
     outline: none;
-    box-shadow: 0 0 0 1px var(--secondaryColor);
+    box-shadow: 0 0 0 2px var(--secondaryColor);
   }
 
   .dropdown-button-icon {
@@ -209,5 +262,14 @@
   .custom-checkbox.checked {
     background-color: var(--mainColor);
     border-color: var(--mainColor);
+  }
+
+  .dropdown-item.focused {
+    background-color: #f3f4f6;
+  }
+
+  .dropdown-item:focus {
+    outline: none;
+    background-color: #f3f4f6;
   }
 </style>
