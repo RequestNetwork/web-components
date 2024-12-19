@@ -154,7 +154,9 @@
                 <NetworkIcon network={option.value} />
               </div>
             {:else if type === "transaction"}
-              <TxType type={option.value} />
+              <div class="tx-type-wrapper">
+                <TxType type={option.value} />
+              </div>
             {:else if type === "status"}
               <StatusLabel status={option.value} />
             {/if}
@@ -294,5 +296,9 @@
   .dropdown-item:focus {
     outline: none;
     background-color: #f3f4f6;
+  }
+
+  .tx-type-wrapper {
+    margin-right: 8px;
   }
 </style>

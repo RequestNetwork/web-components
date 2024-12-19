@@ -596,9 +596,8 @@
         <SearchableDropdownCheckbox
           config={activeConfig}
           options={txTypeOptions}
-          placeholder="Type"
+          placeholder="Filter by Type"
           onchange={handleTxTypeSelection}
-          searchPlaceholder="Search types..."
           type="transaction"
           noSearch={true}
         />
