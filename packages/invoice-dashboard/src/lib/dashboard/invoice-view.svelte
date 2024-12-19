@@ -372,24 +372,68 @@
     paymentCurrencies: any[],
     signer: any
   ) => {
-    const approvalCheckers: { [key: string]: () => Promise<boolean> } = {
-      [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: () =>
-        hasErc20Approval(requestData!, address!, signer),
-      [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: () =>
-        hasErc20ApprovalForProxyConversion(
+    try {
+      if (!paymentNetworkExtension?.id || !address || !signer) {
+        console.log("Missing required arguments for approval check:", {
+          network: paymentNetworkExtension?.id,
+          address,
+          signer: !!signer,
+        });
+        return false;
+      }
+
+      // Skip approval check if payment is not required
+      if (requestData?.balance?.balance >= requestData?.expectedAmount) {
+        console.log("Payment already completed, skipping approval check");
+        return true;
+      }
+
+      // Validate payment currency
+      if (!paymentCurrencies[0]?.address) {
+        console.error("Invalid payment currency:", paymentCurrencies[0]);
+        return false;
+      }
+
+      // Check if we're on the correct network
+      const chainId = await signer.getChainId();
+      const expectedChainId = getNetworkIdFromNetworkName(network);
+      const expectedChainIdNumber = parseInt(expectedChainId, 16);
+
+      if (chainId !== expectedChainIdNumber) {
+        console.error("Wrong network:", {
+          current: `0x${chainId.toString(16)}`,
+          expected: expectedChainId,
+        });
+        return false;
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        return await hasErc20Approval(requestData!, address!, signer).catch(
+          () => false
+        );
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        return await hasErc20ApprovalForProxyConversion(
           requestData!,
           address!,
           paymentCurrencies[0]?.address,
           signer,
           requestData.expectedAmount
-        ),
-    };
+        ).catch(() => false);
+      }
 
-    return (
-      (paymentNetworkExtension?.id &&
-        (await approvalCheckers[paymentNetworkExtension.id]?.())) ||
-      false
-    );
+      return false;
+    } catch (error) {
+      console.error("General approval check error:", error);
+      return false;
+    }
   };
 
   async function approve() {
@@ -482,7 +526,7 @@
   async function checkBalance() {
     try {
       if (!address || !paymentCurrencies[0] || !network) {
-        console.log("Missing required parameters for balance check:", {
+        console.error("Missing required parameters for balance check:", {
           address,
           paymentCurrency: paymentCurrencies[0],
           network,
@@ -504,7 +548,6 @@
           token: paymentCurrencies[0].address as `0x${string}`,
           chainId: invoiceNetworkId,
         });
-        ;
         userBalance = balance.formatted;
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       } else {
