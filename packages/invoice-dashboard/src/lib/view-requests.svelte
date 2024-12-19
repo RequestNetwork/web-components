@@ -163,7 +163,7 @@
     requestNetwork: RequestNetwork | undefined | null
   ) => {
     if (!account?.address || !requestNetwork) return;
-
+    loading = true;
     try {
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -174,6 +174,8 @@
         .sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
       console.error("Failed to fetch requests:", error);
+    } finally {
+      loading = false;
     }
   };
 
