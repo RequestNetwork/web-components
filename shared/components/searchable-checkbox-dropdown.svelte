@@ -154,11 +154,11 @@
                 <NetworkIcon network={option.value} />
               </div>
             {:else if type === "transaction"}
-              <div class="tx-type-wrapper">
-                <TxType type={option.value} />
-              </div>
+              <TxType type={option.value} />
             {:else if type === "status"}
-              <StatusLabel status={option.value} />
+              <div class="status-wrapper">
+                <StatusLabel status={option.value} />
+              </div>
             {/if}
             <div class="custom-checkbox" class:checked={option.checked}>
               {@html option.checked ? CheckIcon : ""}
@@ -298,7 +298,7 @@
     background-color: #f3f4f6;
   }
 
-  .tx-type-wrapper {
+  .status-wrapper {
     margin-right: 8px;
   }
 </style>
