@@ -119,8 +119,11 @@
     cipherProvider = undefined;
   };
 
-  const handleWalletChange = (data: any) => {
-    if (data?.address) {
+  const handleWalletChange = (account: GetAccountReturnType, previousAccount: GetAccountReturnType) => {
+    if (account?.address !== previousAccount?.address) {
+      handleWalletDisconnection();
+      handleWalletConnection();
+    } else if (account?.address) {
       handleWalletConnection();
     } else {
       handleWalletDisconnection();
@@ -129,9 +132,9 @@
 
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(data) {
+      onChange(account: GetAccountReturnType, previousAccount: GetAccountReturnType) {
         tick().then(() => {
-          handleWalletChange(data);
+          handleWalletChange(account, previousAccount);
         });
       },
     });
@@ -160,7 +163,7 @@
     requestNetwork: RequestNetwork | undefined | null
   ) => {
     if (!account?.address || !requestNetwork) return;
-
+    loading = true;
     try {
       const requestsData = await requestNetwork?.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
@@ -171,6 +174,8 @@
         .sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
       console.error("Failed to fetch requests:", error);
+    } finally {
+      loading = false;
     }
   };
 
