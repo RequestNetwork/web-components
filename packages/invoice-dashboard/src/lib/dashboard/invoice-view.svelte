@@ -515,7 +515,7 @@
           token: paymentCurrencies[0].address as `0x${string}`,
           chainId: invoiceNetworkId,
         });
-        const balanceNum = BigInt(balance.formatted);
+        const balanceNum = Number(balance.value);
         userBalance = formatBalance(balanceNum);
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       } else {
@@ -523,7 +523,7 @@
           address,
           chainId: invoiceNetworkId,
         });
-        const balanceNum = BigInt(balance.formatted);
+        const balanceNum = Number(balance.value);
         userBalance = formatBalance(balanceNum);
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       }
