@@ -407,7 +407,7 @@
             bind:this={invoiceCurrencyDropdown}
             getValue={(currency) => currency.value.symbol}
             getDisplayValue={(currency) =>
-              `${currency.value.symbol} ${currency.value.network ? `(${currency.value.network})` : ""}`}
+              `${currency.value.symbol}`}
             placeholder="Invoice currency"
             items={defaultCurrencies
               ?.filter((curr) => curr)
