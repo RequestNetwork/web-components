@@ -480,9 +480,14 @@
   }
 
   function formatBalance(value: number, maxDecimals: number = 4): string {
-    return Number.isInteger(value)
-      ? value.toString()
-      : value.toFixed(maxDecimals);
+    try {
+      return Number.isInteger(value)
+        ? value.toString()
+        : value.toFixed(maxDecimals);
+    } catch (error) {
+      console.error("Error formatting balance:", error);
+      return "-";
+    }
   }
 
   async function checkBalance() {

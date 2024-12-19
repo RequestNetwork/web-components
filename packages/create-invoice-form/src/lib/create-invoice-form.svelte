@@ -1,7 +1,11 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
-  import { getAccount, watchAccount, WatchAccountReturnType } from "@wagmi/core";
+  import {
+    getAccount,
+    watchAccount,
+    WatchAccountReturnType,
+  } from "@wagmi/core";
   import { Config as WagmiConfig } from "wagmi";
   // Types
   import { type GetAccountReturnType } from "@wagmi/core";
@@ -24,7 +28,7 @@
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
-    import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
     disconnectWallet: () => void;
@@ -36,32 +40,19 @@
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
   let cipherProvider: CipherProvider | undefined;
 
-  let account: GetAccountReturnType | undefined = wagmiConfig && getAccount(wagmiConfig);
+  let account: GetAccountReturnType | undefined =
+    wagmiConfig && getAccount(wagmiConfig);
   let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
   let currencyManager = initializeCurrencyManager(currencies);
 
-  let invoiceCurrencyDropdown: { clear: () => void; };
-  let networkDropdown: { clear: () => void; };
-  let currencyDropdown: { clear: () => void; };
-
-  const extractUniqueNetworkNames = (): string[] => {
-    const networkSet = new Set<string>();
-
-    currencyManager.knownCurrencies.forEach(
-      (currency: CurrencyTypes.CurrencyDefinition) => {
-        if (currency.network) {
-          networkSet.add(currency.network);
-        }
-      }
-    );
-
-    return Array.from(networkSet);
-  };
-
-  let networks: string[] = extractUniqueNetworkNames();
+  let invoiceCurrencyDropdown: { clear: () => void };
+  let networkDropdown: { clear: () => void };
+  let currencyDropdown: { clear: () => void };
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
+  let networks: string[] = [];
 
   let network: string | undefined = undefined;
   let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
@@ -70,32 +61,36 @@
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
       currencyDropdown.clear();
+      invoiceCurrency = invoiceCurrency?.type !== Types.RequestLogic.CURRENCY.ISO4217 ? currencyManager.knownCurrencies.find(currency => invoiceCurrency?.symbol === currency.symbol && currency.network === newNetwork) : invoiceCurrency;
       network = newNetwork;
-
       currency = undefined;
 
-      filteredSettlementCurrencies = currencyManager.knownCurrencies.filter((currency: CurrencyTypes.CurrencyDefinition) => {
-      if (!invoiceCurrency) {
-        return false;
-      }
+      filteredSettlementCurrencies = currencyManager.knownCurrencies.filter(
+        (currency: CurrencyTypes.CurrencyDefinition) => {
+          if (!invoiceCurrency) {
+            return false;
+          }
 
-      // For ISO4217 currencies (like EUR)
-      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-        const hasValidPath =
-          currencyManager?.getConversionPath(
-            invoiceCurrency,
-            currency,
-            currency?.network
-          )?.length > 0;
+          // For ISO4217 currencies (like EUR)
+          if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+            const hasValidPath =
+              currencyManager?.getConversionPath(
+                invoiceCurrency,
+                currency,
+                currency?.network,
+              )?.length > 0;
 
-        return (
-          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
-        );
-      }
+            return (
+              currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
+              hasValidPath &&
+              currency.network === newNetwork
+            );
+          }
 
-      // For other currency types (like ERC20)
-      return invoiceCurrency.hash === currency?.hash;
-    });;
+          // For other currency types (like ERC20)
+          return invoiceCurrency.hash === currency?.hash;
+        },
+      );
     }
   };
 
@@ -103,11 +98,18 @@
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let defaultCurrencies = currencyManager.knownCurrencies;
-  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
+  // Remove duplicate currencies and filter out currencies with '-' in the symbol
+  let defaultCurrencies = Object.values(currencyManager.knownCurrencies.reduce(
+    (unique: { [x: string]: any; }, currency: { symbol: string | number; }) => {
+      if (!unique[currency.symbol] && !currency.symbol.includes('-')) unique[currency.symbol] = currency;
+
+      return unique;
+    },
+    {},
+  ));
 
   const handleInvoiceCurrencyChange = (
-    value: CurrencyTypes.CurrencyDefinition
+    value: CurrencyTypes.CurrencyDefinition,
   ) => {
     if (value !== invoiceCurrency) {
       networkDropdown.clear();
@@ -122,10 +124,10 @@
       if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
         networks = (getCurrencySupportedNetworksForConversion(
           invoiceCurrency.hash,
-          currencyManager
+          currencyManager,
         ) ?? []) as string[];
       } else {
-        networks = extractUniqueNetworkNames();
+        networks = currencyManager.knownCurrencies.filter(currency => currency.symbol === invoiceCurrency?.symbol).map(currency => currency.network);
       }
     }
   };
@@ -257,7 +259,7 @@
               paymentNetwork: requestCreateParameters.paymentNetwork,
               contentData: requestCreateParameters.contentData,
             },
-            [payeeEncryptionParams, payerEncryptionParams]
+            [payeeEncryptionParams, payerEncryptionParams],
           );
         } else {
           request = await requestNetwork.createRequest({
