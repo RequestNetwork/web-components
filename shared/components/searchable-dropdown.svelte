@@ -74,6 +74,12 @@
   }
 
   $: if (!isOpen) selectedIndex = -1;
+
+  export function clear() {
+    searchTerm = "";
+    isOpen = false;
+    selectedIndex = -1;
+  }
 </script>
 
 {#if isOpen && !disabled}

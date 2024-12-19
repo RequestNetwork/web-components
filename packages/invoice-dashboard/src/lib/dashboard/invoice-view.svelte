@@ -533,80 +533,47 @@
       : value;
   }
 
-  function formatBalance(value: number, maxDecimals: number = 4): string {
-    return Number.isInteger(value)
-      ? value.toString()
-      : value.toFixed(maxDecimals);
-  }
-
-  const checkBalance = async () => {
+  async function checkBalance() {
     try {
-      if (!account?.address || !requestData || !paymentCurrencies?.[0]) {
-        console.log("Missing dependencies for balance check:", {
-          hasAddress: !!account?.address,
-          hasRequestData: !!requestData,
-          hasPaymentCurrency: !!paymentCurrencies?.[0],
+      if (!address || !paymentCurrencies[0] || !network) {
+        console.log("Missing required parameters for balance check:", {
+          address,
+          paymentCurrency: paymentCurrencies[0],
+          network,
         });
         return;
       }
 
-      // Check if we're on the correct network
-      const hexStringChain = "0x" + account.chainId.toString(16);
-      const expectedChainId = getNetworkIdFromNetworkName(network);
+      const invoiceNetworkId = Number(getNetworkIdFromNetworkName(network));
 
-      if (hexStringChain !== String(expectedChainId)) {
-        console.log("Wrong network for balance check:", {
-          current: hexStringChain,
-          expected: expectedChainId,
-        });
-        userBalance = "0";
+      if (account.chainId !== invoiceNetworkId) {
         hasEnoughBalance = false;
+        console.log("Wrong network - balance check skipped");
         return;
       }
 
-      // Rest of the balance check logic...
-      if (
-        !paymentCurrencies[0].address ||
-        paymentCurrencies[0].type === Types.RequestLogic.CURRENCY.ETH
-      ) {
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
         const balance = await getBalance(wagmiConfig, {
-          address: account.address,
+          address,
+          token: paymentCurrencies[0].address as `0x${string}`,
+          chainId: invoiceNetworkId,
         });
-
-        userBalance = formatUnits(balance.value, balance.decimals);
-        const balanceInWei = BigInt(Math.floor(Number(balance.value)));
-        const expectedAmountBigInt = BigInt(requestData.expectedAmount || 0);
-        hasEnoughBalance = balanceInWei >= expectedAmountBigInt;
-
-        return;
-      }
-
-      // For ERC20 tokens
-      try {
+        userBalance = balance.formatted;
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      } else {
         const balance = await getBalance(wagmiConfig, {
-          address: account.address,
-          token: paymentCurrencies[0].address,
+          address,
+          chainId: invoiceNetworkId,
         });
-
-        if (balance && typeof balance.value !== "undefined") {
-          userBalance = formatUnits(balance.value, balance.decimals);
-          const balanceInWei = BigInt(Math.floor(Number(balance.value)));
-          const expectedAmountBigInt = BigInt(requestData.expectedAmount || 0);
-          hasEnoughBalance = balanceInWei >= expectedAmountBigInt;
-        } else {
-          throw new Error("Invalid balance response");
-        }
-      } catch (tokenError) {
-        console.error("Error checking ERC20 balance:", tokenError);
-        userBalance = "0";
-        hasEnoughBalance = false;
+        userBalance = balance.formatted;
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       }
-    } catch (error) {
-      console.error("Error checking balance:", error);
-      userBalance = "0";
+    } catch (err) {
+      console.error("Error checking balance:", err);
       hasEnoughBalance = false;
+      userBalance = "0";
     }
-  };
+  }
 
   const currentStatusIndex = statuses.length - 1;
 
@@ -921,7 +888,7 @@
     {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
       {#if !hasEnoughBalance}
         <div class="balance-warning">
-          Insufficient funds: {userBalance}
+          Insufficient funds: {Number(userBalance).toFixed(4)}
           {paymentCurrencies[0]?.symbol || "-"}
         </div>
       {/if}

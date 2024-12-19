@@ -1,16 +1,21 @@
 import { getAddress } from "viem";
-import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
 
 export const formatAddress = (
-  address: string,
-  first: number = 6,
-  last: number = 4
-): string => {
-  if (!checkAddress(address)) {
-    console.error("Invalid address!");
+   address: string,
+   first: number = 6,
+   last: number = 4
+): string | '-' => {
+   if (!address || address.length === 0) {
+    // Consider using a proper logging service
+    console.warn("[formatAddress] No address provided");
+    return '-';
+   } else {
+    try {
+      const checksumAddress = getAddress(address);
+      return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
+    } catch (error) {
+      console.error("Invalid address: ", error);
+      return '-';
+    }
   }
-
-  const checksumAddress = getAddress(address);
-
-  return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
 };

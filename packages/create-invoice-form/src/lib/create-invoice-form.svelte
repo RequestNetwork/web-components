@@ -1,7 +1,11 @@
 <svelte:options customElement="create-invoice-form" />
 
 <script lang="ts">
-  import { getAccount, watchAccount, WatchAccountReturnType } from "@wagmi/core";
+  import {
+    getAccount,
+    watchAccount,
+    WatchAccountReturnType,
+  } from "@wagmi/core";
   import { Config as WagmiConfig } from "wagmi";
   // Types
   import { type GetAccountReturnType } from "@wagmi/core";
@@ -24,7 +28,7 @@
   import Status from "@requestnetwork/shared-components/status.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
   import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
-    import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
     disconnectWallet: () => void;
@@ -36,28 +40,19 @@
   export let currencies: CurrencyTypes.CurrencyInput[] = [];
   let cipherProvider: CipherProvider | undefined;
 
-  let account: GetAccountReturnType | undefined = wagmiConfig && getAccount(wagmiConfig);
+  let account: GetAccountReturnType | undefined =
+    wagmiConfig && getAccount(wagmiConfig);
   let isTimeout = false;
   let activeConfig = config ? config : defaultConfig;
   let mainColor = activeConfig.colors.main;
   let secondaryColor = activeConfig.colors.secondary;
   let currencyManager = initializeCurrencyManager(currencies);
 
-  const extractUniqueNetworkNames = (): string[] => {
-    const networkSet = new Set<string>();
-
-    currencyManager.knownCurrencies.forEach(
-      (currency: CurrencyTypes.CurrencyDefinition) => {
-        if (currency.network) {
-          networkSet.add(currency.network);
-        }
-      }
-    );
-
-    return Array.from(networkSet);
-  };
-
-  let networks: string[] = extractUniqueNetworkNames();
+  let invoiceCurrencyDropdown: { clear: () => void };
+  let networkDropdown: { clear: () => void };
+  let currencyDropdown: { clear: () => void };
+  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
+  let networks: string[] = [];
 
   let network: string | undefined = undefined;
   let currency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
@@ -65,15 +60,36 @@
 
   const handleNetworkChange = (newNetwork: string) => {
     if (newNetwork) {
+      currencyDropdown.clear();
+      invoiceCurrency = invoiceCurrency?.type !== Types.RequestLogic.CURRENCY.ISO4217 ? currencyManager.knownCurrencies.find(currency => invoiceCurrency?.symbol === currency.symbol && currency.network === newNetwork) : invoiceCurrency;
       network = newNetwork;
-
-      invoiceCurrency = undefined;
       currency = undefined;
 
-      defaultCurrencies = currencyManager.knownCurrencies.filter(
-        (curr: CurrencyTypes.CurrencyDefinition) =>
-          curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-          curr.network === newNetwork
+      filteredSettlementCurrencies = currencyManager.knownCurrencies.filter(
+        (currency: CurrencyTypes.CurrencyDefinition) => {
+          if (!invoiceCurrency) {
+            return false;
+          }
+
+          // For ISO4217 currencies (like EUR)
+          if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+            const hasValidPath =
+              currencyManager?.getConversionPath(
+                invoiceCurrency,
+                currency,
+                currency?.network,
+              )?.length > 0;
+
+            return (
+              currency.type !== Types.RequestLogic.CURRENCY.ISO4217 &&
+              hasValidPath &&
+              currency.network === newNetwork
+            );
+          }
+
+          // For other currency types (like ERC20)
+          return invoiceCurrency.hash === currency?.hash;
+        },
       );
     }
   };
@@ -82,17 +98,36 @@
   let canSubmit = false;
   let appStatus: APP_STATUS[] = [];
   let formData = getInitialFormData();
-  let defaultCurrencies = currencyManager.knownCurrencies;
+  // Remove duplicate currencies and filter out currencies with '-' in the symbol
+  let defaultCurrencies = Object.values(currencyManager.knownCurrencies.reduce(
+    (unique: { [x: string]: any; }, currency: { symbol: string | number; }) => {
+      if (!unique[currency.symbol] && !currency.symbol.includes('-')) unique[currency.symbol] = currency;
+
+      return unique;
+    },
+    {},
+  ));
 
   const handleInvoiceCurrencyChange = (
-    value: CurrencyTypes.CurrencyDefinition
+    value: CurrencyTypes.CurrencyDefinition,
   ) => {
     if (value !== invoiceCurrency) {
+      networkDropdown.clear();
+      currencyDropdown.clear();
+
       invoiceCurrency = value;
       currency = undefined;
+      filteredSettlementCurrencies = [];
+      network = undefined;
+      networks = [];
 
-      if (value.type !== Types.RequestLogic.CURRENCY.ISO4217) {
-        network = value.network;
+      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
+        networks = (getCurrencySupportedNetworksForConversion(
+          invoiceCurrency.hash,
+          currencyManager,
+        ) ?? []) as string[];
+      } else {
+        networks = currencyManager.knownCurrencies.filter(currency => currency.symbol === invoiceCurrency?.symbol).map(currency => currency.network);
       }
     }
   };
@@ -100,19 +135,6 @@
   const handleCurrencyChange = (value: CurrencyTypes.CurrencyDefinition) => {
     currency = value;
   };
-
-  $: {
-    if (invoiceCurrency) {
-      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-        networks = getCurrencySupportedNetworksForConversion(
-          invoiceCurrency.hash,
-          currencyManager
-        );
-      } else {
-        networks = extractUniqueNetworkNames();
-      }
-    }
-  }
 
   let invoiceTotals = {
     amountWithoutTax: 0,
@@ -130,8 +152,11 @@
     cipherProvider?.disconnectWallet();
   };
 
-  const handleWalletChange = (data: any) => {
-    if (data?.address) {
+  const handleWalletChange = (account: GetAccountReturnType, previousAccount: GetAccountReturnType) => {
+    if (account?.address !== previousAccount?.address) {
+      handleWalletDisconnection();
+      handleWalletConnection();
+    } else if (account?.address) {
       handleWalletConnection();
     } else {
       handleWalletDisconnection();
@@ -140,10 +165,9 @@
 
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(data) {
+      onChange(account: GetAccountReturnType, previousAccount: GetAccountReturnType) {
         tick().then(() => {
-          console.log("Wallet changed");
-          handleWalletChange(data);
+          handleWalletChange(account, previousAccount);
         });
       },
     });
@@ -237,7 +261,7 @@
               paymentNetwork: requestCreateParameters.paymentNetwork,
               contentData: requestCreateParameters.contentData,
             },
-            [payeeEncryptionParams, payerEncryptionParams]
+            [payeeEncryptionParams, payerEncryptionParams],
           );
         } else {
           request = await requestNetwork.createRequest({
@@ -272,17 +296,17 @@
   <div class="create-invoice-form-content">
     <InvoiceForm
       bind:formData
-      bind:currency
       config={activeConfig}
       bind:defaultCurrencies
-      bind:network
+      bind:filteredSettlementCurrencies
       {handleInvoiceCurrencyChange}
       {handleCurrencyChange}
       {handleNetworkChange}
-      {networks}
-      {currencyManager}
-      {invoiceCurrency}
+      bind:networks
       {cipherProvider}
+      bind:invoiceCurrencyDropdown
+      bind:networkDropdown
+      bind:currencyDropdown
     />
     <div class="invoice-view-wrapper">
       <InvoiceView

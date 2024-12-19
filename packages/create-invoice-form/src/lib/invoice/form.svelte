@@ -1,7 +1,6 @@
 <script lang="ts">
   // Components
   import Button from "@requestnetwork/shared-components/button.svelte";
-  import Dropdown from "@requestnetwork/shared-components/dropdown.svelte";
   import Input from "@requestnetwork/shared-components/input.svelte";
   import Labels from "@requestnetwork/shared-components/labels.svelte";
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
@@ -19,7 +18,6 @@
   import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
   import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
   import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
-  import { Types } from "@requestnetwork/request-client.js";
   import { CurrencyTypes, CipherProviderTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";
 
@@ -31,14 +29,12 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
-  export let currencyManager: any;
-  export let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined;
-  export let currency:
-    | CurrencyTypes.ERC20Currency
-    | CurrencyTypes.NativeCurrency
-    | undefined;
-  export let network: any;
+  export let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
   export let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
+
+  export let invoiceCurrencyDropdown;
+  export let networkDropdown;
+  export let currencyDropdown;
 
   let validationErrors = {
     payeeAddress: false,
@@ -53,7 +49,6 @@
   };
 
   let showPayeeAddressInput = false;
-  let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
 
   const validateEmail = (email: string, type: "sellerInfo" | "buyerInfo") => {
     validationErrors[`${type}`].email = !isEmail(email);
@@ -158,32 +153,6 @@
 
   $: if (!showPayeeAddressInput && formData.creatorId) {
     formData.payeeAddress = formData.creatorId;
-  }
-
-  $: {
-    // Filter settlement currencies whenever network, invoiceCurrency, or currencyManager changes
-    filteredSettlementCurrencies = defaultCurrencies.filter((currency) => {
-      if (!invoiceCurrency) {
-        return false;
-      }
-
-      // For ISO4217 currencies (like EUR)
-      if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-        const hasValidPath =
-          currencyManager?.getConversionPath(
-            invoiceCurrency,
-            currency,
-            currency.network
-          )?.length > 0;
-
-        return (
-          currency.type !== Types.RequestLogic.CURRENCY.ISO4217 && hasValidPath
-        );
-      }
-
-      // For other currency types (like ERC20)
-      return invoiceCurrency.hash === currency.hash;
-    });
   }
 
   $: if (!formData.issuedOn) {
@@ -433,21 +402,15 @@
             </div>
           </Accordion>
         </div>
-
         <div class="searchable-dropdown-container">
           <SearchableDropdown
+            bind:this={invoiceCurrencyDropdown}
             getValue={(currency) => currency.value.symbol}
             getDisplayValue={(currency) =>
-              `${currency.value.symbol} ${currency.value.network ? `(${currency.value.network})` : ""}`}
+              `${currency.value.symbol}`}
             placeholder="Invoice currency"
             items={defaultCurrencies
-              ?.filter((curr) => {
-                if (!curr) return false;
-                return (
-                  curr.type === Types.RequestLogic.CURRENCY.ISO4217 ||
-                  (curr.network && curr.network === network)
-                );
-              })
+              ?.filter((curr) => curr)
               .map((currency) => ({
                 value: currency,
                 label: `${currency?.symbol ?? "Unknown"} ${currency?.network ? `(${currency.network})` : ""}`,
@@ -455,7 +418,10 @@
               })) ?? []}
             onSelect={handleInvoiceCurrencyChange}
           />
+        </div>
+        <div class="searchable-dropdown-container"> 
           <SearchableDropdown
+            bind:this={networkDropdown}
             items={networks
               .filter((networkItem) => networkItem)
               .map((networkItem) => {
@@ -471,6 +437,7 @@
             onSelect={handleNetworkChange}
           />
           <SearchableDropdown
+            bind:this={currencyDropdown}
             items={filteredSettlementCurrencies.map((currency) => ({
               value: currency,
               type: "settlementCurrency",
@@ -481,6 +448,8 @@
               `${currency.value.symbol} (${currency.value.network})`}
             onSelect={handleCurrencyChange}
           />
+        </div>
+        <div>
           {#if cipherProvider}
             <Input
               type="checkbox"
