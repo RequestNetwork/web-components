@@ -479,17 +479,6 @@
       : value;
   }
 
-  function formatBalance(value: number, maxDecimals: number = 4): string {
-    try {
-      return Number.isInteger(value)
-        ? value.toString()
-        : value.toFixed(maxDecimals);
-    } catch (error) {
-      console.error("Error formatting balance:", error);
-      return "-";
-    }
-  }
-
   async function checkBalance() {
     try {
       if (!address || !paymentCurrencies[0] || !network) {
@@ -515,16 +504,15 @@
           token: paymentCurrencies[0].address as `0x${string}`,
           chainId: invoiceNetworkId,
         });
-        const balanceNum = BigInt(balance.formatted);
-        userBalance = formatBalance(balanceNum);
+        ;
+        userBalance = balance.formatted;
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       } else {
         const balance = await getBalance(wagmiConfig, {
           address,
           chainId: invoiceNetworkId,
         });
-        const balanceNum = BigInt(balance.formatted);
-        userBalance = formatBalance(balanceNum);
+        userBalance = balance.formatted;
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       }
     } catch (err) {
@@ -847,7 +835,7 @@
     {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
       {#if !hasEnoughBalance}
         <div class="balance-warning">
-          Insufficient funds: {userBalance}
+          Insufficient funds: {Number(userBalance).toFixed(4)}
           {paymentCurrencies[0]?.symbol || "-"}
         </div>
       {/if}
