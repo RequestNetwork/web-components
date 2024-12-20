@@ -396,6 +396,7 @@
   async function approve() {
     try {
       loading = true;
+      isSigningTransaction = true;
 
       const approvers: { [key: string]: () => Promise<void> } = {
         [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
@@ -430,6 +431,7 @@
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
       loading = false;
+      isSigningTransaction = false;
     }
   }
 
@@ -847,7 +849,7 @@
   {/if}
   <div class="invoice-view-actions">
     {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction && !unknownCurrency}
-      {#if !hasEnoughBalance}
+      {#if !hasEnoughBalance && correctChain}
         <div class="balance-warning">
           Insufficient funds: {Number(userBalance).toFixed(4)}
           {paymentCurrencies[0]?.symbol || "-"}
@@ -863,7 +865,9 @@
             : "Pay Now"}
         padding="px-[12px] py-[6px]"
         onClick={handlePayment}
-        disabled={!hasEnoughBalance}
+        disabled={correctChain
+          ? !hasEnoughBalance || isSigningTransaction
+          : false}
       />
     {/if}
   </div>
