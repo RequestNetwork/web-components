@@ -64,6 +64,7 @@
   let otherItems: any;
   let sellerInfo: SellerInfo[] = [];
   let buyerInfo: BuyerInfo[] = [];
+  let unknownCurrency = currency?.decimals === undefined;
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
   let hexStringChain = "0x" + account?.chainId?.toString(16);
@@ -155,7 +156,7 @@
   }
 
   $: {
-    if (account && network) {
+    if (account && network && !unknownCurrency) {
       checkBalance();
     }
   }
@@ -638,18 +639,18 @@
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
     {paymentCurrencies && paymentCurrencies.length > 0
-      ? paymentCurrencies[0]?.network || "-"
+      ? paymentCurrencies[0]?.network || "Unknown"
       : ""}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
-    {currency?.symbol || "-"}
+    {currency?.symbol || "Unknown"}
   </h3>
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Settlement Currency:</span>
     {paymentCurrencies && paymentCurrencies.length > 0
-      ? paymentCurrencies[0]?.symbol || "-"
+      ? paymentCurrencies[0]?.symbol || "Unknown"
       : ""}
   </h3>
 
@@ -675,27 +676,34 @@
                 <p class="truncate description-text">{item.name || "-"}</p>
               </th>
               <td>{item.quantity || "-"}</td>
-              <td
-                >{item.unitPrice
-                  ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
-                  : "-"}</td
-              >
-              <td
-                >{item.discount
+              <td>
+                {#if unknownCurrency}
+                  Unknown
+                {:else}
+                  {item.unitPrice
+                    ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                    : "-"}
+                {/if}
+              </td>
+              <td>
+                {item.discount
                   ? formatUnits(item.discount, currency?.decimals ?? 18)
-                  : "-"}</td
-              >
+                  : "-"}
+              </td>
               <td>{Number(item.tax.amount || "-")}</td>
-              <td
-                >{truncateNumberString(
-                  formatUnits(
-                    // @ts-expect-error
-                    calculateItemTotal(item),
-                    currency?.decimals ?? 18
-                  ),
-                  2
-                )}</td
-              >
+              <td>
+                {#if unknownCurrency}
+                  Unknown
+                {:else}
+                  {truncateNumberString(
+                    formatUnits(
+                      calculateItemTotal(item),
+                      currency?.decimals ?? 18
+                    ),
+                    2
+                  )}
+                {/if}
+              </td>
             </tr>
           {/each}
         </tbody>
@@ -724,27 +732,34 @@
                     </p>
                   </th>
                   <td>{item.quantity || "-"}</td>
-                  <td
-                    >{item.unitPrice
-                      ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
-                      : "-"}</td
-                  >
-                  <td
-                    >{item.discount
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {item.unitPrice
+                        ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                        : "-"}
+                    {/if}
+                  </td>
+                  <td>
+                    {item.discount
                       ? formatUnits(item.discount, currency?.decimals ?? 18)
-                      : "-"}</td
-                  >
+                      : "-"}
+                  </td>
                   <td>{Number(item.tax.amount || "-")}</td>
-                  <td
-                    >{truncateNumberString(
-                      formatUnits(
-                        // @ts-expect-error
-                        calculateItemTotal(item),
-                        currency?.decimals ?? 18
-                      ),
-                      2
-                    )}</td
-                  >
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {truncateNumberString(
+                        formatUnits(
+                          calculateItemTotal(item),
+                          currency?.decimals ?? 18
+                        ),
+                        2
+                      )}
+                    {/if}
+                  </td>
                 </tr>
               {/each}</tbody
             >
@@ -833,7 +848,7 @@
     </div>
   {/if}
   <div class="invoice-view-actions">
-    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
+    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction && !unknownCurrency}
       {#if !hasEnoughBalance && correctChain}
         <div class="balance-warning">
           Insufficient funds: {Number(userBalance).toFixed(4)}
