@@ -834,7 +834,7 @@
   {/if}
   <div class="invoice-view-actions">
     {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
-      {#if !hasEnoughBalance}
+      {#if !hasEnoughBalance && correctChain}
         <div class="balance-warning">
           Insufficient funds: {Number(userBalance).toFixed(4)}
           {paymentCurrencies[0]?.symbol || "-"}
@@ -851,7 +851,7 @@
         padding="px-[12px] py-[6px]"
         onClick={handlePayment}
         disabled={correctChain
-          ? !hasEnoughBalance && !isSigningTransaction
+          ? !hasEnoughBalance || isSigningTransaction
           : false}
       />
     {/if}
