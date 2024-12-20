@@ -119,7 +119,10 @@
     cipherProvider = undefined;
   };
 
-  const handleWalletChange = (account: GetAccountReturnType, previousAccount: GetAccountReturnType) => {
+  const handleWalletChange = (
+    account: GetAccountReturnType,
+    previousAccount: GetAccountReturnType
+  ) => {
     if (account?.address !== previousAccount?.address) {
       handleWalletDisconnection();
       handleWalletConnection();
@@ -132,7 +135,10 @@
 
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(account: GetAccountReturnType, previousAccount: GetAccountReturnType) {
+      onChange(
+        account: GetAccountReturnType,
+        previousAccount: GetAccountReturnType
+      ) {
         tick().then(() => {
           handleWalletChange(account, previousAccount);
         });
@@ -279,6 +285,11 @@
         currencyManager
       );
 
+      const formattedAmount =
+        currencyInfo?.decimals !== undefined
+          ? formatUnits(BigInt(request.expectedAmount), currencyInfo.decimals)
+          : "Unknown";
+
       let paymentNetworkExtension = getPaymentNetworkExtension(request);
       let paymentCurrencies: (
         | CurrencyTypes.ERC20Currency
@@ -328,11 +339,8 @@
 
       return {
         ...request,
-        formattedAmount: formatUnits(
-          BigInt(request.expectedAmount),
-          currencyInfo?.decimals ?? 18
-        ),
-        currencySymbol: currencyInfo?.symbol ?? "-",
+        formattedAmount,
+        currencySymbol: currencyInfo?.symbol ?? "",
         paymentCurrencies,
       };
     }
@@ -710,7 +718,13 @@
                   </td>
                 {/if}
                 <td>
-                  {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
+                  {#if request.formattedAmount === "Unknown"}
+                    <Tooltip
+                      text="Cannot calculate the expected amount due to unknown decimals"
+                    >
+                      Unknown
+                    </Tooltip>
+                  {:else if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
                     <Tooltip text={request.formattedAmount}>
                       {Number(request.formattedAmount).toFixed(5)}
                     </Tooltip>
