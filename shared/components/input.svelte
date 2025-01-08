@@ -25,10 +25,6 @@
   {/if}
 
   <div class={`input-container ${width}`}>
-    <div class={`${$$slots.icon ? "text-input-icon" : ""}`}>
-      <slot name="icon" />
-    </div>
-
     {#if type === "textarea"}
       <textarea
         {id}
@@ -40,30 +36,37 @@
         class={`textarea-input ${className} ${error ? "input-error" : ""}`}
       />
     {:else if type === "checkbox"}
-    <label for={id} class="input-label">
-      <input
-        {id}
-        type="checkbox"
-        bind:checked={checked}
-        {disabled}
-        class={`checkbox-input ${className} ${error ? "input-error" : ""}`}
-        on:click={handleCheckbox}
-      />
-      {label}
-    </label>  
+      <label for={id} class="input-label">
+        <input
+          {id}
+          type="checkbox"
+          bind:checked
+          {disabled}
+          class={`checkbox-input ${className} ${error ? "input-error" : ""}`}
+          on:click={handleCheckbox}
+        />
+        {label}
+      </label>
     {:else}
-      <input
-        {id}
-        {min}
-        {style}
-        {value}
-        {disabled}
-        {...{ type }}
-        {placeholder}
-        on:blur={onBlur}
-        on:input={handleInput}
-        class={`text-input ${className} ${error ? "input-error" : ""}`}
-      />
+      <div class="text-input-wrapper">
+        {#if $$slots.icon}
+          <div class="input-icon">
+            <slot name="icon" class="slot-icon" />
+          </div>
+        {/if}
+        <input
+          {id}
+          {min}
+          {style}
+          {value}
+          {disabled}
+          {...{ type }}
+          {placeholder}
+          on:blur={onBlur}
+          on:input={handleInput}
+          class={`text-input ${className} ${error ? "input-error" : ""} ${$$slots.icon ? "has-icon" : ""}`}
+        />
+      </div>
     {/if}
   </div>
 
@@ -112,10 +115,16 @@
     align-items: center;
   }
 
+  .text-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
   .input-wrapper .input-icon {
     position: absolute;
-    top: 25%;
-    left: 3%;
+    top: 55%;
+    left: 12px;
+    transform: translateY(-50%);
   }
 
   .input-wrapper .textarea-input {
@@ -139,13 +148,13 @@
     box-sizing: border-box;
   }
 
-  .input-wrapper .checkbox-input {
-    appearance: auto;
-    accent-color: #0BB489;
+  .input-wrapper .text-input.has-icon {
+    padding-left: 40px;
   }
 
-  .input-wrapper .text-input-icon {
-    margin-right: 10px;
+  .input-wrapper .checkbox-input {
+    appearance: auto;
+    accent-color: #0bb489;
   }
 
   /* Error styles */

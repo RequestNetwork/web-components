@@ -1,6 +1,17 @@
 <script lang="ts">
-  import { openDropdown } from "../store/dropwdown";
-  import { onMount } from "svelte";
+  import type { IConfig } from "../types";
+  import Input from "./input.svelte";
+  import TxType from "./tx-type.svelte";
+  import StatusLabel from "./status-label.svelte";
+  import NetworkIcon from "../icons/network/network-icon.svelte";
+
+  export let config: IConfig;
+  export let options: { value: string; checked?: boolean }[] = [];
+  export let onchange: (selectedValues: string[]) => void;
+  export let placeholder: string = "Select options";
+  export let type: "network" | "transaction" | "status" = "network";
+  export let searchPlaceholder: string = "Search options...";
+  export let noSearch: boolean = false;
 
   const CheckIcon = `
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -8,34 +19,25 @@
     </svg>
   `;
 
-  export let config;
-  export let selectedValue = "";
-  export let options: { value: string; label: string; checked?: boolean }[] =
-    [];
-  export let onchange: (value: string, checked?: boolean) => void;
-  export let placeholder: string = "Select an option";
-  export let type: "default" | "checkbox" = "default";
-
-  let dropdownId: string;
   let isOpen = false;
+  let searchTerm = "";
   let dropdownContainer: HTMLElement;
-  let localOptions = options;
   let focusedIndex = -1;
 
-  const selectOption = (value: string, checked?: boolean) => {
-    if (type === "checkbox") {
-      localOptions = localOptions.map((option) =>
-        option.value === value
-          ? { ...option, checked: !option.checked }
-          : option
-      );
-      onchange(value, !checked);
-    } else {
-      selectedValue =
-        options.find((option) => option.value === value)?.label || "";
-      onchange(value);
-      closeDropdown();
-    }
+  $: filteredOptions = options.filter((option) =>
+    option.value.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectOption = (value: string) => {
+    options = options.map((option) =>
+      option.value === value ? { ...option, checked: !option.checked } : option
+    );
+
+    const selectedValues = options
+      .filter((option) => option.checked)
+      .map((option) => option.value);
+
+    onchange(selectedValues);
   };
 
   function handleKeydown(event: KeyboardEvent) {
@@ -46,7 +48,7 @@
         event.key === "ArrowDown"
       ) {
         event.preventDefault();
-        openDropdown.set(dropdownId);
+        isOpen = true;
       }
       return;
     }
@@ -54,7 +56,7 @@
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
-        focusedIndex = Math.min(focusedIndex + 1, localOptions.length - 1);
+        focusedIndex = Math.min(focusedIndex + 1, filteredOptions.length - 1);
         break;
       case "ArrowUp":
         event.preventDefault();
@@ -64,8 +66,8 @@
       case " ":
         event.preventDefault();
         if (focusedIndex >= 0) {
-          const option = localOptions[focusedIndex];
-          selectOption(option.value, option.checked);
+          const option = filteredOptions[focusedIndex];
+          selectOption(option.value);
         }
         break;
       case "Escape":
@@ -75,9 +77,14 @@
     }
   }
 
+  function handleSearchInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    searchTerm = input.value;
+    focusedIndex = -1; // Reset focus when searching
+  }
+
   function closeDropdown() {
     isOpen = false;
-    openDropdown.set(null);
     focusedIndex = -1;
   }
 
@@ -86,22 +93,8 @@
     if (!isOpen) {
       focusedIndex = -1;
     }
-    openDropdown.set(isOpen ? null : dropdownId);
+    isOpen = !isOpen;
   }
-
-  let unsubscribe: () => void;
-
-  onMount(() => {
-    dropdownId = `dropdown-${Math.random().toString(36).substr(2, 9)}`;
-
-    unsubscribe = openDropdown.subscribe((currentOpenDropdown) => {
-      isOpen = currentOpenDropdown === dropdownId;
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  });
 </script>
 
 {#if isOpen}
@@ -122,7 +115,7 @@
     aria-haspopup="listbox"
     aria-expanded={isOpen}
   >
-    {type === "default" ? selectedValue || placeholder : placeholder}
+    {placeholder}
     <svg class="dropdown-button-icon" fill="none" viewBox="0 0 20 20">
       <path
         stroke="currentColor"
@@ -136,34 +129,42 @@
 
   {#if isOpen}
     <div class="dropdown-menu" role="listbox" tabindex="-1">
+      {#if !noSearch}
+        <div class="search-container">
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchTerm}
+            handleInput={handleSearchInput}
+          />
+        </div>
+      {/if}
       <ul class="dropdown-list">
-        {#if type === "checkbox"}
-          {#each localOptions as option, index}
-            <li
-              class="dropdown-item"
-              class:selected={option.checked}
-              class:focused={index === focusedIndex}
-              on:click={() => selectOption(option.value, option.checked)}
-              role="option"
-              aria-selected={option.checked}
-              tabindex="-1"
-            >
-              <span>{option.label}</span>
-              <div class="custom-checkbox" class:checked={option.checked}>
-                {@html option.checked ? CheckIcon : ""}
+        {#each filteredOptions as option, index}
+          <li
+            class="dropdown-item"
+            class:selected={option.checked}
+            class:focused={index === focusedIndex}
+            on:click={() => selectOption(option.value)}
+            role="option"
+            aria-selected={option.checked}
+            tabindex="-1"
+          >
+            {#if type === "network"}
+              <div class="network-icon">
+                <NetworkIcon network={option.value} />
               </div>
-            </li>
-          {/each}
-        {:else}
-          {#each options as option}
-            <li
-              class="dropdown-item"
-              on:click|stopPropagation={() => selectOption(option.value)}
-            >
-              {option.label}
-            </li>
-          {/each}
-        {/if}
+            {:else if type === "transaction"}
+              <TxType type={option.value} />
+            {:else if type === "status"}
+              <div class="status-wrapper">
+                <StatusLabel status={option.value} />
+              </div>
+            {/if}
+            <div class="custom-checkbox" class:checked={option.checked}>
+              {@html option.checked ? CheckIcon : ""}
+            </div>
+          </li>
+        {/each}
       </ul>
     </div>
   {/if}
@@ -209,6 +210,7 @@
   }
 
   .dropdown-button-icon {
+    margin-left: 8px;
     width: 16px;
     height: 16px;
   }
@@ -216,7 +218,7 @@
   .dropdown-menu {
     z-index: 1200;
     position: absolute;
-    width: max-content;
+    width: fit-content;
     min-width: 100%;
     top: 55px;
     background-color: white;
@@ -224,6 +226,11 @@
     box-shadow:
       0 1px 3px 0 rgb(0 0 0 / 0.1),
       0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .search-container {
+    padding: 8px;
+    border-bottom: 1px solid #f3f4f6;
   }
 
   .dropdown-list {
@@ -242,7 +249,10 @@
     padding: 4px 8px;
     cursor: pointer;
     transition: background-color 0.2s;
-    justify-content: space-between;
+  }
+
+  .status-label-wrapper {
+    margin-right: 8px;
   }
 
   .dropdown-item:hover {
@@ -257,11 +267,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: auto;
   }
 
   .custom-checkbox.checked {
     background-color: var(--mainColor);
     border-color: var(--mainColor);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .network-icon {
+    font-size: 14px;
+  }
+
+  .network-icon :global(span) {
+    font-size: 14px !important;
   }
 
   .dropdown-item.focused {
@@ -271,5 +296,9 @@
   .dropdown-item:focus {
     outline: none;
     background-color: #f3f4f6;
+  }
+
+  .status-wrapper {
+    margin-right: 8px;
   }
 </style>
