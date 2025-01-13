@@ -900,7 +900,7 @@
             {wagmiConfig}
             bind:isRequestPayed
             {requestNetwork}
-            {currencyManager}
+            bind:currencyManager
             config={activeConfig}
             request={activeRequest}
           />
