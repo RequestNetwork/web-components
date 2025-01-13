@@ -182,8 +182,8 @@
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
-  onMount(() => {
-    currencyManager = initializeCurrencyManager(currencies);
+  onMount(async () => {
+    currencyManager = await initializeCurrencyManager();
   });
 
   const getRequests = async (

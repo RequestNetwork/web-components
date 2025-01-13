@@ -61,31 +61,23 @@ const defaultCurrencyIds = [
   "fUSDC-sepolia",
 ];
 
-import { Types } from "@requestnetwork/request-client.js";
 import { formattedCurrencyConversionPairs } from "./currencyConversionPairs";
 
-export function initializeCurrencyManager(
-  customCurrencies: CurrencyTypes.CurrencyInput[] = []
-): CurrencyManager {
-  // If customCurrencies is provided, use only those
-  if (customCurrencies?.length > 0) {
-    return new CurrencyManager(
-      customCurrencies,
-      {},
-      formattedCurrencyConversionPairs
-    );
-  }
+const TOKEN_LIST_URL =
+  "https://requestnetwork.github.io/request-token-list/latest.json";
 
-  // Otherwise, use default currencies
-  const defaultCurrencies = CurrencyManager.getDefaultList().filter(
-    (currency) => defaultCurrencyIds.includes(currency.id)
+const fetchTokenList = async () => {
+  const requestNetworkTokenList = await fetch(TOKEN_LIST_URL).then((res) =>
+    res.json()
   );
 
-  return new CurrencyManager(
-    defaultCurrencies,
-    {},
-    formattedCurrencyConversionPairs
-  );
+  return requestNetworkTokenList.tokens;
+};
+
+export async function initializeCurrencyManager(): Promise<CurrencyManager> {
+  const tokens = await fetchTokenList();
+
+  return new CurrencyManager(tokens, {}, formattedCurrencyConversionPairs);
 }
 
 export function initializeCurrencyManagerWithCurrencyIDS(
