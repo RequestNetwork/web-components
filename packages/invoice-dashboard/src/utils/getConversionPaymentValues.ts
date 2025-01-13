@@ -3,7 +3,7 @@ import { CurrencyTypes } from "@requestnetwork/types";
 import { getAnyErc20Balance } from "@requestnetwork/payment-processor";
 import { BigNumber, BigNumberish, providers, utils } from "ethers";
 
-import { getConversionRate, getSlippageMargin } from './conversion'
+import { getConversionRate, getSlippageMargin } from "./conversion";
 
 export type SlippageLevel = "safe" | "risky";
 
@@ -27,7 +27,7 @@ interface ConversionPaymentValues {
 
 export const formatUnits = (
   amount: BigNumber,
-  token: CurrencyTypes.CurrencyDefinition,
+  token: CurrencyTypes.CurrencyDefinition
 ): string => {
   return utils.formatUnits(amount, token.decimals);
 };
@@ -40,11 +40,11 @@ export const toFixedDecimal = (numberToFormat: number, decimals?: number) => {
 export const amountToFixedDecimal = (
   amount: BigNumberish,
   currency: CurrencyTypes.CurrencyDefinition,
-  decimals?: number,
+  decimals?: number
 ) => {
   return toFixedDecimal(
     Number.parseFloat(formatUnits(BigNumber.from(amount), currency)),
-    decimals,
+    decimals
   );
 };
 
@@ -55,7 +55,7 @@ export const amountToFixedDecimal = (
  */
 export const bigAmountify = (
   amount: number,
-  token: Pick<CurrencyTypes.CurrencyDefinition, "decimals">,
+  token: Pick<CurrencyTypes.CurrencyDefinition, "decimals">
 ): BigNumber => {
   let [whole, decimals] = amount.toString().split(".");
   let pow = "0";
@@ -108,30 +108,33 @@ export const getConversionPaymentValues = async ({
 
   const minConversionAmount = bigAmountify(
     baseAmount * Number(conversionRate),
-    selectedPaymentCurrency,
+    selectedPaymentCurrency
   );
-
   const safeConversionAmount = bigAmountify(
-    baseAmount * Number(conversionRate) * getSlippageMargin(selectedPaymentCurrency),
-    selectedPaymentCurrency,
+    baseAmount *
+      Number(conversionRate) *
+      getSlippageMargin(selectedPaymentCurrency),
+    selectedPaymentCurrency
   );
 
   const userBalance = BigNumber.from(
     fromAddress &&
       provider &&
+      selectedPaymentCurrency.type === "ERC20" &&
       "address" in selectedPaymentCurrency &&
       selectedPaymentCurrency.address
       ? await getAnyErc20Balance(
           selectedPaymentCurrency.address,
           fromAddress,
-          provider,
+          provider
         )
-      : safeConversionAmount,
+      : safeConversionAmount
   );
 
   const hasEnoughForSlippage = userBalance.gte(safeConversionAmount);
   const hasEnough = userBalance.gte(minConversionAmount);
   const isRisky = hasEnough && !hasEnoughForSlippage;
+
   const slippageLevel = isRisky ? "risky" : ("safe" as SlippageLevel);
   const conversionAmount = isRisky ? userBalance : safeConversionAmount;
 
@@ -145,7 +148,7 @@ export const getConversionPaymentValues = async ({
     value: amountToFixedDecimal(
       minConversionAmount,
       selectedPaymentCurrency,
-      4,
+      4
     ),
     currency: selectedPaymentCurrency,
   };
@@ -153,7 +156,7 @@ export const getConversionPaymentValues = async ({
     value: amountToFixedDecimal(
       safeConversionAmount,
       selectedPaymentCurrency,
-      4,
+      4
     ),
     currency: selectedPaymentCurrency,
   };
