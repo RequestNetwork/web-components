@@ -1,9 +1,13 @@
 <svelte:options customElement="single-invoice" />
 
 <script lang="ts">
-  import type { Config as WagmiConfig } from "@wagmi/core";
+  import type {
+    Config as WagmiConfig,
+    GetAccountReturnType,
+    WatchAccountReturnType,
+  } from "@wagmi/core";
   import { toast } from "svelte-sonner";
-  import { getAccount,  getBalance } from "@wagmi/core";
+  import { getAccount, getBalance, watchAccount } from "@wagmi/core";
   import {
     approveErc20,
     approveErc20ForProxyConversion,
@@ -15,7 +19,7 @@
     Types,
     type RequestNetwork,
   } from "@requestnetwork/request-client.js";
-  import {  CurrencyTypes } from "@requestnetwork/types";
+  import { CurrencyTypes } from "@requestnetwork/types";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CurrencyManager } from "@requestnetwork/currency";
   // Components
@@ -36,6 +40,7 @@
   import { formatUnits } from "viem";
   import { getConversionPaymentValues } from "../utils/getConversionPaymentValues";
   import { getEthersSigner } from "../utils";
+  import SingleInvoiceSkeleton from "./loading-skeleton.svelte";
 
   interface EntityInfo {
     value: string;
@@ -98,12 +103,12 @@
   ];
 
   $: if (request && address) {
-    isPayee = request.payee?.value?.toLowerCase() === address.toLowerCase();
-
-    shouldShowStatuses =
-      !isPaid &&
-      !isPayee &&
-      request.payer?.value?.toLowerCase() === address.toLowerCase();
+    isPayee = request.payee?.value?.toLowerCase() === address?.toLowerCase();
+    network = request?.extensionsData[0]?.parameters?.network || "mainnet";
+    hexStringChain = "0x" + account?.chainId?.toString(16);
+    correctChain =
+      hexStringChain ===
+      String(getNetworkIdFromNetworkName(network || "mainnet"));
   }
 
   let status = checkStatus(requestData || request);
@@ -169,13 +174,10 @@
     account = account;
     network = request.currencyInfo?.network || "mainnet";
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
+    unknownCurrency = currency ? currency.decimals === undefined : false;
   }
 
   const getOneRequest = async (requestId: string) => {
-    if (!requestId || !requestNetwork) {
-      return;
-    }
-
     try {
       loading = true;
       unsupportedNetwork = false;
@@ -291,15 +293,67 @@
     }
   };
 
-  onMount(async () => {
+  let unwatchAccount: WatchAccountReturnType | undefined;
+
+  const handleWalletConnection = async () => {
+    account = getAccount(wagmiConfig);
+    if (requestId && requestNetwork) {
+      await getOneRequest(requestId);
+    }
+  };
+
+  const handleWalletDisconnection = () => {
+    account = undefined;
+    address = undefined;
+    request = undefined;
+    requestData = null;
+    signer = null;
+    approved = false;
+    isPayee = false;
+  };
+
+  const handleWalletChange = (
+    account: GetAccountReturnType,
+    previousAccount: GetAccountReturnType
+  ) => {
+    if (account?.address !== previousAccount?.address) {
+      handleWalletDisconnection();
+      handleWalletConnection();
+    } else if (account?.address) {
+      handleWalletConnection();
+    } else {
+      handleWalletDisconnection();
+    }
+  };
+
+  onMount(() => {
     // Initialize currency manager
     currencyManager = initializeCurrencyManager(currencies);
 
-    // Fetch initial request data
-    if (requestId) {
-      await getOneRequest(requestId);
+    // Set up account watching
+    unwatchAccount = watchAccount(wagmiConfig, {
+      onChange(
+        account: GetAccountReturnType,
+        previousAccount: GetAccountReturnType
+      ) {
+        tick().then(() => {
+          handleWalletChange(account, previousAccount);
+        });
+      },
+    });
+  });
+
+  onDestroy(() => {
+    if (typeof unwatchAccount === "function") {
+      unwatchAccount();
     }
   });
+
+  // Make address and chain reactive to account changes
+  $: if (account) {
+    address = account.address;
+    hexStringChain = "0x" + account.chainId?.toString(16);
+  }
 
   // Watch for changes in requestId
   $: if (requestId) {
@@ -313,8 +367,8 @@
 
   const payTheRequest = async () => {
     try {
-      loading = true;
       isSigningTransaction = true;
+      shouldShowStatuses = true;
 
       if (!requestNetwork || !requestData?.requestId) {
         throw new Error("Request network or request data not available");
@@ -328,25 +382,43 @@
       }
 
       let paymentSettings = undefined;
+
+      // Handle conversion payments
       if (
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY ||
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
       ) {
-        if (!currency || !paymentCurrencies[0]) {
-          throw new Error("Currency information not available");
-        }
+        try {
+          if (!currency || !paymentCurrencies[0]) {
+            throw new Error("Missing currency information for conversion");
+          }
 
-        const { conversion } = await getConversionPaymentValues({
-          baseAmount: requestData.expectedAmount,
-          denominationCurrency: currency,
-          selectedPaymentCurrency: paymentCurrencies[0],
-          currencyManager,
-          provider: signer,
-          fromAddress: address,
-        });
-        paymentSettings = conversion;
+          const { conversion } = await getConversionPaymentValues({
+            baseAmount: requestData.expectedAmount,
+            denominationCurrency: currency,
+            selectedPaymentCurrency: paymentCurrencies[0],
+            currencyManager,
+            provider: signer?.provider,
+            fromAddress: address,
+          });
+
+          paymentSettings = conversion;
+        } catch (conversionError) {
+          console.error("Conversion calculation failed:", conversionError);
+          toast.error("Failed to calculate conversion rate", {
+            description: "Please try again or use a different payment method",
+          });
+          throw conversionError;
+        }
+      }
+
+      // Update sign transaction status
+      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
+      if (signStatus) {
+        signStatus.done = false;
+        statuses = [...statuses];
       }
 
       const paymentTx = await payRequest(
@@ -358,31 +430,34 @@
       );
 
       // Update sign transaction status
-      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
-      if (signStatus) signStatus.done = true;
-      statuses = [...statuses];
+      if (signStatus) {
+        signStatus.done = true;
+        statuses = [...statuses];
+      }
 
       await paymentTx.wait();
 
       // Update payment detected status
       const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
-      if (paymentStatus) paymentStatus.done = true;
-      statuses = [...statuses];
+      if (paymentStatus) {
+        paymentStatus.done = true;
+        statuses = [...statuses];
+      }
 
+      // Wait for payment confirmation
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
       requestData = await _request?.refresh();
-      request = requestData; // Update the parent request object
-
       isPaid = true;
       status = checkStatus(requestData);
       isRequestPayed = true;
-    } catch (err) {
-      console.error("Something went wrong while paying : ", err);
 
+      toast.success("Payment successful!");
+    } catch (err) {
+      console.error("Payment failed:", err);
       if (
         String(err).includes("ACTION_REJECTED") ||
         String(err).includes("User rejected")
@@ -395,14 +470,9 @@
           description: err instanceof Error ? err.message : String(err),
         });
       }
-
-      statuses = statuses.map((status) => ({
-        ...status,
-        done: false,
-      }));
     } finally {
-      loading = false;
       isSigningTransaction = false;
+      shouldShowStatuses = false;
     }
   };
 
@@ -413,11 +483,6 @@
   ) => {
     try {
       if (!paymentNetworkExtension?.id || !address || !signer) {
-        console.log("Missing required arguments for approval check:", {
-          network: paymentNetworkExtension?.id,
-          address,
-          signer: !!signer,
-        });
         return false;
       }
 
@@ -477,7 +542,6 @@
 
   async function approve() {
     try {
-      loading = true;
       isSigningTransaction = true;
 
       const approvers: { [key: string]: () => Promise<void> } = {
@@ -512,30 +576,59 @@
     } catch (err) {
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
-      loading = false;
       isSigningTransaction = false;
     }
   }
 
   async function switchNetworkIfNeeded(network: string) {
     try {
-      const targetNetworkId = String(getNetworkIdFromNetworkName(network));
-      await account.connector.switchChain({ chainId: Number(targetNetworkId) });
-      signer = await getEthersSigner(wagmiConfig);
+      if (!network) {
+        throw new Error("Network is undefined");
+      }
 
-      correctChain = true;
+      const targetNetworkId = getNetworkIdFromNetworkName(network);
+      if (!targetNetworkId) {
+        throw new Error(`Unsupported network: ${network}`);
+      }
 
-      // Update network switch status
-      const networkStatus = statuses.find((s) => s.name === "CORRECT_NETWORK");
-      if (networkStatus) networkStatus.done = true;
+      // Only switch if we're on a different network
+      if (account?.chainId !== parseInt(targetNetworkId, 16)) {
+        await account.connector?.switchChain({
+          chainId: parseInt(targetNetworkId, 16),
+        });
+
+        // Wait for the network to switch and get new signer
+        await tick();
+        signer = await getEthersSigner(wagmiConfig);
+
+        // Update chain status
+        correctChain = true;
+        const networkStatus = statuses.find(
+          (s) => s.name === "CORRECT_NETWORK"
+        );
+        if (networkStatus) networkStatus.done = true;
+        statuses = [...statuses];
+      }
+
+      // Re-check approval after network switch
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, paymentCurrencies, signer);
+      }
     } catch (err) {
-      console.error("Something went wrong while switching networks: ", err);
-      toast.error("Failed to switch network");
+      console.error("Network switch failed:", err);
+      toast.error("Failed to switch network", {
+        description: err instanceof Error ? err.message : String(err),
+      });
       throw err;
     }
   }
 
   function getNetworkIdFromNetworkName(network: string): string {
+    if (!network) {
+      console.warn("Network name is undefined, defaulting to mainnet");
+      return "0x1"; // default to mainnet
+    }
+
     const networkIds: { [key: string]: string } = {
       mainnet: "0x1",
       matic: "0x89",
@@ -550,7 +643,9 @@
       zksyncera: "0x144",
       base: "0x2105",
     };
-    return networkIds[network];
+
+    const normalizedNetwork = network.toLowerCase();
+    return networkIds[normalizedNetwork] || "0x1"; // default to mainnet if network not found
   }
 
   // FIXME: Add rounding functionality
@@ -608,39 +703,88 @@
 
   const currentStatusIndex = statuses.length - 1;
 
-  async function handlePayment() {
+  const handlePayment = async () => {
     try {
-      await switchNetworkIfNeeded(network || "mainnet");
+      if (!correctChain) {
+        await switchNetworkIfNeeded(network || "mainnet");
+        return;
+      }
 
       if (
-        !approved &&
-        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+        !approved
       ) {
-        await approve();
-
-        const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
-        if (approveStatus) approveStatus.done = true;
-
+        await handleApproval();
         return;
       }
 
       await payTheRequest();
     } catch (err) {
-      console.error("Error during payment process:", err);
-      toast.error("Payment process failed", {
-        description: String(err),
-      });
-      // Reset statuses on error make them all false
-      statuses = statuses.map((status) => ({
-        ...status,
-        done: false,
-      }));
+      console.error("Payment action failed:", err);
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Payment failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
-  }
+  };
+
+  const handleApproval = async () => {
+    try {
+      isSigningTransaction = true;
+
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        await approveErc20ForProxyConversion(
+          requestData,
+          signer,
+          paymentCurrencies[0]
+        );
+      } else {
+        await approveErc20(requestData, signer);
+      }
+
+      approved = true;
+
+      // Update approval status if it exists
+      const approvalStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+      if (approvalStatus) {
+        approvalStatus.done = true;
+        statuses = [...statuses];
+      }
+    } catch (err) {
+      console.error("Approval failed:", err);
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Approval failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } finally {
+      isSigningTransaction = false;
+    }
+  };
 </script>
 
 {#if loading}
-  <div class="innerDrawer">Loading...</div>
+  <SingleInvoiceSkeleton {config} />
+{:else if !requestId}
+  <div class="innerDrawer">Error: Missing required Request ID</div>
 {:else if request}
   <div
     class="innerDrawer"
@@ -1019,6 +1163,8 @@
   }
 
   .invoice-number {
+    margin: 0;
+    margin-bottom: 18px;
     font-size: 1.25rem;
     line-height: 1.75rem;
     font-weight: 700;
