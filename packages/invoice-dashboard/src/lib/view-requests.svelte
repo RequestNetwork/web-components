@@ -63,7 +63,6 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let cipherProvider: CipherProvider | undefined;
 
