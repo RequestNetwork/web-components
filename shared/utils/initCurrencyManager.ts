@@ -80,6 +80,7 @@ export async function initializeCurrencyManager(): Promise<CurrencyManager> {
   return new CurrencyManager(tokens, {}, formattedCurrencyConversionPairs);
 }
 
+// Note: this function is used in the Payment Widget, I did not want to change it to not cause any unintended side effects.
 export function initializeCurrencyManagerWithCurrencyIDS(
   customCurrencyIds: string[]
 ): any {
@@ -95,6 +96,26 @@ export function initializeCurrencyManagerWithCurrencyIDS(
     ),
     currencies,
   };
+}
+
+export async function initializeCreateInvoiceCurrencyManager(
+  customCurrencyIds: string[]
+): Promise<CurrencyManager<any>> {
+  const tokens = await fetchTokenList();
+
+  const tokenMap = new Map(tokens.map((token: any) => [token.id, token]));
+
+  const currencies = customCurrencyIds
+    .map((id) => tokenMap.get(id))
+    .filter((token): token is CurrencyTypes.CurrencyInput => token != null);
+
+  const currencyManager = new CurrencyManager(
+    currencies,
+    {},
+    formattedCurrencyConversionPairs
+  );
+
+  return currencyManager;
 }
 
 export const getCurrencySupportedNetworksForConversion = (
