@@ -67,11 +67,16 @@ const TOKEN_LIST_URL =
   "https://requestnetwork.github.io/request-token-list/latest.json";
 
 const fetchTokenList = async () => {
-  const requestNetworkTokenList = await fetch(TOKEN_LIST_URL).then((res) =>
-    res.json()
-  );
+  try {
+    const requestNetworkTokenList = await fetch(TOKEN_LIST_URL).then((res) =>
+      res.json()
+    );
 
-  return requestNetworkTokenList.tokens;
+    return requestNetworkTokenList.tokens;
+  } catch (err) {
+    console.error("Failed to fetch token list", err);
+    return [];
+  }
 };
 
 export async function initializeCurrencyManager(): Promise<CurrencyManager> {
