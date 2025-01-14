@@ -8,7 +8,7 @@ export interface CreateInvoiceFormProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies?: CurrencyTypes.CurrencyInput[];
+  currencies: string[];
 }
 
 /**
@@ -25,7 +25,7 @@ export interface CreateInvoiceFormProps {
  *   config={config}
  *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
- *   currencies={currencies}
+ *   currencies={['ETH-MAINNET', 'USDC-MAINNET', 'USDC-MATIC']}
  * />
  */
 declare const CreateInvoiceForm: React.FC<CreateInvoiceFormProps>;

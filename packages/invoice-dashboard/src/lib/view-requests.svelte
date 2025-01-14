@@ -63,7 +63,6 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let cipherProvider: CipherProvider | undefined;
 
@@ -182,8 +181,8 @@
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
-  onMount(() => {
-    currencyManager = initializeCurrencyManager(currencies);
+  onMount(async () => {
+    currencyManager = await initializeCurrencyManager();
   });
 
   const getRequests = async (
@@ -901,7 +900,7 @@
             {wagmiConfig}
             bind:isRequestPayed
             {requestNetwork}
-            {currencyManager}
+            bind:currencyManager
             config={activeConfig}
             request={activeRequest}
           />

@@ -15,7 +15,11 @@ interface IRequestParams {
   address: `0x${string}` | undefined;
 }
 
-const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, currency: CurrencyTypes.CurrencyDefinition, formData: CustomFormData) => {
+const getPaymentNetwork = (
+  invoiceCurrency: CurrencyTypes.CurrencyDefinition,
+  currency: CurrencyTypes.CurrencyDefinition,
+  formData: CustomFormData
+) => {
   if (
     invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217 &&
     currency.type === Types.RequestLogic.CURRENCY.ETH
@@ -52,7 +56,7 @@ const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, cu
         feeAddress: zeroAddress,
         feeAmount: "0",
       },
-    }
+    };
   } else if (currency.type === Types.RequestLogic.CURRENCY.ERC20) {
     return {
       id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
@@ -62,7 +66,7 @@ const getPaymentNetwork = (invoiceCurrency: CurrencyTypes.CurrencyDefinition, cu
         feeAddress: zeroAddress,
         feeAmount: "0",
       },
-    }
+    };
   } else {
     throw new Error("Unsupported payment network");
   }
@@ -76,13 +80,19 @@ export const prepareRequestParams = ({
   invoiceTotals,
 }: IRequestParams): Types.ICreateRequestParameters => {
   const isERC20 = currency.type === Types.RequestLogic.CURRENCY.ERC20;
-  const isERC20InvoiceCurrency = invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20;
+  const isERC20InvoiceCurrency =
+    invoiceCurrency.type === Types.RequestLogic.CURRENCY.ERC20;
   return {
     requestInfo: {
       currency: {
         type: invoiceCurrency.type,
-        value: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
-        network: invoiceCurrency.network,
+        value: isERC20InvoiceCurrency
+          ? invoiceCurrency.address
+          : invoiceCurrency.symbol,
+        network:
+          invoiceCurrency.network === "fiat"
+            ? undefined
+            : invoiceCurrency.network,
       },
       expectedAmount: parseUnits(
         invoiceTotals.totalAmount.toString(),
@@ -122,15 +132,17 @@ export const prepareRequestParams = ({
         discount:
           item.discount != null
             ? parseUnits(
-              item.discount.toString(),
-              invoiceCurrency.decimals
-            ).toString()
+                item.discount.toString(),
+                invoiceCurrency.decimals
+              ).toString()
             : undefined,
         tax: {
           type: "percentage",
           amount: item.tax.amount.toString(),
         },
-        currency: isERC20InvoiceCurrency ? invoiceCurrency.address : invoiceCurrency.symbol,
+        currency: isERC20InvoiceCurrency
+          ? invoiceCurrency.address
+          : invoiceCurrency.symbol,
       })),
       paymentTerms: {
         dueDate: new Date(formData.dueDate).toISOString(),

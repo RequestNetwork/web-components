@@ -8,7 +8,6 @@ export interface InvoiceDashboardProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
-  currencies?: CurrencyTypes.CurrencyInput[];
 }
 /**
  * InvoiceDashboard is a React component that integrates with the Request Network to manage and display invoices.
@@ -25,9 +24,6 @@ export interface InvoiceDashboardProps {
  *   config={config}
  *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
- *   currencies={currencies}
- *   isDecryptionEnabled={isDecryptionEnabled}
- *   enableDecryption={enableDecryption}
  * />
  */
 declare const InvoiceDashboard: React.FC<InvoiceDashboardProps>;
