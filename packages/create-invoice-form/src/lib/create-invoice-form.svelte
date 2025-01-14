@@ -65,8 +65,6 @@
   onMount(async () => {
     currencyManager = await initializeCreateInvoiceCurrencyManager(currencies);
 
-    console.log("Currency manager :", currencyManager);
-
     defaultCurrencies = Object.values(
       currencyManager.knownCurrencies.reduce(
         (
