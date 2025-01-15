@@ -17,6 +17,7 @@ Usage depends on the component. See packages/\<package>/README.md
 | [@requestnetwork/create-invoice-form](packages/create-invoice-form/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form.svg)](https://badge.fury.io/js/%40requestnetwork%2Fcreate-invoice-form) |
 | [@requestnetwork/invoice-dashboard](packages/invoice-dashboard/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard.svg)](https://badge.fury.io/js/%40requestnetwork%2Finvoice-dashboard) |
 | [@requestnetwork/payment-widget](packages/payment-widget/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget.svg)](https://badge.fury.io/js/%40requestnetwork%2Fpayment-widget) |
+| [@requestnetwork/single-invoice](packages/single-invoice/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fsingle-invoice.svg)](https://badge.fury.io/js/%40requestnetwork%2Fsingle-invoice) |
 | [@requestnetwork/shared](packages/shared/README.md) | [![npm version](https://badge.fury.io/js/%40requestnetwork%2Fshared.svg)](https://badge.fury.io/js/%40requestnetwork%2Fshared) |
 
 
