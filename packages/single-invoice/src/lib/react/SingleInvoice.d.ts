@@ -12,8 +12,6 @@ export interface SingleInvoiceProps {
   wagmiConfig: WagmiConfig;
   /** Instance of the Request Network client */
   requestNetwork: RequestNetwork | null | undefined;
-  /** Currency manager instance for handling different currencies */
-  currencies?: CurrencyTypes.CurrencyInput[];
 }
 
 /**
@@ -31,7 +29,6 @@ export interface SingleInvoiceProps {
  *   config={config}
  *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
- *   currencies={currencies}
  * />
  */
 declare const SingleInvoice: React.FC<SingleInvoiceProps>;

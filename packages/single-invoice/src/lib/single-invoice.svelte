@@ -38,8 +38,8 @@
   import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
   import { onMount, onDestroy, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { getConversionPaymentValues } from "../utils/getConversionPaymentValues";
-  import { getEthersSigner } from "../utils";
+  import { getConversionPaymentValues } from "@requestnetwork/shared-utils/getConversionPaymentValues";
+  import { getEthersSigner } from "@requestnetwork/shared-utils/wallet-utils";
   import SingleInvoiceSkeleton from "./loading-skeleton.svelte";
 
   interface EntityInfo {
@@ -55,7 +55,6 @@
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let requestId: string;
-  export let currencies: CurrencyTypes.CurrencyInput[] = [];
 
   let account = getAccount(wagmiConfig);
   let address = account?.address;
@@ -166,7 +165,13 @@
     buyerInfo = generateDetailParagraphs(request.contentData?.buyerInfo);
   }
 
-  $: if (request && account && network && !unknownCurrency) {
+  $: if (
+    request &&
+    account &&
+    network &&
+    !unknownCurrency &&
+    paymentCurrencies?.[0]
+  ) {
     checkBalance();
   }
 
@@ -176,6 +181,23 @@
     currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
     unknownCurrency = currency ? currency.decimals === undefined : false;
   }
+
+  onMount(async () => {
+    currencyManager = await initializeCurrencyManager();
+  });
+
+  onMount(() => {
+    unwatchAccount = watchAccount(wagmiConfig, {
+      onChange(
+        account: GetAccountReturnType,
+        previousAccount: GetAccountReturnType
+      ) {
+        tick().then(() => {
+          handleWalletChange(account, previousAccount);
+        });
+      },
+    });
+  });
 
   const getOneRequest = async (requestId: string) => {
     try {
@@ -326,23 +348,6 @@
     }
   };
 
-  onMount(() => {
-    // Initialize currency manager
-    currencyManager = initializeCurrencyManager(currencies);
-
-    // Set up account watching
-    unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(
-        account: GetAccountReturnType,
-        previousAccount: GetAccountReturnType
-      ) {
-        tick().then(() => {
-          handleWalletChange(account, previousAccount);
-        });
-      },
-    });
-  });
-
   onDestroy(() => {
     if (typeof unwatchAccount === "function") {
       unwatchAccount();
@@ -374,6 +379,15 @@
         throw new Error("Request network or request data not available");
       }
 
+      // Ensure we're on the correct network first
+      await switchNetworkIfNeeded(network || "mainnet");
+
+      // Get fresh signer after network switch
+      signer = await getEthersSigner(wagmiConfig);
+      if (!signer || !signer.provider) {
+        throw new Error("No signer or provider available");
+      }
+
       const _request = await requestNetwork?.fromRequestId(
         requestData.requestId
       );
@@ -383,7 +397,6 @@
 
       let paymentSettings = undefined;
 
-      // Handle conversion payments
       if (
         paymentNetworkExtension?.id ===
           Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY ||
@@ -395,20 +408,31 @@
             throw new Error("Missing currency information for conversion");
           }
 
+          // Verify ERC20 approval first if needed
+          if (
+            paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+            !approved
+          ) {
+            await approve();
+          }
+
           const { conversion } = await getConversionPaymentValues({
             baseAmount: requestData.expectedAmount,
             denominationCurrency: currency,
             selectedPaymentCurrency: paymentCurrencies[0],
             currencyManager,
-            provider: signer?.provider,
+            provider: signer.provider,
             fromAddress: address,
           });
 
           paymentSettings = conversion;
         } catch (conversionError) {
-          console.error("Conversion calculation failed:", conversionError);
-          toast.error("Failed to calculate conversion rate", {
-            description: "Please try again or use a different payment method",
+          console.error("Conversion calculation failed:", {
+            error: conversionError,
+            currency,
+            paymentCurrency: paymentCurrencies[0],
+            network,
+            chainId: await signer.getChainId(),
           });
           throw conversionError;
         }
@@ -444,7 +468,6 @@
         statuses = [...statuses];
       }
 
-      // Wait for payment confirmation
       while (requestData.balance?.balance! < requestData.expectedAmount) {
         requestData = await _request?.refresh();
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -666,6 +689,7 @@
           address,
           paymentCurrency: paymentCurrencies[0],
           network,
+          paymentCurrencies,
         });
         return;
       }
@@ -700,8 +724,6 @@
       userBalance = "0";
     }
   }
-
-  const currentStatusIndex = statuses.length - 1;
 
   const handlePayment = async () => {
     try {

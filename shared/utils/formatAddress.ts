@@ -1,11 +1,16 @@
-import { checkAddress } from "./checkEthAddress";
+import { getAddress } from "viem";
+import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
 
 export const formatAddress = (
   address: string,
   first: number = 6,
   last: number = 4
 ): string => {
-  if (!address) return "";
+  if (!checkAddress(address)) {
+    console.error("Invalid address!");
+  }
 
-  return `${address.slice(0, first)}...${address.slice(-last)}`;
+  const checksumAddress = getAddress(address);
+
+  return `${checksumAddress.slice(0, first)}...${checksumAddress.slice(-last)}`;
 };
