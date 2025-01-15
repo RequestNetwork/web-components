@@ -45,7 +45,7 @@ npm run link:all --app-path=../rn-checkout
 cd <project>
 
 # Use local packages instead of the deployed ones
-npm link @requestnetwork/create-invoice-form @requestnetwork/invoice-dashboard
+npm link @requestnetwork/create-invoice-form @requestnetwork/invoice-dashboard @requestnetwork/single-invoice
 npm link @requestnetwork/payment-widget
 ```
 
