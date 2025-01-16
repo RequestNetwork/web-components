@@ -162,22 +162,47 @@
       currency = undefined;
       filteredSettlementCurrencies = [];
       network = undefined;
-      networks = [];
+
+      const availableNetworks = new Set(
+        currencyManager.knownCurrencies.map((currency) => currency.network)
+      );
 
       if (invoiceCurrency.type === Types.RequestLogic.CURRENCY.ISO4217) {
-        networks = (getCurrencySupportedNetworksForConversion(
-          invoiceCurrency.hash,
-          currencyManager
-        ) ?? []) as string[];
+        const conversionNetworks = new Set(
+          getCurrencySupportedNetworksForConversion(
+            invoiceCurrency.hash,
+            currencyManager
+          )
+        );
+
+        networks = [...availableNetworks].filter(
+          (network) =>
+            conversionNetworks.has(network) &&
+            (config.supportedNetworks
+              ? config.supportedNetworks.includes(network)
+              : true)
+        );
+
+        console.log("networks: ", networks);
       } else {
         const baseSymbol = invoiceCurrency.symbol.split("-")[0];
-        networks = currencyManager.knownCurrencies
-          .filter((currency) => {
-            const currencyBaseSymbol = currency.symbol.split("-")[0];
-            return currencyBaseSymbol === baseSymbol;
-          })
-          .map((currency) => currency.network);
+        networks = [...availableNetworks].filter((network) => {
+          const hasToken = currencyManager.knownCurrencies.some(
+            (currency) =>
+              currency.network === network &&
+              currency.symbol.split("-")[0] === baseSymbol
+          );
+
+          return (
+            hasToken &&
+            (config.supportedNetworks
+              ? config.supportedNetworks.includes(network)
+              : true)
+          );
+        });
       }
+
+      networks = [...new Set(networks)];
     }
   };
 
