@@ -182,8 +182,6 @@
               ? config.supportedNetworks.includes(network)
               : true)
         );
-
-        console.log("networks: ", networks);
       } else {
         const baseSymbol = invoiceCurrency.symbol.split("-")[0];
         networks = [...availableNetworks].filter((network) => {
