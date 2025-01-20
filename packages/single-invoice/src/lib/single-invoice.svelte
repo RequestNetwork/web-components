@@ -410,7 +410,6 @@
             throw new Error("Missing currency information for conversion");
           }
 
-          // Verify ERC20 approval first if needed
           if (
             paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
             !approved
@@ -684,14 +683,13 @@
       : value;
   }
 
-  async function checkBalance() {
+  const checkBalance = async () => {
     try {
       if (!address || !paymentCurrencies[0] || !network) {
-        console.error("Missing required parameters for balance check:", {
+        console.log("Missing required parameters for balance check:", {
           address,
           paymentCurrency: paymentCurrencies[0],
           network,
-          paymentCurrencies,
         });
         return;
       }
@@ -725,7 +723,7 @@
       hasEnoughBalance = false;
       userBalance = "0";
     }
-  }
+  };
 
   const handlePayment = async () => {
     try {

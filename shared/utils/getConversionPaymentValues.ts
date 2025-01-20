@@ -34,6 +34,7 @@ export const formatUnits = (
 
 export const toFixedDecimal = (numberToFormat: number, decimals?: number) => {
   const MAX_DECIMALS = decimals !== undefined ? decimals : 5;
+
   return Number(numberToFormat.toFixed(MAX_DECIMALS));
 };
 
@@ -58,6 +59,7 @@ export const bigAmountify = (
   token: Pick<CurrencyTypes.CurrencyDefinition, "decimals">
 ): BigNumber => {
   let [whole, decimals] = amount.toString().split(".");
+
   let pow = "0";
   let powSign = true;
 
@@ -78,6 +80,7 @@ export const bigAmountify = (
       ? wholeBn.add(decimalsBn).mul(power)
       : wholeBn.add(decimalsBn).div(power);
   }
+
   return wholeBn;
 };
 
@@ -121,6 +124,7 @@ export const getConversionPaymentValues = async ({
   const userBalance = BigNumber.from(
     fromAddress &&
       provider &&
+      selectedPaymentCurrency.type === "ERC20" &&
       "address" in selectedPaymentCurrency &&
       selectedPaymentCurrency.address
       ? await getAnyErc20Balance(
@@ -151,6 +155,7 @@ export const getConversionPaymentValues = async ({
     ),
     currency: selectedPaymentCurrency,
   };
+
   const safeBalance = {
     value: amountToFixedDecimal(
       safeConversionAmount,

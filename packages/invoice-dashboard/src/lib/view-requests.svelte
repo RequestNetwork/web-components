@@ -39,7 +39,6 @@
   import {
     debounce,
     checkStatus,
-    formatUnits,
     formatAddress,
     getEthersSigner,
     exportToPDF,
@@ -47,6 +46,7 @@
     config as defaultConfig,
     initializeCurrencyManager,
   } from "@requestnetwork/shared-utils/index";
+  import { formatUnits } from "viem";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
   import { Drawer, InvoiceView } from "./dashboard";
