@@ -48,6 +48,7 @@
   import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
   import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { ethers } from "ethers";
+  import { queryClient } from "@requestnetwork/shared-utils/queryClient";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
     getSessionSignatures: (
@@ -106,6 +107,10 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
+  const itemsPerPage = 10;
+  let currentPage = 1;
+  let hasMoreRequests = false;
+
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
     await loadRequests(sliderValueForDecryption, account, requestNetwork);
@@ -158,6 +163,26 @@
     currencyManager = initializeCurrencyManager(currencies);
   });
 
+  const getRequestsQueryKey = (address: string, currentPage: number) => ["requestsData", address, currentPage];
+
+  const fetchRequests = async (address: string, page: number, pageSize: number) => {
+    if (!address || !requestNetwork) return null;
+    try {
+      const requestsData = await requestNetwork.fromIdentity({
+        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+        value: address,
+      }, undefined, { 
+        page: page,
+        pageSize: pageSize,
+      });
+      console.log("requestsData", requestsData);
+      return requestsData;
+    } catch (error) {
+      console.error("Failed to fetch requests:", error);
+      throw error;
+    }
+  };
+
   const getRequests = async (
     account: GetAccountReturnType,
     requestNetwork: RequestNetwork | undefined | null
@@ -165,13 +190,20 @@
     if (!account?.address || !requestNetwork) return;
     loading = true;
     try {
-      const requestsData = await requestNetwork?.fromIdentity({
-        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: account?.address,
+      const data = await queryClient.fetchQuery({
+        queryKey: getRequestsQueryKey(account.address, currentPage),
+        queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage)
       });
-      requests = requestsData
-        ?.map((request) => request.getData())
-        .sort((a, b) => b.timestamp - a.timestamp);
+      requests = data.requests?.map((request) => request.getData())
+      .sort((a, b) => b.timestamp - a.timestamp);
+      hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+
+      if (hasMoreRequests) {
+        queryClient.prefetchQuery({
+          queryKey: getRequestsQueryKey(account.address, currentPage + 1),
+          queryFn: () => fetchRequests(account.address, currentPage + 1, itemsPerPage)
+        });
+      }
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
@@ -196,10 +228,6 @@
       console.error("Failed to fetch request:", error);
     }
   };
-
-  const itemsPerPage = 10;
-  let currentPage = 1;
-  let totalPages = 1;
 
   $: {
     if (sortColumn && sortOrder) {
@@ -255,14 +283,7 @@
     return false;
   });
 
-  $: totalPages = Math.ceil(filteredRequests?.length! / itemsPerPage);
-
-  $: paginatedRequests = (filteredRequests ?? []).slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  $: processedRequests = paginatedRequests?.map(
+  $: processedRequests = filteredRequests?.map(
     (
       request
     ): Types.IRequestDataWithEvents & {
@@ -339,8 +360,9 @@
   );
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1) {
       currentPage = page;
+      getRequests(account, requestNetwork);
     }
   };
 
@@ -429,6 +451,7 @@
       cipherProvider?.enableDecryption(false);
       localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
     }
+    queryClient.invalidateQueries()
     await getRequests(currentAccount, currentRequestNetwork);
     loading = false;
   };
@@ -789,7 +812,7 @@
         {/if}
       </Drawer>
     </div>
-    {#if paginatedRequests.length > 0}
+    {#if processedRequests.length > 0}
       <div class="pagination">
         <button
           class="chevron-button"
@@ -801,19 +824,9 @@
           </i>
         </button>
 
-        {#each Array(totalPages).fill(null) as _, i}
-          <button
-            class={`active-page page-${currentPage === i + 1 ? "on" : "off"}`}
-            class:active={currentPage === i + 1}
-            on:click={() => goToPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        {/each}
-
         <button
           class="chevron-button"
-          disabled={currentPage === totalPages}
+          disabled={!hasMoreRequests}
           on:click={() => goToPage(currentPage + 1)}
         >
           <i>
@@ -823,7 +836,7 @@
       </div>
     {/if}
   </div>
-  {#if !loading && paginatedRequests.length === 0}
+  {#if !loading && processedRequests.length === 0}
     <div class="no-requests">
       <p>No requests found</p>
       <span>(Please connect a wallet or create a request)</span>
