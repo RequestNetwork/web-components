@@ -27,6 +27,7 @@
   import Accordion from "@requestnetwork/shared-components/accordion.svelte";
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
   // Icons
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
@@ -43,6 +44,18 @@
   import { onMount, onDestroy, tick } from "svelte";
   import { formatUnits } from "viem";
   import SingleInvoiceSkeleton from "./loading-skeleton.svelte";
+  import { CipherProviderTypes } from "@requestnetwork/types";
+  import { ethers } from "ethers";
+
+  interface CipherProvider extends CipherProviderTypes.ICipherProvider {
+    getSessionSignatures: (
+      signer: ethers.Signer,
+      walletAddress: `0x${string}`,
+      domain: string,
+      statement: string
+    ) => Promise<any>;
+    disconnectWallet: () => void;
+  }
 
   interface EntityInfo {
     value: string;
@@ -102,6 +115,14 @@
       done: false,
     },
   ];
+
+  let cipherProvider: CipherProvider | undefined;
+  let loadSessionSignatures = false;
+  let isDecryptionEnabled = JSON.parse(
+    localStorage?.getItem("isDecryptionEnabled") ?? "false"
+  );
+
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
   $: if (request && address) {
     isPayee = request.payee?.value?.toLowerCase() === address?.toLowerCase();
@@ -201,10 +222,129 @@
     });
   });
 
+  const isRequestEncrypted = async (requestId: string) => {
+    try {
+      // Temporarily disable decryption to check raw request
+      cipherProvider?.enableDecryption(false);
+      const testRequest = await requestNetwork?.fromRequestId(requestId);
+      const data = testRequest?.getData();
+
+      // Check if the request has encrypted data
+      const hasEncryptedData = data?.extensionsData?.some(
+        (ext: any) => ext.value?.encryptedData
+      );
+
+      // Also check transactions for encryption
+      const hasEncryptedTransactions = data?.transactions?.some(
+        (tx: any) => tx.transaction?.encryptedData
+      );
+
+      return hasEncryptedData || hasEncryptedTransactions;
+    } catch (error) {
+      // If we get a decryption error, it means the request is encrypted
+      if (String(error).includes("Decryption is not available")) {
+        return true;
+      }
+      console.log("Error checking encryption status:", error);
+      return false;
+    }
+  };
+
+  const ensureDecryption = async () => {
+    if (!isDecryptionEnabled || !cipherProvider || !account?.address) {
+      return false;
+    }
+
+    try {
+      // First check if the request is actually encrypted
+      const encrypted = await isRequestEncrypted(requestId);
+      if (!encrypted) {
+        console.log("Request is not encrypted, skipping decryption setup");
+        return true;
+      }
+
+      console.log("Request is encrypted, setting up decryption");
+      const signer = await getEthersSigner(wagmiConfig);
+      if (!signer) return false;
+
+      // Check if we have a valid session first
+      const hasExistingSession =
+        localStorage.getItem("lit-wallet-sig") === "true";
+
+      if (hasExistingSession) {
+        // Try to use existing session
+        try {
+          cipherProvider.enableDecryption(true);
+          // Test if current session works with a request fetch
+          const testRequest = await requestNetwork?.fromRequestId(requestId);
+
+          // Only consider the session valid if we can actually decrypt the request
+          if (testRequest?.getData()) {
+            console.log("Using existing Lit Protocol session");
+            return true;
+          }
+        } catch (error) {
+          // If we get a decryption error, we need a new session
+          if (
+            String(error).includes("Decryption is not available") ||
+            String(error).includes("Failed to decrypt") ||
+            String(error).includes("LitNodeClient is not ready")
+          ) {
+            console.log("Existing session invalid, clearing...");
+            localStorage.removeItem("lit-wallet-sig");
+          } else {
+            // If it's some other error, keep the session
+            console.log("Error fetching request, but keeping session:", error);
+            return true;
+          }
+        }
+      }
+
+      // If we get here, we need a new session
+      console.log("Getting new Lit Protocol session");
+      loadSessionSignatures = true;
+
+      try {
+        await cipherProvider.getSessionSignatures(
+          signer,
+          account.address,
+          window.location.host,
+          "Sign in to Lit Protocol through Request Network"
+        );
+
+        localStorage.setItem("lit-wallet-sig", "true");
+        cipherProvider.enableDecryption(true);
+        return true;
+      } catch (error) {
+        console.error("Failed to get new session signatures:", error);
+        return false;
+      } finally {
+        loadSessionSignatures = false;
+      }
+    } catch (error) {
+      console.error("Failed to ensure decryption:", error);
+      return false;
+    }
+  };
+
   const getOneRequest = async (requestId: string) => {
     try {
       loading = true;
       unsupportedNetwork = false;
+
+      // Only attempt decryption setup if needed
+      if (isDecryptionEnabled) {
+        const encrypted = await isRequestEncrypted(requestId);
+        if (encrypted) {
+          const decryptionReady = await ensureDecryption();
+          if (!decryptionReady) {
+            throw new Error("Failed to initialize decryption");
+          }
+        } else {
+          // For non-encrypted requests, just disable decryption
+          cipherProvider?.enableDecryption(false);
+        }
+      }
 
       const singleRequest = await requestNetwork?.fromRequestId(requestId);
       if (!singleRequest) {
@@ -310,8 +450,18 @@
       console.error("Failed to fetch request:", error);
       if (String(error).includes("Unsupported payment")) {
         unsupportedNetwork = true;
+      } else if (String(error).includes("LitNodeClient is not ready")) {
+        toast.error("Decryption service not ready", {
+          description: "Please try again in a few seconds",
+        });
+      } else if (String(error).includes("Decryption is not available")) {
+        toast.error("Cannot decrypt request", {
+          description:
+            "Please try refreshing the page or reconnecting your wallet",
+        });
+      } else {
+        toast.error("Failed to fetch request");
       }
-      toast.error("Failed to fetch request");
     } finally {
       loading = false;
     }
@@ -321,6 +471,13 @@
 
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
+
+    // Reset decryption state
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
+      localStorage.removeItem("lit-wallet-sig");
+    }
+
     if (requestId && requestNetwork) {
       await getOneRequest(requestId);
     }
@@ -334,17 +491,26 @@
     signer = null;
     approved = false;
     isPayee = false;
+
+    // Clean up decryption state
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
+      localStorage.removeItem("lit-wallet-sig");
+    }
   };
 
-  const handleWalletChange = (
+  const handleWalletChange = async (
     account: GetAccountReturnType,
     previousAccount: GetAccountReturnType
   ) => {
     if (account?.address !== previousAccount?.address) {
+      // Clean up previous wallet state
       handleWalletDisconnection();
-      handleWalletConnection();
+
+      // Initialize new wallet state
+      await handleWalletConnection();
     } else if (account?.address) {
-      handleWalletConnection();
+      await handleWalletConnection();
     } else {
       handleWalletDisconnection();
     }
@@ -353,6 +519,9 @@
   onDestroy(() => {
     if (typeof unwatchAccount === "function") {
       unwatchAccount();
+    }
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
     }
   });
 
@@ -1147,6 +1316,19 @@
   <div class="innerDrawer">No invoice found</div>
 {/if}
 
+{#if loadSessionSignatures}
+  <Modal {config} isOpen={true} title="Lit Protocol Signature Required">
+    <div class="modal-content">
+      <p>
+        This signature is required only once per session and will allow you to:
+      </p>
+      <ul>
+        <li>Access encrypted invoice details</li>
+      </ul>
+    </div>
+  </Modal>
+{/if}
+
 <style>
   .innerDrawer {
     position: relative;
@@ -1552,5 +1734,20 @@
     padding: 8px 12px !important;
     width: fit-content;
     margin-left: auto;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-content ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .modal-content li {
+    margin-bottom: 0.5rem;
+    color: #4b5563;
   }
 </style>
