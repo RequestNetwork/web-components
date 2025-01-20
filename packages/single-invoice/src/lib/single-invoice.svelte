@@ -30,16 +30,18 @@
   // Icons
   import Download from "@requestnetwork/shared-icons/download.svelte";
   // Utils
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
+  import {
+    formatDate,
+    checkStatus,
+    exportToPDF,
+    getEthersSigner,
+    calculateItemTotal,
+    getCurrencyFromManager,
+    initializeCurrencyManager,
+    getConversionPaymentValues,
+  } from "@requestnetwork/shared-utils/index";
   import { onMount, onDestroy, tick } from "svelte";
   import { formatUnits } from "viem";
-  import { getConversionPaymentValues } from "@requestnetwork/shared-utils/getConversionPaymentValues";
-  import { getEthersSigner } from "@requestnetwork/shared-utils/wallet-utils";
   import SingleInvoiceSkeleton from "./loading-skeleton.svelte";
 
   interface EntityInfo {

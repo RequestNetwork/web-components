@@ -36,18 +36,22 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
+  import {
+    debounce,
+    checkStatus,
+    formatUnits,
+    formatAddress,
+    getEthersSigner,
+    exportToPDF,
+    getCurrencyFromManager,
+    config as defaultConfig,
+    initializeCurrencyManager,
+  } from "@requestnetwork/shared-utils/index";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
-  import { formatUnits } from "viem";
-  import { debounce, formatAddress, getEthersSigner } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { ethers } from "ethers";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
