@@ -15,9 +15,12 @@
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
 
   // Utils
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
-  import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import {
+    checkAddress,
+    inputDateFormat,
+    calculateItemTotal,
+  } from "@requestnetwork/shared-utils/index";
+
   import { CurrencyTypes, CipherProviderTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";
 

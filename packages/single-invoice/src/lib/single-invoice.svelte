@@ -1,0 +1,1778 @@
+<svelte:options customElement="single-invoice" />
+
+<script lang="ts">
+  import type {
+    Config as WagmiConfig,
+    GetAccountReturnType,
+    WatchAccountReturnType,
+  } from "@wagmi/core";
+  import { toast } from "svelte-sonner";
+  import { getAccount, getBalance, watchAccount } from "@wagmi/core";
+  import {
+    approveErc20,
+    approveErc20ForProxyConversion,
+    hasErc20Approval,
+    hasErc20ApprovalForProxyConversion,
+    payRequest,
+  } from "@requestnetwork/payment-processor";
+  import {
+    Types,
+    type RequestNetwork,
+  } from "@requestnetwork/request-client.js";
+  import { CurrencyTypes } from "@requestnetwork/types";
+  import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
+  import { CurrencyManager } from "@requestnetwork/currency";
+  // Components
+  import StatusLabel from "@requestnetwork/shared-components/status-label.svelte";
+  import Accordion from "@requestnetwork/shared-components/accordion.svelte";
+  import Button from "@requestnetwork/shared-components/button.svelte";
+  import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
+  import Modal from "@requestnetwork/shared-components/modal.svelte";
+  // Icons
+  import Download from "@requestnetwork/shared-icons/download.svelte";
+  // Utils
+  import {
+    formatDate,
+    checkStatus,
+    exportToPDF,
+    getEthersSigner,
+    calculateItemTotal,
+    getCurrencyFromManager,
+    initializeCurrencyManager,
+    getConversionPaymentValues,
+  } from "@requestnetwork/shared-utils/index";
+  import { onMount, onDestroy, tick } from "svelte";
+  import { formatUnits } from "viem";
+  import SingleInvoiceSkeleton from "./loading-skeleton.svelte";
+  import { CipherProviderTypes } from "@requestnetwork/types";
+  import { ethers } from "ethers";
+
+  interface CipherProvider extends CipherProviderTypes.ICipherProvider {
+    getSessionSignatures: (
+      signer: ethers.Signer,
+      walletAddress: `0x${string}`,
+      domain: string,
+      statement: string
+    ) => Promise<any>;
+    disconnectWallet: () => void;
+  }
+
+  interface EntityInfo {
+    value: string;
+    isCompany?: boolean;
+    isEmail?: boolean;
+  }
+
+  interface BuyerInfo extends EntityInfo {}
+  interface SellerInfo extends EntityInfo {}
+
+  export let config;
+  export let wagmiConfig: WagmiConfig;
+  export let requestNetwork: RequestNetwork | null | undefined;
+  export let requestId: string;
+
+  let account = getAccount(wagmiConfig);
+  let address = account?.address;
+  let currencyManager: CurrencyManager;
+  let request: Types.IRequestDataWithEvents | undefined;
+  let loading = true;
+  let isRequestPayed = false;
+  let network: string | undefined;
+  let currency: CurrencyTypes.CurrencyDefinition | undefined;
+  let paymentCurrencies: (CurrencyTypes.CurrencyDefinition | undefined)[] = [];
+  let isPaid = false;
+  let requestData: any = null;
+  let signer: any = null;
+  let approved = false;
+  let firstItems: any;
+  let otherItems: any;
+  let sellerInfo: SellerInfo[] = [];
+  let buyerInfo: BuyerInfo[] = [];
+  let unknownCurrency = currency?.decimals === undefined;
+  let isPayee = false;
+  let shouldShowStatuses = false;
+  let unsupportedNetwork = false;
+  let hexStringChain = "0x" + account?.chainId?.toString(16);
+  let correctChain =
+    hexStringChain === String(getNetworkIdFromNetworkName(network));
+  let paymentNetworkExtension:
+    | Types.Extension.IPaymentNetworkState<any>
+    | undefined;
+  let statuses: any[] = [
+    {
+      name: "CORRECT_NETWORK",
+      message: "Correct Network",
+      done: correctChain,
+    },
+    {
+      name: "SIGN_TRANSACTION",
+      message: "Sign Transaction",
+      done: false,
+    },
+    {
+      name: "PAYMENT_DETECTED",
+      message: "Payment Detected",
+      done: false,
+    },
+  ];
+
+  let cipherProvider: CipherProvider | undefined;
+  let loadSessionSignatures = false;
+  let isDecryptionEnabled = JSON.parse(
+    localStorage?.getItem("isDecryptionEnabled") ?? "false"
+  );
+
+  $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
+
+  $: if (request && address) {
+    isPayee = request.payee?.value?.toLowerCase() === address?.toLowerCase();
+    network = request?.extensionsData[0]?.parameters?.network || "mainnet";
+    hexStringChain = "0x" + account?.chainId?.toString(16);
+    correctChain =
+      hexStringChain ===
+      String(getNetworkIdFromNetworkName(network || "mainnet"));
+  }
+
+  let status = checkStatus(requestData || request);
+  let hasEnoughBalance = false;
+  let userBalance = "0";
+
+  let isSigningTransaction = false;
+
+  const generateDetailParagraphs = (info: any) => {
+    const fullName = [info?.firstName, info?.lastName]
+      .filter(Boolean)
+      .join(" ");
+    const fullAddress = [
+      info?.address?.["street-address"],
+      info?.address?.locality,
+      info?.address?.region,
+      info?.address?.["postal-code"],
+      info?.address?.["country-name"],
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    return [
+      ...(fullName ? [{ value: fullName }] : []),
+      ...(info?.businessName
+        ? [
+            {
+              value: info?.businessName,
+              isCompany: true,
+            },
+          ]
+        : []),
+      ...(info?.taxRegistration ? [{ value: info?.taxRegistration }] : []),
+      ...(fullAddress ? [{ value: fullAddress }] : []),
+      ...(info?.email ? [{ value: info?.email, isEmail: true }] : []),
+    ].filter((detail) => detail.value);
+  };
+
+  let currencyDetails = {
+    symbol: "",
+    decimals: 0,
+  };
+
+  $: if (request) {
+    firstItems = request.contentData
+      ? request.contentData?.invoiceItems?.slice(0, 3)
+      : [];
+    otherItems = request.contentData
+      ? request.contentData?.invoiceItems?.slice(3)
+      : [];
+  }
+
+  $: if (request) {
+    sellerInfo = generateDetailParagraphs(request.contentData?.sellerInfo);
+    buyerInfo = generateDetailParagraphs(request.contentData?.buyerInfo);
+  }
+
+  $: if (
+    request &&
+    account &&
+    network &&
+    !unknownCurrency &&
+    paymentCurrencies?.[0]
+  ) {
+    checkBalance();
+  }
+
+  $: if (request) {
+    account = account;
+    network = request.currencyInfo?.network || "mainnet";
+    currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
+    unknownCurrency = currency ? currency.decimals === undefined : false;
+  }
+
+  onMount(async () => {
+    currencyManager = await initializeCurrencyManager();
+  });
+
+  onMount(() => {
+    unwatchAccount = watchAccount(wagmiConfig, {
+      onChange(
+        account: GetAccountReturnType,
+        previousAccount: GetAccountReturnType
+      ) {
+        tick().then(() => {
+          handleWalletChange(account, previousAccount);
+        });
+      },
+    });
+  });
+
+  const isRequestEncrypted = async (requestId: string) => {
+    try {
+      // Temporarily disable decryption to check raw request
+      cipherProvider?.enableDecryption(false);
+      const testRequest = await requestNetwork?.fromRequestId(requestId);
+      const data = testRequest?.getData();
+
+      // Check both extensions and transactions for encrypted data
+      const hasEncryptedData = data?.extensionsData?.some(
+        (ext: any) => ext.value?.encryptedData
+      );
+      const hasEncryptedTransactions = data?.transactions?.some(
+        (tx: any) => tx.transaction?.encryptedData
+      );
+
+      return hasEncryptedData || hasEncryptedTransactions;
+    } catch (error) {
+      // If we get a decryption error, it means the request is encrypted
+      if (String(error).includes("Decryption is not available")) {
+        return true;
+      }
+      // For other errors, assume not encrypted
+      console.log("Error checking encryption status:", error);
+      return false;
+    }
+  };
+
+  const ensureDecryption = async () => {
+    if (!isDecryptionEnabled || !cipherProvider || !account?.address) {
+      return false;
+    }
+
+    try {
+      // First check if the request is actually encrypted
+      const encrypted = await isRequestEncrypted(requestId);
+      if (!encrypted) {
+        console.log("Request is not encrypted, skipping decryption setup");
+        return true;
+      }
+
+      console.log("Request is encrypted, setting up decryption");
+      const signer = await getEthersSigner(wagmiConfig);
+      if (!signer) return false;
+
+      // Check if we have a valid session first
+      const hasExistingSession =
+        localStorage.getItem("lit-wallet-sig") === "true";
+
+      if (hasExistingSession) {
+        // Try to use existing session
+        try {
+          cipherProvider.enableDecryption(true);
+          // Test if current session works with a request fetch
+          const testRequest = await requestNetwork?.fromRequestId(requestId);
+
+          // Only consider the session valid if we can actually decrypt the request
+          if (testRequest?.getData()) {
+            console.log("Using existing Lit Protocol session");
+            return true;
+          }
+        } catch (error) {
+          // If we get a decryption error, we need a new session
+          if (
+            String(error).includes("Decryption is not available") ||
+            String(error).includes("Failed to decrypt") ||
+            String(error).includes("LitNodeClient is not ready")
+          ) {
+            console.log("Existing session invalid, clearing...");
+            localStorage.removeItem("lit-wallet-sig");
+          } else {
+            // If it's some other error, keep the session
+            console.log("Error fetching request, but keeping session:", error);
+            return true;
+          }
+        }
+      }
+
+      // If we get here, we need a new session
+      console.log("Getting new Lit Protocol session");
+      loadSessionSignatures = true;
+
+      try {
+        await cipherProvider.getSessionSignatures(
+          signer,
+          account.address,
+          window.location.host,
+          "Sign in to Lit Protocol through Request Network"
+        );
+
+        localStorage.setItem("lit-wallet-sig", "true");
+        cipherProvider.enableDecryption(true);
+        return true;
+      } catch (error) {
+        console.error("Failed to get new session signatures:", error);
+        return false;
+      } finally {
+        loadSessionSignatures = false;
+      }
+    } catch (error) {
+      console.error("Failed to ensure decryption:", error);
+      return false;
+    }
+  };
+
+  const getOneRequest = async (requestId: string) => {
+    try {
+      loading = true;
+      unsupportedNetwork = false;
+
+      // Only attempt decryption setup if needed
+      if (isDecryptionEnabled) {
+        const encrypted = await isRequestEncrypted(requestId);
+        if (encrypted) {
+          const decryptionReady = await ensureDecryption();
+          if (!decryptionReady) {
+            throw new Error("Failed to initialize decryption");
+          }
+        } else {
+          // For non-encrypted requests, just disable decryption
+          cipherProvider?.enableDecryption(false);
+        }
+      }
+
+      const singleRequest = await requestNetwork?.fromRequestId(requestId);
+      if (!singleRequest) {
+        console.log("No request found");
+        return;
+      }
+
+      request = singleRequest.getData();
+      if (!request) {
+        console.log("No request data found");
+        return;
+      }
+
+      signer = await getEthersSigner(wagmiConfig);
+      requestData = request;
+      paymentNetworkExtension = getPaymentNetworkExtension(requestData);
+
+      // Set up currency and network information
+      currency = getCurrencyFromManager(request.currencyInfo, currencyManager);
+      network = request?.currencyInfo?.network || "mainnet";
+
+      isPaid = requestData?.balance?.balance >= requestData?.expectedAmount;
+
+      // Handle payment currencies setup
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        paymentCurrencies =
+          paymentNetworkExtension?.values?.acceptedTokens?.map((token: any) =>
+            currencyManager.fromAddress(
+              token,
+              paymentNetworkExtension?.values?.network
+            )
+          );
+      } else if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        paymentCurrencies = [
+          currencyManager.getNativeCurrency(
+            Types.RequestLogic.CURRENCY.ETH,
+            paymentNetworkExtension?.values?.network
+          ),
+        ];
+      } else if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ETH_FEE_PROXY_CONTRACT
+      ) {
+        paymentCurrencies = [currency];
+      } else {
+        throw new Error("Unsupported payment network");
+      }
+
+      network = paymentCurrencies[0]?.network || "mainnet";
+
+      // Check ERC20 approval if needed
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, paymentCurrencies, signer);
+      } else {
+        approved = true;
+      }
+
+      // Build status flow based on conditions
+      const baseStatuses = [
+        {
+          name: "CORRECT_NETWORK",
+          message: "Correct Network",
+          done: correctChain,
+        },
+      ];
+
+      if (
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+        !approved
+      ) {
+        baseStatuses.push({
+          name: "APPROVE_ERC20",
+          message: "Approve ERC20",
+          done: false,
+        });
+      }
+
+      baseStatuses.push(
+        {
+          name: "SIGN_TRANSACTION",
+          message: "Sign Transaction",
+          done: false,
+        },
+        {
+          name: "PAYMENT_DETECTED",
+          message: "Payment Detected",
+          done: false,
+        }
+      );
+
+      statuses = baseStatuses;
+      status = checkStatus(requestData);
+      await checkBalance();
+    } catch (error) {
+      console.error("Failed to fetch request:", error);
+      if (String(error).includes("Unsupported payment")) {
+        unsupportedNetwork = true;
+      } else if (String(error).includes("LitNodeClient is not ready")) {
+        toast.error("Decryption service not ready", {
+          description: "Please try again in a few seconds",
+        });
+      } else if (String(error).includes("Decryption is not available")) {
+        toast.error("Cannot decrypt request", {
+          description:
+            "Please try refreshing the page or reconnecting your wallet",
+        });
+      } else {
+        toast.error("Failed to fetch request");
+      }
+    } finally {
+      loading = false;
+    }
+  };
+
+  let unwatchAccount: WatchAccountReturnType | undefined;
+
+  const handleWalletConnection = async () => {
+    account = getAccount(wagmiConfig);
+
+    // Reset decryption state
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
+      localStorage.removeItem("lit-wallet-sig");
+    }
+
+    // Only attempt decryption setup if needed
+    if (isDecryptionEnabled && requestId) {
+      const isEncrypted = await isRequestEncrypted(requestId);
+      if (isEncrypted) {
+        await ensureDecryption();
+      } else {
+        // For non-encrypted requests, just disable decryption
+        cipherProvider?.enableDecryption(false);
+      }
+    }
+
+    if (requestId && requestNetwork) {
+      await getOneRequest(requestId);
+    }
+  };
+
+  const handleWalletDisconnection = () => {
+    account = undefined;
+    address = undefined;
+    request = undefined;
+    requestData = null;
+    signer = null;
+    approved = false;
+    isPayee = false;
+
+    // Clean up decryption state
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
+      localStorage.removeItem("lit-wallet-sig");
+    }
+  };
+
+  const handleWalletChange = async (
+    account: GetAccountReturnType,
+    previousAccount: GetAccountReturnType
+  ) => {
+    if (account?.address !== previousAccount?.address) {
+      // Clean up previous wallet state
+      handleWalletDisconnection();
+
+      // Initialize new wallet state
+      account = getAccount(wagmiConfig);
+
+      // Only attempt decryption setup if the request is encrypted
+      if (isDecryptionEnabled && requestId) {
+        const isEncrypted = await isRequestEncrypted(requestId);
+        if (isEncrypted) {
+          await ensureDecryption();
+        } else {
+          // For non-encrypted requests, just disable decryption
+          cipherProvider?.enableDecryption(false);
+        }
+      }
+
+      if (requestId && requestNetwork) {
+        await getOneRequest(requestId);
+      }
+    } else if (account?.address) {
+      await handleWalletConnection();
+    } else {
+      handleWalletDisconnection();
+    }
+  };
+
+  onDestroy(() => {
+    if (typeof unwatchAccount === "function") {
+      unwatchAccount();
+    }
+    if (cipherProvider) {
+      cipherProvider.disconnectWallet();
+    }
+  });
+
+  // Make address and chain reactive to account changes
+  $: if (account) {
+    address = account.address;
+    hexStringChain = "0x" + account.chainId?.toString(16);
+  }
+
+  // Watch for changes in requestId
+  $: if (requestId) {
+    getOneRequest(requestId);
+  }
+
+  // Watch for payment status changes
+  $: if (isRequestPayed) {
+    getOneRequest(requestId);
+  }
+
+  const payTheRequest = async () => {
+    try {
+      isSigningTransaction = true;
+      shouldShowStatuses = true;
+
+      if (!requestNetwork || !requestData?.requestId) {
+        throw new Error("Request network or request data not available");
+      }
+
+      // Ensure we're on the correct network first
+      await switchNetworkIfNeeded(network || "mainnet");
+
+      // Get fresh signer after network switch
+      signer = await getEthersSigner(wagmiConfig);
+      if (!signer || !signer.provider) {
+        throw new Error("No signer or provider available");
+      }
+
+      const _request = await requestNetwork?.fromRequestId(
+        requestData.requestId
+      );
+      if (!_request) {
+        throw new Error("Could not fetch request details");
+      }
+
+      let paymentSettings = undefined;
+
+      if (
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY ||
+        paymentNetworkExtension?.id ===
+          Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ETH_PROXY
+      ) {
+        try {
+          if (!currency || !paymentCurrencies[0]) {
+            throw new Error("Missing currency information for conversion");
+          }
+
+          if (
+            paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+            !approved
+          ) {
+            await approve();
+          }
+
+          const { conversion } = await getConversionPaymentValues({
+            baseAmount: requestData.expectedAmount,
+            denominationCurrency: currency,
+            selectedPaymentCurrency: paymentCurrencies[0],
+            currencyManager,
+            provider: signer.provider,
+            fromAddress: address,
+          });
+
+          paymentSettings = conversion;
+        } catch (conversionError) {
+          console.error("Conversion calculation failed:", {
+            error: conversionError,
+            currency,
+            paymentCurrency: paymentCurrencies[0],
+            network,
+            chainId: await signer.getChainId(),
+          });
+          throw conversionError;
+        }
+      }
+
+      // Update sign transaction status
+      const signStatus = statuses.find((s) => s.name === "SIGN_TRANSACTION");
+      if (signStatus) {
+        signStatus.done = false;
+        statuses = [...statuses];
+      }
+
+      const paymentTx = await payRequest(
+        requestData,
+        signer,
+        undefined,
+        undefined,
+        paymentSettings
+      );
+
+      // Update sign transaction status
+      if (signStatus) {
+        signStatus.done = true;
+        statuses = [...statuses];
+      }
+
+      await paymentTx.wait();
+
+      // Update payment detected status
+      const paymentStatus = statuses.find((s) => s.name === "PAYMENT_DETECTED");
+      if (paymentStatus) {
+        paymentStatus.done = true;
+        statuses = [...statuses];
+      }
+
+      while (requestData.balance?.balance! < requestData.expectedAmount) {
+        requestData = await _request?.refresh();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      requestData = await _request?.refresh();
+      isPaid = true;
+      status = checkStatus(requestData);
+      isRequestPayed = true;
+
+      toast.success("Payment successful!");
+    } catch (err) {
+      console.error("Payment failed:", err);
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Payment failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } finally {
+      isSigningTransaction = false;
+      shouldShowStatuses = false;
+    }
+  };
+
+  const checkApproval = async (
+    requestData: any,
+    paymentCurrencies: any[],
+    signer: any
+  ) => {
+    try {
+      if (!paymentNetworkExtension?.id || !address || !signer) {
+        return false;
+      }
+
+      // Skip approval check if payment is not required
+      if (requestData?.balance?.balance >= requestData?.expectedAmount) {
+        console.log("Payment already completed, skipping approval check");
+        return true;
+      }
+
+      // Validate payment currency
+      if (!paymentCurrencies[0]?.address) {
+        console.error("Invalid payment currency:", paymentCurrencies[0]);
+        return false;
+      }
+
+      // Check if we're on the correct network
+      const chainId = await signer.getChainId();
+      const expectedChainId = getNetworkIdFromNetworkName(network);
+      const expectedChainIdNumber = parseInt(expectedChainId, 16);
+
+      if (chainId !== expectedChainIdNumber) {
+        console.error("Wrong network:", {
+          current: `0x${chainId.toString(16)}`,
+          expected: expectedChainId,
+        });
+        return false;
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        return await hasErc20Approval(requestData!, address!, signer).catch(
+          () => false
+        );
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        return await hasErc20ApprovalForProxyConversion(
+          requestData!,
+          address!,
+          paymentCurrencies[0]?.address,
+          signer,
+          requestData.expectedAmount
+        ).catch(() => false);
+      }
+
+      return false;
+    } catch (error) {
+      console.error("General approval check error:", error);
+      return false;
+    }
+  };
+
+  async function approve() {
+    try {
+      isSigningTransaction = true;
+
+      const approvers: { [key: string]: () => Promise<void> } = {
+        [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
+          async () => {
+            const approvalTx = await approveErc20(requestData!, signer);
+            await approvalTx.wait();
+            approved = true;
+          },
+        [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: async () => {
+          const approvalTx = await approveErc20ForProxyConversion(
+            requestData!,
+            paymentCurrencies[0]?.address,
+            signer
+          );
+          await approvalTx.wait();
+          approved = true;
+        },
+      };
+
+      if (
+        paymentNetworkExtension?.id &&
+        approvers[paymentNetworkExtension.id]
+      ) {
+        await approvers[paymentNetworkExtension.id]();
+      }
+
+      const approveStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+
+      if (approveStatus) approveStatus.done = true;
+      statuses = [...statuses];
+    } catch (err) {
+      console.error("Something went wrong while approving ERC20: ", err);
+    } finally {
+      isSigningTransaction = false;
+    }
+  }
+
+  async function switchNetworkIfNeeded(network: string) {
+    try {
+      if (!network) {
+        throw new Error("Network is undefined");
+      }
+
+      const targetNetworkId = getNetworkIdFromNetworkName(network);
+      if (!targetNetworkId) {
+        throw new Error(`Unsupported network: ${network}`);
+      }
+
+      // Only switch if we're on a different network
+      if (account?.chainId !== parseInt(targetNetworkId, 16)) {
+        await account.connector?.switchChain({
+          chainId: parseInt(targetNetworkId, 16),
+        });
+
+        // Wait for the network to switch and get new signer
+        await tick();
+        signer = await getEthersSigner(wagmiConfig);
+
+        // Update chain status
+        correctChain = true;
+        const networkStatus = statuses.find(
+          (s) => s.name === "CORRECT_NETWORK"
+        );
+        if (networkStatus) networkStatus.done = true;
+        statuses = [...statuses];
+      }
+
+      // Re-check approval after network switch
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        approved = await checkApproval(requestData, paymentCurrencies, signer);
+      }
+    } catch (err) {
+      console.error("Network switch failed:", err);
+      toast.error("Failed to switch network", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  }
+
+  function getNetworkIdFromNetworkName(network: string): string {
+    if (!network) {
+      console.warn("Network name is undefined, defaulting to mainnet");
+      return "0x1"; // default to mainnet
+    }
+
+    const networkIds: { [key: string]: string } = {
+      mainnet: "0x1",
+      matic: "0x89",
+      bsc: "0x38",
+      xdai: "0x64",
+      avalanche: "0xa86a",
+      optimism: "0xa",
+      moonbeam: "0x504",
+      sepolia: "0xaa36a7",
+      fantom: "0xfa",
+      mantle: "0x1388",
+      zksyncera: "0x144",
+      base: "0x2105",
+    };
+
+    const normalizedNetwork = network.toLowerCase();
+    return networkIds[normalizedNetwork] || "0x1"; // default to mainnet if network not found
+  }
+
+  // FIXME: Add rounding functionality
+  function truncateNumberString(
+    value: string,
+    maxDecimalDigits: number
+  ): string {
+    const [integerPart, decimalPart] = value.split(".");
+    return decimalPart
+      ? `${integerPart}.${decimalPart.substring(0, maxDecimalDigits)}`
+      : value;
+  }
+
+  const checkBalance = async () => {
+    try {
+      if (!address || !paymentCurrencies[0] || !network) {
+        console.log("Missing required parameters for balance check:", {
+          address,
+          paymentCurrency: paymentCurrencies[0],
+          network,
+        });
+        return;
+      }
+
+      const invoiceNetworkId = Number(getNetworkIdFromNetworkName(network));
+
+      if (account.chainId !== invoiceNetworkId) {
+        hasEnoughBalance = false;
+        console.log("Wrong network - balance check skipped");
+        return;
+      }
+
+      if (paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20) {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          token: paymentCurrencies[0].address as `0x${string}`,
+          chainId: invoiceNetworkId,
+        });
+        userBalance = balance.formatted;
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      } else {
+        const balance = await getBalance(wagmiConfig, {
+          address,
+          chainId: invoiceNetworkId,
+        });
+        userBalance = balance.formatted;
+        hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
+      }
+    } catch (err) {
+      console.error("Error checking balance:", err);
+      hasEnoughBalance = false;
+      userBalance = "0";
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      if (!correctChain) {
+        await switchNetworkIfNeeded(network || "mainnet");
+        return;
+      }
+
+      if (
+        paymentCurrencies[0]?.type === Types.RequestLogic.CURRENCY.ERC20 &&
+        !approved
+      ) {
+        await handleApproval();
+        return;
+      }
+
+      await payTheRequest();
+    } catch (err) {
+      console.error("Payment action failed:", err);
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Payment failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  };
+
+  const handleApproval = async () => {
+    try {
+      isSigningTransaction = true;
+
+      if (
+        paymentNetworkExtension?.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        await approveErc20ForProxyConversion(
+          requestData,
+          signer,
+          paymentCurrencies[0]
+        );
+      } else {
+        await approveErc20(requestData, signer);
+      }
+
+      approved = true;
+
+      // Update approval status if it exists
+      const approvalStatus = statuses.find((s) => s.name === "APPROVE_ERC20");
+      if (approvalStatus) {
+        approvalStatus.done = true;
+        statuses = [...statuses];
+      }
+    } catch (err) {
+      console.error("Approval failed:", err);
+      if (
+        String(err).includes("ACTION_REJECTED") ||
+        String(err).includes("User rejected")
+      ) {
+        toast.error("Transaction cancelled", {
+          description: "You rejected the transaction",
+        });
+      } else {
+        toast.error("Approval failed", {
+          description: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } finally {
+      isSigningTransaction = false;
+    }
+  };
+</script>
+
+{#if loading}
+  <SingleInvoiceSkeleton {config} />
+{:else if !requestId}
+  <div class="innerDrawer">Error: Missing required Request ID</div>
+{:else if request}
+  <div
+    class="innerDrawer"
+    style="
+      --mainColor: {config.colors.main};
+      --secondaryColor: {config.colors.secondary};"
+  >
+    <div class="invoice-view">
+      <div class="dates">
+        <p>
+          Issued on: {formatDate(request?.contentData?.creationDate || "-")}
+        </p>
+        <p>
+          Due by: {formatDate(
+            request?.contentData?.paymentTerms?.dueDate || "-"
+          )}
+        </p>
+      </div>
+      <h2 class="invoice-number">
+        Invoice #{request?.contentData?.invoiceNumber || "-"}
+        <StatusLabel status={checkStatus(request)} />
+        <Tooltip text="Download PDF">
+          <Download
+            onClick={async () => {
+              try {
+                await exportToPDF(
+                  request,
+                  currency,
+                  paymentCurrencies,
+                  config.logo
+                );
+              } catch (error) {
+                toast.error(`Failed to export PDF`, {
+                  description: `${error}`,
+                  action: {
+                    label: "X",
+                    onClick: () => console.info("Close"),
+                  },
+                });
+                console.error("Failed to export PDF:", error);
+              }
+            }}
+          />
+        </Tooltip>
+      </h2>
+      <div class="invoice-address">
+        <h2>From:</h2>
+        <p>{request?.payee?.value || "-"}</p>
+      </div>
+      {#if sellerInfo.length > 0}
+        <div class={`invoice-info`}>
+          {#each sellerInfo as { value, isCompany, isEmail }}
+            <p>
+              {#if isEmail}
+                <a href="mailto:{value}" class="email-link">{value}</a>
+              {:else if isCompany}
+                <span class="company-name">{value}</span>
+              {:else}
+                {value}
+              {/if}
+            </p>
+          {/each}
+        </div>
+      {/if}
+      <div class="invoice-border"></div>
+      <div class="invoice-address">
+        <h2>Billed to:</h2>
+        <p>{request?.payer?.value || "-"}</p>
+      </div>
+      {#if buyerInfo.length > 0}
+        <div class={`invoice-info`}>
+          {#each buyerInfo as { value, isCompany, isEmail }}
+            <p>
+              {#if isEmail}
+                <a href="mailto:{value}" class="email-link">{value}</a>
+              {:else if isCompany}
+                <span class="company-name">{value}</span>
+              {:else}
+                {value}
+              {/if}
+            </p>
+          {/each}
+        </div>
+      {/if}
+
+      <h3 class="invoice-info-payment">
+        <span style="font-weight: 500;">Payment Chain:</span>
+        {paymentCurrencies && paymentCurrencies.length > 0
+          ? paymentCurrencies[0]?.network || "Unknown"
+          : ""}
+      </h3>
+      <h3 class="invoice-info-payment">
+        <span style="font-weight: 500;">Invoice Currency:</span>
+        {currency?.symbol || "Unknown"}
+      </h3>
+
+      <h3 class="invoice-info-payment">
+        <span style="font-weight: 500;">Settlement Currency:</span>
+        {paymentCurrencies && paymentCurrencies.length > 0
+          ? paymentCurrencies[0]?.symbol || "Unknown"
+          : ""}
+      </h3>
+
+      {#if request?.contentData?.invoiceItems}
+        <div class="table-container">
+          <table class="invoice-table">
+            <thead class="table-header">
+              <tr class="table-row">
+                <th scope="col" class="table-header-cell description"
+                  >Description</th
+                >
+                <th scope="col" class="table-header-cell">Qty</th>
+                <th scope="col" class="table-header-cell">Unit Price</th>
+                <th scope="col" class="table-header-cell">Discount</th>
+                <th scope="col" class="table-header-cell">Tax</th>
+                <th scope="col" class="table-header-cell">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each firstItems as item, index (index)}
+                <tr class="table-row item-row">
+                  <th scope="row" class="item-description">
+                    <p class="truncate description-text">{item.name || "-"}</p>
+                  </th>
+                  <td>{item.quantity || "-"}</td>
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {item.unitPrice
+                        ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                        : "-"}
+                    {/if}
+                  </td>
+                  <td>
+                    {item.discount
+                      ? formatUnits(item.discount, currency?.decimals ?? 18)
+                      : "-"}
+                  </td>
+                  <td>{Number(item.tax.amount || "-")}</td>
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {truncateNumberString(
+                        formatUnits(
+                          calculateItemTotal(item),
+                          currency?.decimals ?? 18
+                        ),
+                        2
+                      )}
+                    {/if}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+        {#if otherItems.length > 0}
+          <Accordion title="View All">
+            <div class="table-container">
+              <table class="invoice-table">
+                <thead
+                  class="table-header hidden-header"
+                  style="display: none;"
+                >
+                  <tr class="table-row">
+                    <th scope="col" class="table-header-cell">Description</th>
+                    <th scope="col" class="table-header-cell">Qty</th>
+                    <th scope="col" class="table-header-cell">Unit Price</th>
+                    <th scope="col" class="table-header-cell">Discount</th>
+                    <th scope="col" class="table-header-cell">Tax</th>
+                    <th scope="col" class="table-header-cell">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each otherItems as item, index (index)}
+                    <tr class="table-row item-row">
+                      <th scope="row" class="item-description">
+                        <p
+                          class="truncate description-text"
+                          style="margin: 4px 0;"
+                        >
+                          {item.name || "-"}
+                        </p>
+                      </th>
+                      <td>{item.quantity || "-"}</td>
+                      <td>
+                        {#if unknownCurrency}
+                          Unknown
+                        {:else}
+                          {item.unitPrice
+                            ? formatUnits(
+                                item.unitPrice,
+                                currency?.decimals ?? 18
+                              )
+                            : "-"}
+                        {/if}
+                      </td>
+                      <td>
+                        {item.discount
+                          ? formatUnits(item.discount, currency?.decimals ?? 18)
+                          : "-"}
+                      </td>
+                      <td>{Number(item.tax.amount || "-")}</td>
+                      <td>
+                        {#if unknownCurrency}
+                          Unknown
+                        {:else}
+                          {truncateNumberString(
+                            formatUnits(
+                              calculateItemTotal(item),
+                              currency?.decimals ?? 18
+                            ),
+                            2
+                          )}
+                        {/if}
+                      </td>
+                    </tr>
+                  {/each}</tbody
+                >
+              </table>
+            </div>
+          </Accordion>
+        {/if}
+      {/if}
+      {#if request?.contentData?.note}
+        <div class="note-container">
+          <p class="note-content">
+            <span class="note-title">Memo:</span> <br />
+            {request.contentData?.note || "-"}
+          </p>
+        </div>
+      {/if}
+      <div class="labels-container">
+        {#if request?.contentData?.miscellaneous?.labels}
+          {#each request?.contentData?.miscellaneous?.labels as label, index (index)}
+            <div class="label">
+              {label || "-"}
+            </div>
+          {/each}
+        {/if}
+      </div>
+      {#if shouldShowStatuses}
+        <div class="status-container">
+          <div class="statuses">
+            {#if statuses?.length > 0}
+              <ul class="status-list">
+                {#each statuses as status, index}
+                  <li
+                    class="status-item"
+                    style="width: {statuses.length === 3 ? '35%' : '45%'}"
+                  >
+                    <span
+                      class={`status-icon-wrapper ${status.done ? "bg-success" : "bg-waiting"}`}
+                    >
+                      {#if status.done}
+                        <svg
+                          width="24"
+                          height="25"
+                          viewBox="0 0 24 25"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 12.5L10.2426 16.7426L18.727 8.25732"
+                            stroke="#328965"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      {:else}
+                        <svg
+                          width="25"
+                          height="25"
+                          viewBox="0 0 25 25"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M12.334 11.5V16.5M12.334 21.5C7.36342 21.5 3.33398 17.4706 3.33398 12.5C3.33398 7.52944 7.36342 3.5 12.334 3.5C17.3045 3.5 21.334 7.52944 21.334 12.5C21.334 17.4706 17.3045 21.5 12.334 21.5ZM12.3838 8.5V8.6L12.2842 8.6002V8.5H12.3838Z"
+                            stroke="#3D72FF"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      {/if}
+                    </span>
+                    <span class="status-text">{status.message}</span>
+                    <div
+                      class={`progress-line ${
+                        status.done || statuses[index + 1]?.done
+                          ? "bg-green"
+                          : "bg-blue"
+                      }`}
+                    ></div>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          </div>
+        </div>
+      {/if}
+      <div class="invoice-view-actions">
+        {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction && !unknownCurrency}
+          {#if !hasEnoughBalance && correctChain}
+            <div class="balance-warning">
+              Insufficient funds: {Number(userBalance).toFixed(4)}
+              {paymentCurrencies[0]?.symbol || "-"}
+            </div>
+          {/if}
+          <Button
+            type="button"
+            text={!correctChain
+              ? "Switch Network"
+              : !approved &&
+                  paymentCurrencies[0]?.type ===
+                    Types.RequestLogic.CURRENCY.ERC20
+                ? "Approve"
+                : "Pay Now"}
+            padding="px-[12px] py-[6px]"
+            onClick={handlePayment}
+            disabled={correctChain
+              ? !hasEnoughBalance || isSigningTransaction
+              : false}
+          />
+        {/if}
+      </div>
+
+      {#if unsupportedNetwork}
+        <div class="unsupported-network">Unsupported payment network!</div>
+      {/if}
+    </div>
+  </div>
+{:else}
+  <div class="innerDrawer">No invoice found</div>
+{/if}
+
+{#if loadSessionSignatures}
+  <Modal {config} isOpen={true} title="Lit Protocol Signature Required">
+    <div class="modal-content">
+      <p>
+        This signature is required only once per session and will allow you to:
+      </p>
+      <ul>
+        <li>Access encrypted invoice details</li>
+      </ul>
+    </div>
+  </Modal>
+{/if}
+
+<style>
+  .innerDrawer {
+    position: relative;
+    height: 100%;
+    padding: 1rem;
+    overflow: hidden;
+    background-color: white;
+    transition: all 300ms;
+    border-radius: 0.375rem;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    border-top: 6px solid var(--mainColor);
+    width: 800px;
+    margin: 0 auto;
+  }
+
+  @media only screen and (max-width: 880px) {
+    .innerDrawer {
+      width: 600px;
+    }
+  }
+
+  .invoice-view {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: white;
+    width: 100%;
+    height: fit-content;
+  }
+
+  .dates {
+    position: absolute;
+    right: 3.5rem;
+  }
+
+  .invoice-number {
+    margin: 0;
+    margin-bottom: 18px;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .invoice-number svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .invoice-address {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .invoice-address h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .invoice-address p {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .invoice-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: fit-content;
+    color: #6e7480;
+    font-size: 16px;
+  }
+
+  .invoice-info p {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .invoice-info p span {
+    font-weight: 500;
+    color: #71717a;
+  }
+
+  .invoice-border {
+    border-bottom: 1px solid var(--mainColor);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .invoice-info-payment {
+    display: flex;
+    flex-direction: column;
+    text-transform: capitalize;
+    margin: 0;
+  }
+
+  .invoice-info-payment {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #71717a;
+  }
+
+  .invoice-info-payment span {
+    color: black;
+  }
+
+  .table-container {
+    position: relative;
+    overflow-x: auto;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+  }
+
+  .invoice-table {
+    width: 100%;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    color: #6b7280;
+    border-radius: 8px;
+    overflow: hidden;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .table-header {
+    line-height: 20px;
+    text-transform: uppercase;
+    background-color: #f6f6f7;
+    color: black;
+    border: none;
+    border-collapse: collapse;
+  }
+
+  .table-header tr {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .table-header tr th {
+    padding: 12px 16px;
+    font-size: 11px;
+    white-space: nowrap;
+    border: none;
+    border-spacing: 0;
+    background-color: #f6f6f7;
+  }
+
+  .table-row th,
+  .table-row td {
+    padding: 12px 16px;
+  }
+
+  .table-row th p {
+    margin: 0;
+  }
+
+  .item-description {
+    width: 250px !important;
+    font-weight: normal;
+  }
+
+  .truncate {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hidden-header {
+    opacity: 0;
+  }
+
+  .note-container {
+    background-color: #f5f5f5;
+    padding: 10px;
+  }
+
+  .note-content {
+    width: fit-content;
+    word-break: break-all;
+  }
+
+  .note-title {
+    font-weight: 600;
+  }
+
+  .labels-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 300px;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    color: white;
+    background-color: black;
+    border-radius: 0.25rem;
+    padding: 0.25rem;
+    cursor: pointer;
+  }
+
+  .status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .status {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 0.5rem;
+    background-color: var(--mainColor);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .status-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin-left: 85px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    text-align: center;
+    width: 45%;
+  }
+
+  .status-list:has(:nth-child(3):last-child) .status-item {
+    width: 35%;
+  }
+
+  .status-item:first-child {
+    padding-left: 50px;
+  }
+
+  .status-item:first-child .status-text {
+    padding-left: 50px;
+  }
+
+  .status-item:last-child {
+    width: 20%;
+  }
+
+  .status-item:last-child .progress-line {
+    width: 170px;
+  }
+
+  .progress-line {
+    position: absolute;
+    left: 40%;
+    height: 8px;
+    z-index: 0;
+    transform: translateX(-50%);
+    width: 300px;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .status-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    padding: 4px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .status-text {
+    font-size: 14px;
+    color: #272d41;
+    position: absolute;
+    top: -30px;
+    left: -30px;
+  }
+
+  .checkmark {
+    margin-left: 5px;
+    color: #58e1a5;
+  }
+
+  .invoice-view-actions {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    justify-content: end;
+  }
+
+  :global(.invoice-view-actions button) {
+    padding: 6px 14px !important;
+    width: fit-content !important;
+    height: fit-content !important;
+  }
+
+  .unsupported-network {
+    font-size: 12px;
+    color: #e89e14ee;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .label {
+    background-color: var(--mainColor);
+  }
+
+  .label:hover {
+    background-color: var(--secondaryColor);
+  }
+
+  .bg-blue {
+    background-color: #759aff;
+  }
+
+  .bg-green {
+    background-color: #0bb489;
+  }
+
+  .bg-success {
+    background-color: #cdf6e4;
+  }
+
+  .bg-waiting {
+    background-color: #c7e7ff;
+  }
+
+  .bg-zinc {
+    background-color: #a1a1aa;
+  }
+
+  .bg-zinc-light {
+    background-color: #f4f4f5;
+  }
+
+  .company-name {
+    font-weight: 600 !important;
+  }
+
+  .email-link {
+    color: #6e7480;
+  }
+
+  .email-link:hover {
+    text-decoration: underline;
+  }
+
+  .balance-warning {
+    color: #ef4444;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #fee2e2;
+    margin-right: 0.5rem;
+  }
+
+  :global(.invoice-view-actions button[disabled]) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #71717a !important;
+  }
+
+  :global(.pay-button) {
+    padding: 8px 12px !important;
+    width: fit-content;
+    margin-left: auto;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-content ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .modal-content li {
+    margin-bottom: 0.5rem;
+    color: #4b5563;
+  }
+</style>

@@ -34,6 +34,7 @@ export const formatUnits = (
 
 export const toFixedDecimal = (numberToFormat: number, decimals?: number) => {
   const MAX_DECIMALS = decimals !== undefined ? decimals : 5;
+
   return Number(numberToFormat.toFixed(MAX_DECIMALS));
 };
 
@@ -58,6 +59,7 @@ export const bigAmountify = (
   token: Pick<CurrencyTypes.CurrencyDefinition, "decimals">
 ): BigNumber => {
   let [whole, decimals] = amount.toString().split(".");
+
   let pow = "0";
   let powSign = true;
 
@@ -78,6 +80,7 @@ export const bigAmountify = (
       ? wholeBn.add(decimalsBn).mul(power)
       : wholeBn.add(decimalsBn).div(power);
   }
+
   return wholeBn;
 };
 
@@ -110,6 +113,7 @@ export const getConversionPaymentValues = async ({
     baseAmount * Number(conversionRate),
     selectedPaymentCurrency
   );
+
   const safeConversionAmount = bigAmountify(
     baseAmount *
       Number(conversionRate) *
@@ -134,7 +138,6 @@ export const getConversionPaymentValues = async ({
   const hasEnoughForSlippage = userBalance.gte(safeConversionAmount);
   const hasEnough = userBalance.gte(minConversionAmount);
   const isRisky = hasEnough && !hasEnoughForSlippage;
-
   const slippageLevel = isRisky ? "risky" : ("safe" as SlippageLevel);
   const conversionAmount = isRisky ? userBalance : safeConversionAmount;
 
@@ -152,6 +155,7 @@ export const getConversionPaymentValues = async ({
     ),
     currency: selectedPaymentCurrency,
   };
+
   const safeBalance = {
     value: amountToFixedDecimal(
       safeConversionAmount,

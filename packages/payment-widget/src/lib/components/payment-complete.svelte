@@ -1,8 +1,11 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
+  import {
+    exportToPDF,
+    getCurrencyFromManager,
+    initializeCurrencyManager,
+  } from "@requestnetwork/shared-utils/index";
+
   import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import { toast } from "svelte-sonner";
 

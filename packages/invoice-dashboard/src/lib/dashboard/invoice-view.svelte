@@ -22,16 +22,18 @@
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   // Icons
   import Download from "@requestnetwork/shared-icons/download.svelte";
+  import Share from "@requestnetwork/shared-icons/share.svelte";
   // Utils
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-  import { onMount } from "svelte";
+  import {
+    exportToPDF,
+    formatDate,
+    checkStatus,
+    getEthersSigner,
+    calculateItemTotal,
+    getCurrencyFromManager,
+    getConversionPaymentValues,
+  } from "@requestnetwork/shared-utils/index";
   import { formatUnits } from "viem";
-  import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
-  import { getEthersSigner } from "../../utils";
 
   interface EntityInfo {
     value: string;
@@ -49,6 +51,7 @@
   export let currencyManager: any;
   export let isRequestPayed: boolean;
   export let wagmiConfig: any;
+  export let singleInvoicePath: string;
 
   let network: string | undefined = request?.currencyInfo?.network || "mainnet";
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
@@ -512,7 +515,12 @@
       zksyncera: "0x144",
       base: "0x2105",
     };
-    return networkIds[network];
+
+    const networkId = networkIds[network];
+    if (!networkId) {
+      console.warn(`Unknown network: ${network}`);
+    }
+    return networkId;
   }
 
   // FIXME: Add rounding functionality
@@ -599,6 +607,15 @@
       }));
     }
   }
+
+  $: {
+    const hexStringChain = "0x" + account?.chainId?.toString(16);
+    const networkId = getNetworkIdFromNetworkName(network || "mainnet");
+
+    correctChain =
+      hexStringChain.toLowerCase() === String(networkId).toLowerCase() ||
+      Number(hexStringChain) === Number(networkId);
+  }
 </script>
 
 <div
@@ -639,6 +656,17 @@
         }}
       />
     </Tooltip>
+    {#if singleInvoicePath}
+      <Tooltip text="Share Invoice">
+        <Share
+          onClick={() => {
+            const shareUrl = `${window.location.origin}${singleInvoicePath}/${request.requestId}`;
+            navigator.clipboard.writeText(shareUrl);
+            toast.success("Share link copied to clipboard!");
+          }}
+        />
+      </Tooltip>
+    {/if}
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
@@ -948,6 +976,7 @@
   .invoice-number svg {
     width: 13px;
     height: 13px;
+    cursor: pointer;
   }
 
   .invoice-address {

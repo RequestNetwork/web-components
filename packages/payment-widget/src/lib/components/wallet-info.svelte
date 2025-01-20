@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Web3Modal } from "@web3modal/ethers5";
-  import { formatAddress } from "@requestnetwork/shared-utils/formatAddress";
+  import { formatAddress } from "@requestnetwork/shared-utils/index";
   export let web3Modal: Web3Modal | null;
   export let isConnected: boolean = false;
 

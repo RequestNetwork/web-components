@@ -16,13 +16,12 @@
   import { CurrencyTypes } from "@requestnetwork/types";
   // Utils
   import { getInitialFormData, prepareRequestParams } from "./utils";
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { calculateInvoiceTotals } from "@requestnetwork/shared-utils/invoiceTotals";
   import {
+    config as defaultConfig,
+    calculateInvoiceTotals,
     getCurrencySupportedNetworksForConversion,
     initializeCreateInvoiceCurrencyManager,
-    initializeCurrencyManager,
-  } from "@requestnetwork/shared-utils/initCurrencyManager";
+  } from "@requestnetwork/shared-utils/index";
   // Components
   import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
