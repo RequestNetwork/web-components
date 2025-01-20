@@ -63,6 +63,7 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
+  export let singleInvoicePath: string;
 
   let cipherProvider: CipherProvider | undefined;
 
@@ -903,6 +904,7 @@
             bind:currencyManager
             config={activeConfig}
             request={activeRequest}
+            {singleInvoicePath}
           />
         {/if}
       </Drawer>
