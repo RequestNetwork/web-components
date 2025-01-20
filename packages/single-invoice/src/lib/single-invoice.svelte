@@ -229,12 +229,10 @@
       const testRequest = await requestNetwork?.fromRequestId(requestId);
       const data = testRequest?.getData();
 
-      // Check if the request has encrypted data
+      // Check both extensions and transactions for encrypted data
       const hasEncryptedData = data?.extensionsData?.some(
         (ext: any) => ext.value?.encryptedData
       );
-
-      // Also check transactions for encryption
       const hasEncryptedTransactions = data?.transactions?.some(
         (tx: any) => tx.transaction?.encryptedData
       );
@@ -245,6 +243,7 @@
       if (String(error).includes("Decryption is not available")) {
         return true;
       }
+      // For other errors, assume not encrypted
       console.log("Error checking encryption status:", error);
       return false;
     }
@@ -478,6 +477,17 @@
       localStorage.removeItem("lit-wallet-sig");
     }
 
+    // Only attempt decryption setup if needed
+    if (isDecryptionEnabled && requestId) {
+      const isEncrypted = await isRequestEncrypted(requestId);
+      if (isEncrypted) {
+        await ensureDecryption();
+      } else {
+        // For non-encrypted requests, just disable decryption
+        cipherProvider?.enableDecryption(false);
+      }
+    }
+
     if (requestId && requestNetwork) {
       await getOneRequest(requestId);
     }
@@ -508,7 +518,22 @@
       handleWalletDisconnection();
 
       // Initialize new wallet state
-      await handleWalletConnection();
+      account = getAccount(wagmiConfig);
+
+      // Only attempt decryption setup if the request is encrypted
+      if (isDecryptionEnabled && requestId) {
+        const isEncrypted = await isRequestEncrypted(requestId);
+        if (isEncrypted) {
+          await ensureDecryption();
+        } else {
+          // For non-encrypted requests, just disable decryption
+          cipherProvider?.enableDecryption(false);
+        }
+      }
+
+      if (requestId && requestNetwork) {
+        await getOneRequest(requestId);
+      }
     } else if (account?.address) {
       await handleWalletConnection();
     } else {
