@@ -608,7 +608,6 @@
     }
   }
 
-  // Add debug logging to see what's happening
   $: {
     const hexStringChain = "0x" + account?.chainId?.toString(16);
     const networkId = getNetworkIdFromNetworkName(network || "mainnet");
