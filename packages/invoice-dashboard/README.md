@@ -167,11 +167,7 @@ export const config: IConfig = {
 
 ## Chains and Currencies
 
-| Chain    | Currencies             |
-| -------- | ---------------------- |
-| Ethereum | USDC, USDT, DAI        |
-| Polygon  | USDC, USDT, DAI, USDCe |
-| Sepolia  | USDC, FAU              |
+For a list of supported chains and currencies see [Token List](https://docs.request.network/building-blocks/token-list)
 
 ## Additional Information
 

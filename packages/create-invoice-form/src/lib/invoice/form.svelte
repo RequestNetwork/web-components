@@ -15,9 +15,12 @@
   import type { IConfig, CustomFormData } from "@requestnetwork/shared-types";
 
   // Utils
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { checkAddress } from "@requestnetwork/shared-utils/checkEthAddress";
-  import { inputDateFormat } from "@requestnetwork/shared-utils/formatDate";
+  import {
+    checkAddress,
+    inputDateFormat,
+    calculateItemTotal,
+  } from "@requestnetwork/shared-utils/index";
+
   import { CurrencyTypes, CipherProviderTypes } from "@requestnetwork/types";
   import isEmail from "validator/es/lib/isEmail";
 
@@ -29,7 +32,8 @@
   export let handleNetworkChange: (chainId: string) => void;
   export let networks;
   export let defaultCurrencies: any = [];
-  export let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] = [];
+  export let filteredSettlementCurrencies: CurrencyTypes.CurrencyDefinition[] =
+    [];
   export let cipherProvider: CipherProviderTypes.ICipherProvider | undefined;
 
   export let invoiceCurrencyDropdown;
@@ -161,7 +165,7 @@
 
   $: if (!formData.dueDate) {
     formData.dueDate = inputDateFormat(
-      new Date(new Date(formData.issuedOn).getTime() + 24 * 60 * 60 * 1000)
+      new Date(new Date(formData.issuedOn).getTime() + 30 * 24 * 60 * 60 * 1000)
     );
   }
 </script>
@@ -406,8 +410,7 @@
           <SearchableDropdown
             bind:this={invoiceCurrencyDropdown}
             getValue={(currency) => currency.value.symbol}
-            getDisplayValue={(currency) =>
-              `${currency.value.symbol}`}
+            getDisplayValue={(currency) => `${currency.value.symbol}`}
             placeholder="Invoice currency"
             items={defaultCurrencies
               ?.filter((curr) => curr)
@@ -419,7 +422,7 @@
             onSelect={handleInvoiceCurrencyChange}
           />
         </div>
-        <div class="searchable-dropdown-container"> 
+        <div class="searchable-dropdown-container">
           <SearchableDropdown
             bind:this={networkDropdown}
             items={networks

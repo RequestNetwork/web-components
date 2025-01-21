@@ -1,93 +1,60 @@
 import { CurrencyManager } from "@requestnetwork/currency";
 import { CurrencyTypes } from "@requestnetwork/types";
+import { formattedCurrencyConversionPairs } from "./currencyConversionPairs";
 
 const defaultCurrencyIds = [
   "USD",
   "EUR",
-  "GBP",
-  "CHF",
-  "SGD",
-  "AUD",
-  "BRL",
-  "CAD",
-  "INR",
-  "JPY",
-  "KRW",
-  "IDR",
-  "NZD",
-  "TRY",
   "CNY",
-  "FAU-sepolia",
-  "USDC-mainnet",
-  "USDT-mainnet",
-  "DAI-mainnet",
-  "USDC-matic",
-  "USDT-matic",
-  "DAI-matic",
-  "USDC-matic",
-  "AXS-mainnet",
-  "AUDIO-mainnet",
-  "RAI-mainnet",
-  "SYLO-mainnet",
-  "LDO-mainnet",
-  "UST-mainnet",
-  "MNT-mainnet",
-  "MIR-mainnet",
-  "INJ-mainnet",
-  "OCEAN-mainnet",
-  "ANKR-mainnet",
-  "RLY-mainnet",
+  "GBP",
+  "JPY",
   "DAI-bsc",
   "BUSD-bsc",
-  "USDC-xdai",
-  "USDC-avalanche",
-  "USDT-avalanche",
-  "USDC-optimism",
-  "USDT-optimism",
-  "DAI-optimism",
-  "USDC-multichain-moonbeam",
-  "USDC-wormhole-moonbeam",
+  "ETH-base-base",
+  "DAI-mainnet",
   "ETH-mainnet",
   "REQ-mainnet",
+  "USDC-mainnet",
+  "USDT-mainnet",
+  "DAI-matic",
   "MATIC-matic",
-  "FTM-fantom",
-  "AVAX-avalanche",
+  "USDC-matic",
+  "USDT-matic",
+  "DAI-optimism",
   "ETH-optimism-optimism",
-  "MNT-mantle",
+  "USDC-optimism",
+  "USDT-optimism",
+  "FAU-sepolia",
   "ETH-sepolia-sepolia",
-  "ETH-zksync-zksyncera",
-  "ETH-base-base",
-  "fUSDT-sepolia",
   "fUSDC-sepolia",
+  "fUSDT-sepolia",
+  "USDC-xdai",
+  "USDC-base",
 ];
 
-import { Types } from "@requestnetwork/request-client.js";
-import { formattedCurrencyConversionPairs } from "./currencyConversionPairs";
+const TOKEN_LIST_URL =
+  "https://requestnetwork.github.io/request-token-list/latest.json";
 
-export function initializeCurrencyManager(
-  customCurrencies: CurrencyTypes.CurrencyInput[] = []
-): CurrencyManager {
-  // If customCurrencies is provided, use only those
-  if (customCurrencies?.length > 0) {
-    return new CurrencyManager(
-      customCurrencies,
-      {},
-      formattedCurrencyConversionPairs
+const fetchTokenList = async () => {
+  try {
+    const requestNetworkTokenList = await fetch(TOKEN_LIST_URL).then((res) =>
+      res.json()
     );
+
+    return requestNetworkTokenList.tokens;
+  } catch (err) {
+    console.error("Failed to fetch token list", err);
+    return [];
   }
+};
 
-  // Otherwise, use default currencies
-  const defaultCurrencies = CurrencyManager.getDefaultList().filter(
-    (currency) => defaultCurrencyIds.includes(currency.id)
-  );
+export async function initializeCurrencyManager(): Promise<CurrencyManager> {
+  const tokens = await fetchTokenList();
 
-  return new CurrencyManager(
-    defaultCurrencies,
-    {},
-    formattedCurrencyConversionPairs
-  );
+  return new CurrencyManager(tokens, {}, formattedCurrencyConversionPairs);
 }
 
+// Note: this function is used in the Payment Widget, I did not want to change it to not cause any unintended side effects.
 export function initializeCurrencyManagerWithCurrencyIDS(
   customCurrencyIds: string[]
 ): any {
@@ -103,6 +70,29 @@ export function initializeCurrencyManagerWithCurrencyIDS(
     ),
     currencies,
   };
+}
+
+export async function initializeCreateInvoiceCurrencyManager(
+  customCurrencyIds: string[]
+): Promise<CurrencyManager<any>> {
+  const currenciesToUse =
+    customCurrencyIds.length > 0 ? customCurrencyIds : defaultCurrencyIds;
+
+  const tokens = await fetchTokenList();
+
+  const tokenMap = new Map(tokens.map((token: any) => [token.id, token]));
+
+  const currencies = currenciesToUse
+    .map((id) => tokenMap.get(id))
+    .filter((token): token is CurrencyTypes.CurrencyInput => token != null);
+
+  const currencyManager = new CurrencyManager(
+    currencies,
+    {},
+    formattedCurrencyConversionPairs
+  );
+
+  return currencyManager;
 }
 
 export const getCurrencySupportedNetworksForConversion = (

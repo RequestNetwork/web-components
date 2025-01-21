@@ -22,16 +22,18 @@
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   // Icons
   import Download from "@requestnetwork/shared-icons/download.svelte";
+  import Share from "@requestnetwork/shared-icons/share.svelte";
   // Utils
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
-  import { onMount } from "svelte";
+  import {
+    exportToPDF,
+    formatDate,
+    checkStatus,
+    getEthersSigner,
+    calculateItemTotal,
+    getCurrencyFromManager,
+    getConversionPaymentValues,
+  } from "@requestnetwork/shared-utils/index";
   import { formatUnits } from "viem";
-  import { getConversionPaymentValues } from "../../utils/getConversionPaymentValues";
-  import { getEthersSigner } from "../../utils";
 
   interface EntityInfo {
     value: string;
@@ -49,6 +51,7 @@
   export let currencyManager: any;
   export let isRequestPayed: boolean;
   export let wagmiConfig: any;
+  export let singleInvoicePath: string;
 
   let network: string | undefined = request?.currencyInfo?.network || "mainnet";
   let currency: CurrencyTypes.CurrencyDefinition | undefined =
@@ -64,6 +67,7 @@
   let otherItems: any;
   let sellerInfo: SellerInfo[] = [];
   let buyerInfo: BuyerInfo[] = [];
+  let unknownCurrency = currency?.decimals === undefined;
   let isPayee = request?.payee?.value.toLowerCase() === address?.toLowerCase();
   let unsupportedNetwork = false;
   let hexStringChain = "0x" + account?.chainId?.toString(16);
@@ -155,7 +159,7 @@
   }
 
   $: {
-    if (account && network) {
+    if (account && network && !unknownCurrency) {
       checkBalance();
     }
   }
@@ -372,29 +376,74 @@
     paymentCurrencies: any[],
     signer: any
   ) => {
-    const approvalCheckers: { [key: string]: () => Promise<boolean> } = {
-      [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]: () =>
-        hasErc20Approval(requestData!, address!, signer),
-      [Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY]: () =>
-        hasErc20ApprovalForProxyConversion(
+    try {
+      if (!paymentNetworkExtension?.id || !address || !signer) {
+        console.log("Missing required arguments for approval check:", {
+          network: paymentNetworkExtension?.id,
+          address,
+          signer: !!signer,
+        });
+        return false;
+      }
+
+      // Skip approval check if payment is not required
+      if (requestData?.balance?.balance >= requestData?.expectedAmount) {
+        console.log("Payment already completed, skipping approval check");
+        return true;
+      }
+
+      // Validate payment currency
+      if (!paymentCurrencies[0]?.address) {
+        console.error("Invalid payment currency:", paymentCurrencies[0]);
+        return false;
+      }
+
+      // Check if we're on the correct network
+      const chainId = await signer.getChainId();
+      const expectedChainId = getNetworkIdFromNetworkName(network);
+      const expectedChainIdNumber = parseInt(expectedChainId, 16);
+
+      if (chainId !== expectedChainIdNumber) {
+        console.error("Wrong network:", {
+          current: `0x${chainId.toString(16)}`,
+          expected: expectedChainId,
+        });
+        return false;
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT
+      ) {
+        return await hasErc20Approval(requestData!, address!, signer).catch(
+          () => false
+        );
+      }
+
+      if (
+        paymentNetworkExtension.id ===
+        Types.Extension.PAYMENT_NETWORK_ID.ANY_TO_ERC20_PROXY
+      ) {
+        return await hasErc20ApprovalForProxyConversion(
           requestData!,
           address!,
           paymentCurrencies[0]?.address,
           signer,
           requestData.expectedAmount
-        ),
-    };
+        ).catch(() => false);
+      }
 
-    return (
-      (paymentNetworkExtension?.id &&
-        (await approvalCheckers[paymentNetworkExtension.id]?.())) ||
-      false
-    );
+      return false;
+    } catch (error) {
+      console.error("General approval check error:", error);
+      return false;
+    }
   };
 
   async function approve() {
     try {
       loading = true;
+      isSigningTransaction = true;
 
       const approvers: { [key: string]: () => Promise<void> } = {
         [Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT]:
@@ -429,6 +478,7 @@
       console.error("Something went wrong while approving ERC20: ", err);
     } finally {
       loading = false;
+      isSigningTransaction = false;
     }
   }
 
@@ -465,7 +515,12 @@
       zksyncera: "0x144",
       base: "0x2105",
     };
-    return networkIds[network];
+
+    const networkId = networkIds[network];
+    if (!networkId) {
+      console.warn(`Unknown network: ${network}`);
+    }
+    return networkId;
   }
 
   // FIXME: Add rounding functionality
@@ -482,7 +537,7 @@
   async function checkBalance() {
     try {
       if (!address || !paymentCurrencies[0] || !network) {
-        console.log("Missing required parameters for balance check:", {
+        console.error("Missing required parameters for balance check:", {
           address,
           paymentCurrency: paymentCurrencies[0],
           network,
@@ -504,7 +559,6 @@
           token: paymentCurrencies[0].address as `0x${string}`,
           chainId: invoiceNetworkId,
         });
-        ;
         userBalance = balance.formatted;
         hasEnoughBalance = balance.value >= BigInt(request.expectedAmount);
       } else {
@@ -553,6 +607,15 @@
       }));
     }
   }
+
+  $: {
+    const hexStringChain = "0x" + account?.chainId?.toString(16);
+    const networkId = getNetworkIdFromNetworkName(network || "mainnet");
+
+    correctChain =
+      hexStringChain.toLowerCase() === String(networkId).toLowerCase() ||
+      Number(hexStringChain) === Number(networkId);
+  }
 </script>
 
 <div
@@ -593,6 +656,17 @@
         }}
       />
     </Tooltip>
+    {#if singleInvoicePath}
+      <Tooltip text="Share Invoice">
+        <Share
+          onClick={() => {
+            const shareUrl = `${window.location.origin}${singleInvoicePath}/${request.requestId}`;
+            navigator.clipboard.writeText(shareUrl);
+            toast.success("Share link copied to clipboard!");
+          }}
+        />
+      </Tooltip>
+    {/if}
   </h2>
   <div class="invoice-address">
     <h2>From:</h2>
@@ -637,18 +711,18 @@
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Payment Chain:</span>
     {paymentCurrencies && paymentCurrencies.length > 0
-      ? paymentCurrencies[0]?.network || "-"
+      ? paymentCurrencies[0]?.network || "Unknown"
       : ""}
   </h3>
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Invoice Currency:</span>
-    {currency?.symbol || "-"}
+    {currency?.symbol || "Unknown"}
   </h3>
 
   <h3 class="invoice-info-payment">
     <span style="font-weight: 500;">Settlement Currency:</span>
     {paymentCurrencies && paymentCurrencies.length > 0
-      ? paymentCurrencies[0]?.symbol || "-"
+      ? paymentCurrencies[0]?.symbol || "Unknown"
       : ""}
   </h3>
 
@@ -674,27 +748,34 @@
                 <p class="truncate description-text">{item.name || "-"}</p>
               </th>
               <td>{item.quantity || "-"}</td>
-              <td
-                >{item.unitPrice
-                  ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
-                  : "-"}</td
-              >
-              <td
-                >{item.discount
+              <td>
+                {#if unknownCurrency}
+                  Unknown
+                {:else}
+                  {item.unitPrice
+                    ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                    : "-"}
+                {/if}
+              </td>
+              <td>
+                {item.discount
                   ? formatUnits(item.discount, currency?.decimals ?? 18)
-                  : "-"}</td
-              >
+                  : "-"}
+              </td>
               <td>{Number(item.tax.amount || "-")}</td>
-              <td
-                >{truncateNumberString(
-                  formatUnits(
-                    // @ts-expect-error
-                    calculateItemTotal(item),
-                    currency?.decimals ?? 18
-                  ),
-                  2
-                )}</td
-              >
+              <td>
+                {#if unknownCurrency}
+                  Unknown
+                {:else}
+                  {truncateNumberString(
+                    formatUnits(
+                      calculateItemTotal(item),
+                      currency?.decimals ?? 18
+                    ),
+                    2
+                  )}
+                {/if}
+              </td>
             </tr>
           {/each}
         </tbody>
@@ -723,27 +804,34 @@
                     </p>
                   </th>
                   <td>{item.quantity || "-"}</td>
-                  <td
-                    >{item.unitPrice
-                      ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
-                      : "-"}</td
-                  >
-                  <td
-                    >{item.discount
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {item.unitPrice
+                        ? formatUnits(item.unitPrice, currency?.decimals ?? 18)
+                        : "-"}
+                    {/if}
+                  </td>
+                  <td>
+                    {item.discount
                       ? formatUnits(item.discount, currency?.decimals ?? 18)
-                      : "-"}</td
-                  >
+                      : "-"}
+                  </td>
                   <td>{Number(item.tax.amount || "-")}</td>
-                  <td
-                    >{truncateNumberString(
-                      formatUnits(
-                        // @ts-expect-error
-                        calculateItemTotal(item),
-                        currency?.decimals ?? 18
-                      ),
-                      2
-                    )}</td
-                  >
+                  <td>
+                    {#if unknownCurrency}
+                      Unknown
+                    {:else}
+                      {truncateNumberString(
+                        formatUnits(
+                          calculateItemTotal(item),
+                          currency?.decimals ?? 18
+                        ),
+                        2
+                      )}
+                    {/if}
+                  </td>
                 </tr>
               {/each}</tbody
             >
@@ -832,8 +920,8 @@
     </div>
   {/if}
   <div class="invoice-view-actions">
-    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction}
-      {#if !hasEnoughBalance}
+    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction && !unknownCurrency}
+      {#if !hasEnoughBalance && correctChain}
         <div class="balance-warning">
           Insufficient funds: {Number(userBalance).toFixed(4)}
           {paymentCurrencies[0]?.symbol || "-"}
@@ -849,7 +937,9 @@
             : "Pay Now"}
         padding="px-[12px] py-[6px]"
         onClick={handlePayment}
-        disabled={!hasEnoughBalance}
+        disabled={correctChain
+          ? !hasEnoughBalance || isSigningTransaction
+          : false}
       />
     {/if}
   </div>
@@ -886,6 +976,7 @@
   .invoice-number svg {
     width: 13px;
     height: 13px;
+    cursor: pointer;
   }
 
   .invoice-address {

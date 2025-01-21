@@ -17,6 +17,7 @@
   import DashboardSkeleton from "@requestnetwork/shared-components/dashboard-skeleton.svelte";
   import { toast } from "svelte-sonner";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import SearchableDropdownCheckbox from "@requestnetwork/shared-components/searchable-checkbox-dropdown.svelte";
   // Icons
   import ChevronDown from "@requestnetwork/shared-icons/chevron-down.svelte";
   import ChevronLeft from "@requestnetwork/shared-icons/chevron-left.svelte";
@@ -35,18 +36,22 @@
   import type { IConfig } from "@requestnetwork/shared-types";
   import type { RequestNetwork } from "@requestnetwork/request-client.js";
   // Utils
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { initializeCurrencyManager } from "@requestnetwork/shared-utils/initCurrencyManager";
-  import { exportToPDF } from "@requestnetwork/shared-utils/generateInvoice";
-  import { getCurrencyFromManager } from "@requestnetwork/shared-utils/getCurrency";
+  import {
+    debounce,
+    checkStatus,
+    formatAddress,
+    getEthersSigner,
+    exportToPDF,
+    getCurrencyFromManager,
+    config as defaultConfig,
+    initializeCurrencyManager,
+  } from "@requestnetwork/shared-utils/index";
+  import { formatUnits } from "viem";
   import { CurrencyManager } from "@requestnetwork/currency";
   import { onDestroy, onMount, tick } from "svelte";
-  import { formatUnits } from "viem";
-  import { debounce, formatAddress, getEthersSigner } from "../utils";
   import { Drawer, InvoiceView } from "./dashboard";
   import { getPaymentNetworkExtension } from "@requestnetwork/payment-detection";
   import { CipherProviderTypes, CurrencyTypes } from "@requestnetwork/types";
-  import { checkStatus } from "@requestnetwork/shared-utils/checkStatus";
   import { ethers } from "ethers";
   import { queryClient } from "@requestnetwork/shared-utils/queryClient";
 
@@ -63,7 +68,7 @@
   export let config: IConfig;
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
-  export let currencies: CurrencyTypes.CurrencyInput[] = [];
+  export let singleInvoicePath: string;
 
   let cipherProvider: CipherProvider | undefined;
 
@@ -110,6 +115,26 @@
   const itemsPerPage = 10;
   let currentPage = 1;
   let hasMoreRequests = false;
+  let selectedNetworks: string[] = [];
+  let networkOptions: { value: string; checked: boolean }[] = [];
+
+  let selectedTxTypes: string[] = [];
+  let txTypeOptions = [
+    { value: "IN", checked: false },
+    { value: "OUT", checked: false },
+  ];
+
+  let selectedStatuses: string[] = [];
+  let statusOptions = [
+    { value: "paid", checked: false },
+    { value: "partially paid", checked: false },
+    { value: "accepted", checked: false },
+    { value: "awaiting payment", checked: false },
+    { value: "canceled", checked: false },
+    { value: "rejected", checked: false },
+    { value: "overdue", checked: false },
+    { value: "pending", checked: false },
+  ];
 
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
@@ -124,7 +149,10 @@
     cipherProvider = undefined;
   };
 
-  const handleWalletChange = (account: GetAccountReturnType, previousAccount: GetAccountReturnType) => {
+  const handleWalletChange = (
+    account: GetAccountReturnType,
+    previousAccount: GetAccountReturnType
+  ) => {
     if (account?.address !== previousAccount?.address) {
       handleWalletDisconnection();
       handleWalletConnection();
@@ -137,7 +165,10 @@
 
   onMount(() => {
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(account: GetAccountReturnType, previousAccount: GetAccountReturnType) {
+      onChange(
+        account: GetAccountReturnType,
+        previousAccount: GetAccountReturnType
+      ) {
         tick().then(() => {
           handleWalletChange(account, previousAccount);
         });
@@ -159,8 +190,8 @@
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
-  onMount(() => {
-    currencyManager = initializeCurrencyManager(currencies);
+  onMount(async () => {
+    currencyManager = await initializeCurrencyManager();
   });
 
   const getRequestsQueryKey = (address: string, currentPage: number) => ["requestsData", address, currentPage];
@@ -204,6 +235,19 @@
           queryFn: () => fetchRequests(account.address, currentPage + 1, itemsPerPage)
         });
       }
+
+      const uniqueNetworks = new Set<string>();
+      requests?.forEach((request) => {
+        const network = request.currencyInfo.network;
+        if (network) {
+          uniqueNetworks.add(network);
+        }
+      });
+
+      networkOptions = Array.from(uniqueNetworks).map((network) => ({
+        value: network,
+        checked: selectedNetworks.includes(network),
+      }));
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
@@ -255,13 +299,29 @@
 
   $: filteredRequests = requests?.filter((request) => {
     const terms = searchQuery.toLowerCase();
+    const network = request.currencyInfo.network;
+    const txType = signer === request.payer?.value ? "OUT" : "IN";
+    const status = checkStatus(request).toLowerCase();
+
+    const networkMatch =
+      selectedNetworks.length === 0 ||
+      (network && selectedNetworks.includes(network));
+
+    const txTypeMatch =
+      selectedTxTypes.length === 0 || selectedTxTypes.includes(txType);
+
+    const statusMatch =
+      selectedStatuses.length === 0 || selectedStatuses.includes(status);
 
     if (
-      currentTab === "All" ||
-      (currentTab === "Get Paid" &&
-        request.payee?.value?.toLowerCase() === signer?.toLowerCase()) ||
-      (currentTab === "Pay" &&
-        request.payer?.value?.toLowerCase() === signer?.toLowerCase())
+      networkMatch &&
+      txTypeMatch &&
+      statusMatch &&
+      (currentTab === "All" ||
+        (currentTab === "Get Paid" &&
+          request.payee?.value?.toLowerCase() === signer?.toLowerCase()) ||
+        (currentTab === "Pay" &&
+          request.payer?.value?.toLowerCase() === signer?.toLowerCase()))
     ) {
       const invoiceMatches = request.contentData?.invoiceNumber
         ?.toString()
@@ -299,6 +359,11 @@
         request.currencyInfo,
         currencyManager
       );
+
+      const formattedAmount =
+        currencyInfo?.decimals !== undefined
+          ? formatUnits(BigInt(request.expectedAmount), currencyInfo.decimals)
+          : "Unknown";
 
       let paymentNetworkExtension = getPaymentNetworkExtension(request);
       let paymentCurrencies: (
@@ -349,11 +414,8 @@
 
       return {
         ...request,
-        formattedAmount: formatUnits(
-          BigInt(request.expectedAmount),
-          currencyInfo?.decimals ?? 18
-        ),
-        currencySymbol: currencyInfo?.symbol ?? "-",
+        formattedAmount,
+        currencySymbol: currencyInfo?.symbol ?? "",
         paymentCurrencies,
       };
     }
@@ -388,6 +450,7 @@
   const handleSearchChange = (event: Event) => {
     const { value } = event.target as HTMLInputElement;
     searchQuery = value;
+    currentPage = 1;
   };
 
   const handleSort = (column: string) => {
@@ -424,32 +487,39 @@
       return;
 
     loading = true;
-    if (sliderValue === "on") {
-      try {
-        const signer = await getEthersSigner(wagmiConfig);
-        if (signer && currentAccount?.address) {
-          loadSessionSignatures =
-            localStorage?.getItem("lit-wallet-sig") === null;
-          await cipherProvider?.getSessionSignatures(
-            signer,
-            currentAccount.address,
-            window.location.host,
-            "Sign in to Lit Protocol through Request Network"
-          );
-          cipherProvider?.enableDecryption(true);
-          localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
+    const previousNetworks = [...selectedNetworks]; // Store current selection
+
+    try {
+      if (sliderValue === "on") {
+        try {
+          const signer = await getEthersSigner(wagmiConfig);
+          if (signer && currentAccount?.address) {
+            loadSessionSignatures =
+              localStorage?.getItem("lit-wallet-sig") === null;
+            await cipherProvider?.getSessionSignatures(
+              signer,
+              currentAccount.address,
+              window.location.host,
+              "Sign in to Lit Protocol through Request Network"
+            );
+            cipherProvider?.enableDecryption(true);
+            localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
+          }
+        } catch (error) {
+          console.error("Failed to enable decryption:", error);
+          toast.error("Failed to enable decryption.");
+          return;
+        } finally {
+          loadSessionSignatures = false;
         }
-      } catch (error) {
-        console.error("Failed to enable decryption:", error);
-        toast.error("Failed to enable decryption.");
-        loading = false;
-        return;
-      } finally {
-        loadSessionSignatures = false;
+      } else {
+        cipherProvider?.enableDecryption(false);
+        localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
       }
-    } else {
-      cipherProvider?.enableDecryption(false);
-      localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
+      await getRequests(currentAccount, currentRequestNetwork);
+      selectedNetworks = previousNetworks; // Restore selection
+    } finally {
+      loading = false;
     }
     queryClient.invalidateQueries()
     await getRequests(currentAccount, currentRequestNetwork);
@@ -457,6 +527,29 @@
   };
 
   $: loadRequests(sliderValueForDecryption, account, requestNetwork);
+
+  const handleNetworkSelection = async (networks: string[]) => {
+    selectedNetworks = networks;
+    currentPage = 1;
+    if (networks.length === 0 && selectedNetworks.length > 0) {
+      loading = true;
+      try {
+        await getRequests(account!, requestNetwork!);
+      } finally {
+        loading = false;
+      }
+    }
+  };
+
+  const handleTxTypeSelection = (types: string[]) => {
+    selectedTxTypes = types;
+    currentPage = 1;
+  };
+
+  const handleStatusSelection = (statuses: string[]) => {
+    selectedStatuses = statuses;
+    currentPage = 1;
+  };
 </script>
 
 <div
@@ -500,35 +593,59 @@
   </div>
   <div style="display: flex; flex-direction: column;">
     <div class="search-wrapper">
-      <div class="search-wrapper" style="gap: 10px;">
-        <Input
-          placeholder="Search..."
-          width="w-[300px]"
-          handleInput={handleSearchChange}
-        >
-          <div slot="icon">
-            <Search />
-          </div>
-        </Input>
-        {#if cipherProvider}
-          <div class="width: fit-content;">
-            <Switch
-              bind:value={sliderValueForDecryption}
-              label="Show encrypted requests"
-              fontSize={14}
-              design="slider"
-            />
-          </div>
-        {/if}
-      </div>
+      <Input
+        placeholder="Search..."
+        width="w-[300px]"
+        handleInput={handleSearchChange}
+      >
+        <div slot="icon">
+          <Search />
+        </div>
+      </Input>
+      {#if cipherProvider}
+        <div class="switch-wrapper">
+          <Switch
+            bind:value={sliderValueForDecryption}
+            label="Show encrypted requests"
+            fontSize={14}
+            design="slider"
+          />
+        </div>
+      {/if}
 
-      <Dropdown
-        config={activeConfig}
-        type="checkbox"
-        options={columnOptions}
-        placeholder="Select Columns"
-        onchange={handleColumnChange}
-      />
+      <div class="dropdown-controls">
+        <SearchableDropdownCheckbox
+          config={activeConfig}
+          options={statusOptions}
+          placeholder="Filter by Status"
+          onchange={handleStatusSelection}
+          searchPlaceholder="Search statuses..."
+          type="status"
+        />
+        <SearchableDropdownCheckbox
+          config={activeConfig}
+          options={txTypeOptions}
+          placeholder="Filter by Type"
+          onchange={handleTxTypeSelection}
+          type="transaction"
+          noSearch={true}
+        />
+        <SearchableDropdownCheckbox
+          config={activeConfig}
+          options={networkOptions}
+          placeholder="Filter by Chain"
+          onchange={handleNetworkSelection}
+          searchPlaceholder="Search chains..."
+          type="network"
+        />
+        <Dropdown
+          config={activeConfig}
+          type="checkbox"
+          options={columnOptions}
+          placeholder="Select Columns"
+          onchange={handleColumnChange}
+        />
+      </div>
     </div>
     <div class="table-wrapper">
       <table>
@@ -733,7 +850,13 @@
                   </td>
                 {/if}
                 <td>
-                  {#if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
+                  {#if request.formattedAmount === "Unknown"}
+                    <Tooltip
+                      text="Cannot calculate the expected amount due to unknown decimals"
+                    >
+                      Unknown
+                    </Tooltip>
+                  {:else if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
                     <Tooltip text={request.formattedAmount}>
                       {Number(request.formattedAmount).toFixed(5)}
                     </Tooltip>
@@ -805,9 +928,10 @@
             {wagmiConfig}
             bind:isRequestPayed
             {requestNetwork}
-            {currencyManager}
+            bind:currencyManager
             config={activeConfig}
             request={activeRequest}
+            {singleInvoicePath}
           />
         {/if}
       </Drawer>
@@ -920,6 +1044,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 12px;
   }
 
   @media only screen and (max-width: 880px) {
@@ -1105,5 +1230,16 @@
   .modal-content li {
     margin-bottom: 0.5rem;
     color: #4b5563;
+  }
+
+  .dropdown-controls {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .switch-wrapper {
+    margin-left: 8px;
   }
 </style>

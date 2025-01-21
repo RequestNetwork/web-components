@@ -11,9 +11,11 @@
   import { CurrencyTypes } from "@requestnetwork/types";
 
   // Utils
-  import { config as defaultConfig } from "@requestnetwork/shared-utils/config";
-  import { calculateItemTotal } from "@requestnetwork/shared-utils/invoiceTotals";
-  import { formatDate } from "@requestnetwork/shared-utils/formatDate";
+  import {
+    formatDate,
+    calculateItemTotal,
+    config as defaultConfig,
+  } from "@requestnetwork/shared-utils/index";
 
   export let defaultCurrencies;
   export let config: IConfig;
