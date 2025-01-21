@@ -206,7 +206,6 @@
         page: page,
         pageSize: pageSize,
       });
-      console.log("requestsData", requestsData);
       return requestsData;
     } catch (error) {
       console.error("Failed to fetch requests:", error);
@@ -225,9 +224,15 @@
         queryKey: getRequestsQueryKey(account.address, currentPage),
         queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage)
       });
-      requests = data.requests?.map((request) => request.getData())
-      .sort((a, b) => b.timestamp - a.timestamp);
-      hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+
+      if (data) {
+        requests = data.requests?.map((request) => request.getData())
+        .sort((a, b) => b.timestamp - a.timestamp);
+        hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+      } else {
+        requests = [];
+        hasMoreRequests = false;
+      }
 
       if (hasMoreRequests) {
         queryClient.prefetchQuery({
