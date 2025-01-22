@@ -23,6 +23,8 @@
     initializeCreateInvoiceCurrencyManager,
   } from "@requestnetwork/shared-utils/index";
   // Components
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
+  import Share from "@requestnetwork/shared-icons/share.svelte";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Status from "@requestnetwork/shared-components/status.svelte";
@@ -30,6 +32,7 @@
   import { EncryptionTypes, CipherProviderTypes } from "@requestnetwork/types";
   import { onDestroy, onMount, tick } from "svelte";
   import { CurrencyManager } from "@requestnetwork/currency";
+  import { toast } from "svelte-sonner";
 
   interface CipherProvider extends CipherProviderTypes.ICipherProvider {
     disconnectWallet: () => void;
@@ -39,6 +42,7 @@
   export let wagmiConfig: WagmiConfig;
   export let requestNetwork: RequestNetwork | null | undefined;
   export let currencies: string[] = [];
+  export let singleInvoicePath = "/invoice";
   let cipherProvider: CipherProvider | undefined;
 
   let account: GetAccountReturnType | undefined =
@@ -60,6 +64,9 @@
   let invoiceCurrency: CurrencyTypes.CurrencyDefinition | undefined = undefined;
 
   let defaultCurrencies: any[] = [];
+
+  let showSuccessDialog = false;
+  let createdRequestId = "";
 
   onMount(async () => {
     currencyManager = await initializeCreateInvoiceCurrencyManager(currencies);
@@ -283,6 +290,7 @@
 
   const hanldeCreateNewInvoice = () => {
     removeAllStatuses();
+    handleCloseSuccessDialog();
     formData = getInitialFormData();
   };
 
@@ -340,6 +348,11 @@
         addToStatus(APP_STATUS.PERSISTING_ON_CHAIN);
         await request.waitForConfirmation();
         addToStatus(APP_STATUS.REQUEST_CONFIRMED);
+
+        // Show success dialog after confirmation
+        createdRequestId = request.requestId;
+        removeAllStatuses();
+        showSuccessDialog = true;
       } catch (error: any) {
         if (error.message.includes("Transaction confirmation not received")) {
           isTimeout = true;
@@ -350,6 +363,10 @@
         }
       }
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    showSuccessDialog = false;
   };
 </script>
 
@@ -392,19 +409,75 @@
     onClose={handleCloseInvoiceModal}
   >
     <Status config={activeConfig} statuses={appStatus} />
-    <div class="modal-footer">
-      <Button
-        type="button"
-        onClick={() => handleGoToDashboard(activeConfig.dashboardLink)}
-        text="Go to dashboard"
-        disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
-      />
-      <Button
-        type="button"
-        onClick={hanldeCreateNewInvoice}
-        text="Create a new invoice"
-        disabled={!appStatus.includes(APP_STATUS.REQUEST_CONFIRMED)}
-      />
+  </Modal>
+  <Modal
+    title="Invoice Created Successfully!"
+    config={activeConfig}
+    isOpen={showSuccessDialog}
+    onClose={handleCloseSuccessDialog}
+  >
+    <div class="success-modal">
+      <div class="checkmark-container">
+        <svg
+          class="checkmark"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 52 52"
+        >
+          <circle
+            class="checkmark__circle"
+            cx="26"
+            cy="26"
+            r="25"
+            fill="none"
+          />
+          <path
+            class="checkmark__check"
+            fill="none"
+            d="M14.1 27.2l7.1 7.2 16.7-16.8"
+          />
+        </svg>
+      </div>
+      <p class="success-message">
+        Your invoice has been sent to<br />
+        {formData.payeeAddress}
+      </p>
+      <p class="share-tip">
+        Did you know that sharing your invoice via link cuts payment times by
+        77%? Give it a try.
+      </p>
+
+      <div class="share-buttons">
+        <div
+          class="copy-button-wrapper"
+          on:click={() => {
+            const shareUrl = `${window.location.origin}${singleInvoicePath}/${createdRequestId}`;
+            navigator.clipboard.writeText(shareUrl);
+            toast.success("Share link copied to clipboard!");
+          }}
+        >
+          Copy the Link
+          <Share />
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button
+          class="primary-button"
+          on:click={() => handleGoToDashboard(activeConfig.dashboardLink)}
+        >
+          Back to Dashboard
+        </button>
+        <button class="primary-button" on:click={hanldeCreateNewInvoice}>
+          Create New Invoice
+        </button>
+        <button
+          class="primary-button"
+          on:click={() =>
+            (window.location.href = `${window.location.origin}${singleInvoicePath}/${createdRequestId}`)}
+        >
+          View Invoice
+        </button>
+      </div>
     </div>
   </Modal>
   <Modal
@@ -437,9 +510,10 @@
       />
     </div>
   </Modal>
+  <Toaster />
 </div>
 
-<style>
+<style lang="scss">
   @font-face {
     font-family: "Montserrat";
     src: url("./fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
@@ -499,5 +573,145 @@
     padding: 6px 14px !important;
     width: fit-content !important;
     height: fit-content !important;
+  }
+
+  .success-modal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 32px;
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+  }
+
+  .success-modal h2 {
+    font-size: 24px;
+    margin-bottom: 24px;
+    color: #333;
+  }
+
+  .checkmark-container {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #4caf50;
+    border-radius: 50%;
+    margin-bottom: 26px;
+  }
+
+  .checkmark {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 3;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    animation: scale 0.3s ease-in-out 0.9s both;
+  }
+
+  .checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #fff;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  }
+
+  .checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+  }
+
+  .success-message {
+    margin-bottom: 24px;
+    color: #666;
+  }
+
+  .share-tip {
+    margin-bottom: 32px;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .share-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .copy-button-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: #f6f6f7;
+    padding: 12px 24px;
+    border-radius: 8px;
+    width: 180px;
+    font-size: 14px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .action-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .primary-button {
+    border: none;
+    background: transparent;
+    width: fit-content;
+    color: var(--mainColor);
+    cursor: pointer;
+  }
+
+  .primary-button:hover {
+    opacity: 0.9;
+  }
+
+  @media (max-width: 600px) {
+    .success-modal {
+      padding: 24px;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+
+  @keyframes stroke {
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes scale {
+    0%,
+    100% {
+      transform: none;
+    }
+    50% {
+      transform: scale3d(1.1, 1.1, 1);
+    }
   }
 </style>

@@ -8,6 +8,7 @@ export interface CreateInvoiceFormProps {
   config: IConfig;
   wagmiConfig: WagmiConfig;
   requestNetwork: RequestNetwork | null | undefined;
+  singleInvoicePath: string;
   currencies?: string[];
 }
 
@@ -25,6 +26,7 @@ export interface CreateInvoiceFormProps {
  *   config={config}
  *   wagmiConfig={wagmiConfig}
  *   requestNetwork={requestNetwork}
+ *   singleInvoicePath={'/invoice'}
  *   currencies={['ETH-MAINNET', 'USDC-MAINNET', 'USDC-MATIC']}
  * />
  */
