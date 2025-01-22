@@ -28,8 +28,10 @@
   import Button from "@requestnetwork/shared-components/button.svelte";
   import Tooltip from "@requestnetwork/shared-components/tooltip.svelte";
   import Modal from "@requestnetwork/shared-components/modal.svelte";
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   // Icons
   import Download from "@requestnetwork/shared-icons/download.svelte";
+  import Share from "@requestnetwork/shared-icons/share.svelte";
   // Utils
   import {
     formatDate,
@@ -1045,6 +1047,15 @@
             }}
           />
         </Tooltip>
+        <Tooltip text="Share Invoice">
+          <Share
+            onClick={() => {
+              const shareUrl = `${window.location.origin}${window.location.pathname}`;
+              navigator.clipboard.writeText(shareUrl);
+              toast.success("Share link copied to clipboard!");
+            }}
+          />
+        </Tooltip>
       </h2>
       <div class="invoice-address">
         <h2>From:</h2>
@@ -1353,6 +1364,7 @@
     </div>
   </Modal>
 {/if}
+<Toaster />
 
 <style>
   .innerDrawer {
