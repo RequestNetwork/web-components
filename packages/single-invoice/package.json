@@ -1,6 +1,6 @@
 {
   "name": "@requestnetwork/single-invoice",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./dist/web-component.umd.cjs",
   "scripts": {
     "dev": "vite dev",
@@ -33,9 +33,9 @@
     "!dist/**/*.spec.*"
   ],
   "dependencies": {
-    "@requestnetwork/payment-detection": "0.49.0",
-    "@requestnetwork/payment-processor": "0.52.0",
-    "@requestnetwork/request-client.js": "0.54.0",
+    "@requestnetwork/payment-detection": "0.51.0",
+    "@requestnetwork/payment-processor": "0.54.0",
+    "@requestnetwork/request-client.js": "0.56.0",
     "@wagmi/core": "^2.15.2",
     "ethers": "^5.7.2",
     "viem": "^2.21.53",
