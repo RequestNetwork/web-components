@@ -23,6 +23,7 @@
     initializeCreateInvoiceCurrencyManager,
   } from "@requestnetwork/shared-utils/index";
   // Components
+  import Toaster from "@requestnetwork/shared-components/sonner.svelte";
   import Share from "@requestnetwork/shared-icons/share.svelte";
   import { InvoiceForm, InvoiceView } from "./invoice";
   import Button from "@requestnetwork/shared-components/button.svelte";
@@ -289,6 +290,7 @@
 
   const hanldeCreateNewInvoice = () => {
     removeAllStatuses();
+    handleCloseSuccessDialog();
     formData = getInitialFormData();
   };
 
@@ -413,7 +415,6 @@
     config={activeConfig}
     isOpen={showSuccessDialog}
     onClose={handleCloseSuccessDialog}
-    width="600px"
   >
     <div class="success-modal">
       <div class="checkmark-container">
@@ -446,32 +447,31 @@
       </p>
 
       <div class="share-buttons">
-        <div class="copy-button-wrapper">
-          <Share
-            onClick={() => {
-              const shareUrl = `${window.location.origin}${singleInvoicePath}/${createdRequestId}`;
-              navigator.clipboard.writeText(shareUrl);
-              toast.success("Share link copied to clipboard!");
-            }}
-          />
+        <div
+          class="copy-button-wrapper"
+          on:click={() => {
+            const shareUrl = `${window.location.origin}${singleInvoicePath}/${createdRequestId}`;
+            navigator.clipboard.writeText(shareUrl);
+            toast.success("Share link copied to clipboard!");
+          }}
+        >
+          Copy the Link
+          <Share />
         </div>
       </div>
 
       <div class="action-buttons">
         <button
-          class="action-button primary-button"
+          class="primary-button"
           on:click={() => handleGoToDashboard(activeConfig.dashboardLink)}
         >
           Back to Dashboard
         </button>
-        <button
-          class="action-button primary-button"
-          on:click={hanldeCreateNewInvoice}
-        >
+        <button class="primary-button" on:click={hanldeCreateNewInvoice}>
           Create New Invoice
         </button>
         <button
-          class="action-button primary-button"
+          class="primary-button"
           on:click={() =>
             (window.location.href = `${window.location.origin}${singleInvoicePath}/${createdRequestId}`)}
         >
@@ -510,6 +510,7 @@
       />
     </div>
   </Modal>
+  <Toaster />
 </div>
 
 <style lang="scss">
@@ -651,8 +652,14 @@
 
   .copy-button-wrapper {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    cursor: pointer;
+    background: #f6f6f7;
+    padding: 12px 24px;
+    border-radius: 8px;
+    width: 180px;
+    font-size: 14px;
   }
 
   .action-buttons {
@@ -671,8 +678,11 @@
   }
 
   .primary-button {
-    background: var(--mainColor);
-    color: white;
+    border: none;
+    background: transparent;
+    width: fit-content;
+    color: var(--mainColor);
+    cursor: pointer;
   }
 
   .primary-button:hover {
