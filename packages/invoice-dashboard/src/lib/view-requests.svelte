@@ -496,6 +496,9 @@
 
     try {
       if (sliderValue === "on") {
+        if (localStorage?.getItem("isDecryptionEnabled") === "false") {
+          queryClient.invalidateQueries()
+        } 
         try {
           const signer = await getEthersSigner(wagmiConfig);
           if (signer && currentAccount?.address) {
@@ -518,6 +521,9 @@
           loadSessionSignatures = false;
         }
       } else {
+        if (localStorage?.getItem("isDecryptionEnabled") === "true") {
+          queryClient.invalidateQueries()
+        }
         cipherProvider?.enableDecryption(false);
         localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
       }
@@ -526,7 +532,6 @@
     } finally {
       loading = false;
     }
-    queryClient.invalidateQueries()
     await getRequests(currentAccount, currentRequestNetwork);
     loading = false;
   };
