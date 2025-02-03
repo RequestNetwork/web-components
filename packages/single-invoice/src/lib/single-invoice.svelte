@@ -252,79 +252,26 @@
   };
 
   const ensureDecryption = async () => {
-    if (!isDecryptionEnabled || !cipherProvider || !account?.address) {
-      return false;
-    }
+    if (!account?.address || !cipherProvider) return;
 
-    try {
-      // First check if the request is actually encrypted
-      const encrypted = await isRequestEncrypted(requestId);
-      if (!encrypted) {
-        console.log("Request is not encrypted, skipping decryption setup");
-        return true;
-      }
+    const walletSig = localStorage.getItem("lit-wallet-sig");
+    const sessionKey = localStorage.getItem("lit-session-key");
+    const isEnabled = localStorage.getItem("isDecryptionEnabled") === "true";
 
-      console.log("Request is encrypted, setting up decryption");
-      const signer = await getEthersSigner(wagmiConfig);
-      if (!signer) return false;
-
-      // Check if we have a valid session first
-      const hasExistingSession =
-        localStorage.getItem("lit-wallet-sig") === "true";
-
-      if (hasExistingSession) {
-        // Try to use existing session
-        try {
-          cipherProvider.enableDecryption(true);
-          // Test if current session works with a request fetch
-          const testRequest = await requestNetwork?.fromRequestId(requestId);
-
-          // Only consider the session valid if we can actually decrypt the request
-          if (testRequest?.getData()) {
-            console.log("Using existing Lit Protocol session");
-            return true;
-          }
-        } catch (error) {
-          // If we get a decryption error, we need a new session
-          if (
-            String(error).includes("Decryption is not available") ||
-            String(error).includes("Failed to decrypt") ||
-            String(error).includes("LitNodeClient is not ready")
-          ) {
-            console.log("Existing session invalid, clearing...");
-            localStorage.removeItem("lit-wallet-sig");
-          } else {
-            // If it's some other error, keep the session
-            console.log("Error fetching request, but keeping session:", error);
-            return true;
-          }
-        }
-      }
-
-      // If we get here, we need a new session
-      console.log("Getting new Lit Protocol session");
-      loadSessionSignatures = true;
-
+    if (walletSig && sessionKey && isEnabled) {
       try {
-        await cipherProvider.getSessionSignatures(
-          signer,
-          account.address,
-          window.location.host,
-          "Sign in to Lit Protocol through Request Network"
-        );
-
-        localStorage.setItem("lit-wallet-sig", "true");
+        // Use existing signatures
         cipherProvider.enableDecryption(true);
-        return true;
       } catch (error) {
-        console.error("Failed to get new session signatures:", error);
-        return false;
-      } finally {
-        loadSessionSignatures = false;
+        console.error(
+          "Failed to enable decryption with existing signatures:",
+          error
+        );
+        // Clear invalid signatures
+        localStorage.removeItem("lit-wallet-sig");
+        localStorage.removeItem("lit-session-key");
+        localStorage.setItem("isDecryptionEnabled", "false");
       }
-    } catch (error) {
-      console.error("Failed to ensure decryption:", error);
-      return false;
     }
   };
 
@@ -471,22 +418,14 @@
   let unwatchAccount: WatchAccountReturnType | undefined;
 
   const handleWalletConnection = async () => {
+    if (!account?.address) return;
+
     account = getAccount(wagmiConfig);
 
-    // Reset decryption state
-    if (cipherProvider) {
-      cipherProvider.disconnectWallet();
-      localStorage.removeItem("lit-wallet-sig");
-    }
-
-    // Only attempt decryption setup if needed
     if (isDecryptionEnabled && requestId) {
       const isEncrypted = await isRequestEncrypted(requestId);
       if (isEncrypted) {
         await ensureDecryption();
-      } else {
-        // For non-encrypted requests, just disable decryption
-        cipherProvider?.enableDecryption(false);
       }
     }
 
@@ -508,6 +447,8 @@
     if (cipherProvider) {
       cipherProvider.disconnectWallet();
       localStorage.removeItem("lit-wallet-sig");
+      localStorage.removeItem("lit-session-key");
+      localStorage.setItem("isDecryptionEnabled", "false");
     }
   };
 

@@ -194,18 +194,30 @@
     currencyManager = await initializeCurrencyManager();
   });
 
-  const getRequestsQueryKey = (address: string, currentPage: number) => ["requestsData", address, currentPage];
+  const getRequestsQueryKey = (address: string, currentPage: number) => [
+    "requestsData",
+    address,
+    currentPage,
+  ];
 
-  const fetchRequests = async (address: string, page: number, pageSize: number) => {
+  const fetchRequests = async (
+    address: string,
+    page: number,
+    pageSize: number
+  ) => {
     if (!address || !requestNetwork) return null;
     try {
-      const requestsData = await requestNetwork.fromIdentity({
-        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: address,
-      }, undefined, { 
-        page: page,
-        pageSize: pageSize,
-      });
+      const requestsData = await requestNetwork.fromIdentity(
+        {
+          type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+          value: address,
+        },
+        undefined,
+        {
+          page: page,
+          pageSize: pageSize,
+        }
+      );
       return requestsData;
     } catch (error) {
       console.error("Failed to fetch requests:", error);
@@ -222,12 +234,14 @@
     try {
       const data = await queryClient.fetchQuery({
         queryKey: getRequestsQueryKey(account.address, currentPage),
-        queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage)
+        queryFn: () =>
+          fetchRequests(account.address, currentPage, itemsPerPage),
       });
 
       if (data) {
-        requests = data.requests?.map((request) => request.getData())
-        .sort((a, b) => b.timestamp - a.timestamp);
+        requests = data.requests
+          ?.map((request) => request.getData())
+          .sort((a, b) => b.timestamp - a.timestamp);
         hasMoreRequests = data?.meta?.pagination?.hasMore || false;
       } else {
         requests = [];
@@ -237,7 +251,8 @@
       if (hasMoreRequests) {
         queryClient.prefetchQuery({
           queryKey: getRequestsQueryKey(account.address, currentPage + 1),
-          queryFn: () => fetchRequests(account.address, currentPage + 1, itemsPerPage)
+          queryFn: () =>
+            fetchRequests(account.address, currentPage + 1, itemsPerPage),
         });
       }
 
@@ -492,24 +507,36 @@
       return;
 
     loading = true;
-    const previousNetworks = [...selectedNetworks]; // Store current selection
+    const previousNetworks = [...selectedNetworks];
 
     try {
       if (sliderValue === "on") {
         if (localStorage?.getItem("isDecryptionEnabled") === "false") {
-          queryClient.invalidateQueries()
-        } 
+          queryClient.invalidateQueries();
+        }
         try {
           const signer = await getEthersSigner(wagmiConfig);
           if (signer && currentAccount?.address) {
             loadSessionSignatures =
               localStorage?.getItem("lit-wallet-sig") === null;
-            await cipherProvider?.getSessionSignatures(
+            const signatures = await cipherProvider?.getSessionSignatures(
               signer,
               currentAccount.address,
               window.location.host,
               "Sign in to Lit Protocol through Request Network"
             );
+
+            // Save both signatures
+            localStorage?.setItem(
+              "lit-wallet-sig",
+              JSON.stringify({
+                address: currentAccount.address,
+                timestamp: Date.now(),
+                sig: signatures.walletSig,
+              })
+            );
+            localStorage?.setItem("lit-session-key", signatures.sessionKey);
+
             cipherProvider?.enableDecryption(true);
             localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
           }
@@ -522,7 +549,7 @@
         }
       } else {
         if (localStorage?.getItem("isDecryptionEnabled") === "true") {
-          queryClient.invalidateQueries()
+          queryClient.invalidateQueries();
         }
         cipherProvider?.enableDecryption(false);
         localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
