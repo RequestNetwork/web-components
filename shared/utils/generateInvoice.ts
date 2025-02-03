@@ -30,7 +30,11 @@ async function ensureHtml2PdfLoaded() {
 export const exportToPDF = async (
   invoice: Types.IRequestDataWithEvents,
   currency?: CurrencyTypes.CurrencyDefinition,
-  paymentCurrencies?: (CurrencyTypes.ERC20Currency | CurrencyTypes.NativeCurrency | undefined)[],
+  paymentCurrencies?: (
+    | CurrencyTypes.ERC20Currency
+    | CurrencyTypes.NativeCurrency
+    | undefined
+  )[],
   logo?: string
 ) => {
   await ensureHtml2PdfLoaded();
@@ -79,7 +83,7 @@ export const exportToPDF = async (
     <div id="invoice" style="max-width: 680px; margin: 0 auto; padding: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: start;">
         ${logo && logo.length > 0 ? `<img src="${logo}" alt="Logo" style="width: 50px; height: 50px;">` : ""}
-        <div style="text-align: right;">
+        <div style="text-align: right; min-width: 150px; width: auto;">
           <p>Issued on ${formatDate(invoice.contentData?.creationDate)}</p>
           <p>Payment due by ${formatDate(invoice.contentData?.paymentTerms?.dueDate)}</p>
         </div>
@@ -198,11 +202,35 @@ export const exportToPDF = async (
     },
   };
 
+  // Create a hidden container
+  const container = document.createElement("div");
+  container.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: -9999px;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  `;
+
+  // Create the actual content element (this will be rendered in the PDF)
   const element = document.createElement("div");
   element.innerHTML = content;
-  document.body.appendChild(element);
 
-  await window.html2pdf().from(element).set(opt).save();
+  // Add the content element to the hidden container
+  container.appendChild(element);
+  document.body.appendChild(container);
 
-  document.body.removeChild(element);
+  try {
+    await window
+      .html2pdf()
+      .from(element) // Use the inner element for PDF generation
+      .set(opt)
+      .save();
+  } finally {
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
+  }
 };
