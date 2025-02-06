@@ -8,9 +8,6 @@ const defaultCurrencyIds = [
   "CNY",
   "GBP",
   "JPY",
-  "DAI-bsc",
-  "BUSD-bsc",
-  "ETH-base-base",
   "DAI-mainnet",
   "ETH-mainnet",
   "REQ-mainnet",
@@ -20,16 +17,10 @@ const defaultCurrencyIds = [
   "MATIC-matic",
   "USDC-matic",
   "USDT-matic",
-  "DAI-optimism",
-  "ETH-optimism-optimism",
-  "USDC-optimism",
-  "USDT-optimism",
   "FAU-sepolia",
   "ETH-sepolia-sepolia",
   "fUSDC-sepolia",
   "fUSDT-sepolia",
-  "USDC-xdai",
-  "USDC-base",
 ];
 
 const TOKEN_LIST_URL =
