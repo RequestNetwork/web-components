@@ -100,6 +100,10 @@
 
   let isSigningTransaction = false;
 
+  let initialPaymentCheck = false;
+
+  let showPaymentButton = true;
+
   const generateDetailParagraphs = (info: any) => {
     const fullName = [info?.firstName, info?.lastName]
       .filter(Boolean)
@@ -154,6 +158,12 @@
   $: {
     if (request?.requestId !== previousRequestId) {
       previousRequestId = request?.requestId;
+      initialPaymentCheck =
+        request?.state === "paid" ||
+        request?.state === "overpaid" ||
+        status === "paid" ||
+        status === "overpaid" ||
+        request?.balance?.balance >= request?.expectedAmount;
       checkInvoice();
     }
   }
@@ -345,6 +355,7 @@
       isPaid = true;
       status = checkStatus(requestData);
       isRequestPayed = true;
+      showPaymentButton = false; // Hide the button after successful payment
     } catch (err) {
       console.error("Something went wrong while paying : ", err);
 
@@ -857,7 +868,7 @@
       {/each}
     {/if}
   </div>
-  {#if !isPaid && !isPayee}
+  {#if !isPayee && !initialPaymentCheck}
     <div class="status-container">
       <div class="statuses">
         {#if statuses?.length > 0}
@@ -920,7 +931,7 @@
     </div>
   {/if}
   <div class="invoice-view-actions">
-    {#if !isPayee && !unsupportedNetwork && !isPaid && !isRequestPayed && !isSigningTransaction && !unknownCurrency}
+    {#if showPaymentButton && !isPayee && !unsupportedNetwork && !isSigningTransaction && !unknownCurrency && !initialPaymentCheck}
       {#if !hasEnoughBalance && correctChain}
         <div class="balance-warning">
           Insufficient funds: {Number(userBalance).toFixed(4)}

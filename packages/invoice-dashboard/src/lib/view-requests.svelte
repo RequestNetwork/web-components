@@ -452,6 +452,7 @@
     currentTab = tab;
     activeRequest = undefined;
     currentPage = 1;
+    getRequests(account, requestNetwork);
   };
 
   const handleColumnChange = (selectedOption: any) => {
