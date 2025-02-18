@@ -265,11 +265,10 @@
   const clearLitStorage = () => {
     localStorage?.removeItem("lit-wallet-sig");
     localStorage?.removeItem("lit-session-key");
-    localStorage.setItem("isDecryptionEnabled", "false");
+    localStorage?.setItem("isDecryptionEnabled", "false");
     if (cipherProvider) {
       cipherProvider.enableDecryption(false);
     }
-    console.log("Cleared Lit session storage.");
   };
 
   onMount(async () => {
@@ -331,20 +330,12 @@
     const sessionKey = localStorage.getItem("lit-session-key");
     const isEnabled = localStorage.getItem("isDecryptionEnabled") === "true";
 
-    console.log("walletSig", walletSig);
-    console.log("sessionKey", sessionKey);
-    console.log("isEnabled", isEnabled);
-
     if (walletSig && sessionKey && isEnabled) {
       try {
         // Use existing signatures
         cipherProvider.enableDecryption(true);
         return true;
       } catch (error) {
-        console.error(
-          "Failed to enable decryption with existing signatures:",
-          error
-        );
         // Clear invalid signatures
         localStorage.removeItem("lit-wallet-sig");
         localStorage.removeItem("lit-session-key");
@@ -360,34 +351,25 @@
       loading = true;
       unsupportedNetwork = false;
 
-      // Only attempt decryption setup if needed
-      console.log("isDecryptionEnabled", isDecryptionEnabled);
       if (isDecryptionEnabled) {
         const encrypted = await isRequestEncrypted(requestId);
-        console.log("encrypted", encrypted);
         if (encrypted) {
-          console.log("Ensuring decryption...");
           const decryptionReady = await ensureDecryption();
-          console.log("decryptionReady", decryptionReady);
           if (!decryptionReady) {
             throw new Error("Failed to initialize decryption");
           }
         } else {
-          // For non-encrypted requests, just disable decryption
           cipherProvider?.enableDecryption(false);
         }
       }
 
       const singleRequest = await requestNetwork?.fromRequestId(requestId);
-      console.log("singleRequest", singleRequest);
       if (!singleRequest) {
-        console.log("No request found");
         return;
       }
 
       request = singleRequest.getData();
       if (!request) {
-        console.log("No request data found");
         return;
       }
 
@@ -480,7 +462,6 @@
       status = checkStatus(requestData);
       await checkBalance();
     } catch (error) {
-      console.error("Failed to fetch request:", error);
       if (String(error).includes("Unsupported payment")) {
         unsupportedNetwork = true;
       } else if (String(error).includes("LitNodeClient is not ready")) {
