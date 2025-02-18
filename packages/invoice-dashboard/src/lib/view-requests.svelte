@@ -136,6 +136,9 @@
     { value: "pending", checked: false },
   ];
 
+  let litSessionInitialized = false;
+  let initializationAttempted = false;
+
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
     await loadRequests(sliderValueForDecryption, account, requestNetwork);
@@ -149,29 +152,36 @@
     cipherProvider = undefined;
   };
 
-  const handleWalletChange = (
+  const handleWalletChange = async (
     account: GetAccountReturnType,
     previousAccount: GetAccountReturnType
   ) => {
     if (account?.address !== previousAccount?.address) {
-      handleWalletDisconnection();
-      handleWalletConnection();
-    } else if (account?.address) {
-      handleWalletConnection();
-    } else {
-      handleWalletDisconnection();
+      clearLitStorage();
+      litSessionInitialized = false;
+      initializationAttempted = false;
+      if (account?.address) {
+        await initializeLitSession(account);
+      }
     }
   };
 
-  onMount(() => {
+  onMount(async () => {
+    try {
+      currencyManager = await initializeCurrencyManager();
+      if (account?.address) {
+        await initializeLitSession(account);
+      }
+    } catch (error) {
+      console.error("Failed to initialize:", error);
+    }
+
     unwatchAccount = watchAccount(wagmiConfig, {
       onChange(
         account: GetAccountReturnType,
         previousAccount: GetAccountReturnType
       ) {
-        tick().then(() => {
-          handleWalletChange(account, previousAccount);
-        });
+        handleWalletChange(account, previousAccount);
       },
     });
   });
@@ -190,9 +200,57 @@
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
-  onMount(async () => {
-    currencyManager = await initializeCurrencyManager();
-  });
+  const initializeLitSession = async (
+    currentAccount: GetAccountReturnType | undefined
+  ) => {
+    if (!currentAccount?.address || !cipherProvider || initializationAttempted)
+      return;
+
+    initializationAttempted = true;
+
+    try {
+      const storedSig = localStorage?.getItem("lit-wallet-sig");
+      const sessionKey = localStorage?.getItem("lit-session-key");
+
+      if (storedSig && sessionKey) {
+        const parsedSig = JSON.parse(storedSig);
+
+        if (
+          parsedSig.address?.toLowerCase() ===
+          currentAccount.address?.toLowerCase()
+        ) {
+          try {
+            // Use the stored session key and signature to restore the session
+            await cipherProvider.enableDecryption(true);
+            sliderValueForDecryption = "on";
+            litSessionInitialized = true;
+            localStorage.setItem("isDecryptionEnabled", "true");
+            await getRequests(currentAccount, requestNetwork);
+            return true;
+          } catch (error) {
+            console.error("Failed to restore Lit session:", error);
+            clearLitStorage();
+          }
+        } else {
+          clearLitStorage();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to initialize Lit session:", error);
+      clearLitStorage();
+    }
+    return false;
+  };
+
+  const clearLitStorage = () => {
+    localStorage?.removeItem("lit-wallet-sig");
+    localStorage?.removeItem("lit-session-key");
+    localStorage?.setItem("isDecryptionEnabled", "false");
+    sliderValueForDecryption = "off";
+    if (cipherProvider) {
+      cipherProvider.enableDecryption(false);
+    }
+  };
 
   const getRequestsQueryKey = (address: string, currentPage: number) => [
     "requestsData",
@@ -508,7 +566,7 @@
       return;
 
     loading = true;
-    const previousNetworks = [...selectedNetworks];
+    const previousNetworks = [...selectedNetworks]; // Store current selection
 
     try {
       if (sliderValue === "on") {
@@ -520,24 +578,12 @@
           if (signer && currentAccount?.address) {
             loadSessionSignatures =
               localStorage?.getItem("lit-wallet-sig") === null;
-            const signatures = await cipherProvider?.getSessionSignatures(
+            await cipherProvider?.getSessionSignatures(
               signer,
               currentAccount.address,
               window.location.host,
               "Sign in to Lit Protocol through Request Network"
             );
-
-            // Save both signatures
-            localStorage?.setItem(
-              "lit-wallet-sig",
-              JSON.stringify({
-                address: currentAccount.address,
-                timestamp: Date.now(),
-                sig: signatures.walletSig,
-              })
-            );
-            localStorage?.setItem("lit-session-key", signatures.sessionKey);
-
             cipherProvider?.enableDecryption(true);
             localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
           }

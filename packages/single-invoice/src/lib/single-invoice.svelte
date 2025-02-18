@@ -124,6 +124,9 @@
     localStorage?.getItem("isDecryptionEnabled") ?? "false"
   );
 
+  let litSessionInitialized = false;
+  let initializationAttempted = false;
+
   $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
   $: if (request && address) {
@@ -207,8 +210,78 @@
     unknownCurrency = currency ? currency.decimals === undefined : false;
   }
 
+  const initializeLitSession = async (
+    currentAccount: GetAccountReturnType | undefined
+  ) => {
+    if (
+      !currentAccount?.address ||
+      !cipherProvider ||
+      initializationAttempted
+    ) {
+      console.error(
+        "Initialization skipped: Missing account, cipherProvider, or already attempted."
+      );
+      return;
+    }
+
+    initializationAttempted = true;
+
+    try {
+      const storedSig = localStorage?.getItem("lit-wallet-sig");
+      const sessionKey = localStorage?.getItem("lit-session-key");
+
+      if (storedSig && sessionKey) {
+        const parsedSig = JSON.parse(storedSig);
+
+        if (
+          parsedSig.address?.toLowerCase() ===
+          currentAccount.address?.toLowerCase()
+        ) {
+          try {
+            // Use the stored session key and signature to restore the session
+            await cipherProvider.enableDecryption(true);
+            litSessionInitialized = true;
+            localStorage.setItem("isDecryptionEnabled", "true");
+            console.log("Lit session restored successfully.");
+            return true;
+          } catch (error) {
+            console.error("Failed to restore Lit session:", error);
+            clearLitStorage();
+          }
+        } else {
+          console.warn("Stored signature does not match current account.");
+          clearLitStorage();
+        }
+      } else {
+        console.warn("No stored session data found.");
+      }
+    } catch (error) {
+      console.error("Failed to initialize Lit session:", error);
+      clearLitStorage();
+    }
+    return false;
+  };
+
+  const clearLitStorage = () => {
+    localStorage?.removeItem("lit-wallet-sig");
+    localStorage?.removeItem("lit-session-key");
+    localStorage.setItem("isDecryptionEnabled", "false");
+    if (cipherProvider) {
+      cipherProvider.enableDecryption(false);
+    }
+    console.log("Cleared Lit session storage.");
+  };
+
   onMount(async () => {
     currencyManager = await initializeCurrencyManager();
+    if (account?.address) {
+      // Attempt to use existing session from the dashboard
+      const sessionRestored = await initializeLitSession(account);
+      if (!sessionRestored) {
+        // If no session is restored, initialize a new session
+        await initializeLitSession(account);
+      }
+    }
   });
 
   onMount(() => {
@@ -252,16 +325,21 @@
   };
 
   const ensureDecryption = async () => {
-    if (!account?.address || !cipherProvider) return;
+    if (!account?.address || !cipherProvider) return false;
 
     const walletSig = localStorage.getItem("lit-wallet-sig");
     const sessionKey = localStorage.getItem("lit-session-key");
     const isEnabled = localStorage.getItem("isDecryptionEnabled") === "true";
 
+    console.log("walletSig", walletSig);
+    console.log("sessionKey", sessionKey);
+    console.log("isEnabled", isEnabled);
+
     if (walletSig && sessionKey && isEnabled) {
       try {
         // Use existing signatures
         cipherProvider.enableDecryption(true);
+        return true;
       } catch (error) {
         console.error(
           "Failed to enable decryption with existing signatures:",
@@ -271,8 +349,10 @@
         localStorage.removeItem("lit-wallet-sig");
         localStorage.removeItem("lit-session-key");
         localStorage.setItem("isDecryptionEnabled", "false");
+        return false;
       }
     }
+    return false;
   };
 
   const getOneRequest = async (requestId: string) => {
@@ -281,10 +361,14 @@
       unsupportedNetwork = false;
 
       // Only attempt decryption setup if needed
+      console.log("isDecryptionEnabled", isDecryptionEnabled);
       if (isDecryptionEnabled) {
         const encrypted = await isRequestEncrypted(requestId);
+        console.log("encrypted", encrypted);
         if (encrypted) {
+          console.log("Ensuring decryption...");
           const decryptionReady = await ensureDecryption();
+          console.log("decryptionReady", decryptionReady);
           if (!decryptionReady) {
             throw new Error("Failed to initialize decryption");
           }
@@ -295,6 +379,7 @@
       }
 
       const singleRequest = await requestNetwork?.fromRequestId(requestId);
+      console.log("singleRequest", singleRequest);
       if (!singleRequest) {
         console.log("No request found");
         return;
