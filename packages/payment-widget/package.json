@@ -59,7 +59,7 @@
     "@requestnetwork/payment-processor": "0.56.0",
     "@requestnetwork/request-client.js": "0.58.0",
     "@requestnetwork/web3-signature": "0.8.9",
-    "@web3modal/ethers5": "^5.0.11",
+    "@web3modal/ethers5": "5.0.11",
     "ethers": "^5.7.2",
     "vite-plugin-node-polyfills": "^0.22.0"
   }
