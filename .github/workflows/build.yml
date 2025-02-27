@@ -27,5 +27,5 @@ jobs:
 
       - name: Build
         env:
-          NODE_OPTIONS: "--max-old-space-size=7680"
+          NODE_OPTIONS: "--max-old-space-size=7680" # 8 GB - 512 MB for OS
         run: npm run build
