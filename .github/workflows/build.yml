@@ -12,6 +12,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: node:18
+      options: --memory=8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,5 +30,5 @@ jobs:
 
       - name: Build
         env:
-          NODE_OPTIONS: "--max-old-space-size=8192"
+          NODE_OPTIONS: "--max-old-space-size=7680"
         run: npm run build
