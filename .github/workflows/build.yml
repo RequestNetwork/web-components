@@ -12,9 +12,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: node:18
-      options: --memory=8g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
