@@ -136,7 +136,6 @@
     { value: "pending", checked: false },
   ];
 
-  let litSessionInitialized = false;
   let initializationAttempted = false;
 
   const handleWalletConnection = async () => {
@@ -158,7 +157,6 @@
   ) => {
     if (account?.address !== previousAccount?.address) {
       clearLitStorage();
-      litSessionInitialized = false;
       initializationAttempted = false;
       if (account?.address) {
         await initializeLitSession(account);
@@ -223,7 +221,6 @@
             // Use the stored session key and signature to restore the session
             await cipherProvider.enableDecryption(true);
             sliderValueForDecryption = "on";
-            litSessionInitialized = true;
             localStorage.setItem("isDecryptionEnabled", "true");
             await getRequests(currentAccount, requestNetwork);
             return true;

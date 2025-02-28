@@ -124,7 +124,6 @@
     localStorage?.getItem("isDecryptionEnabled") ?? "false"
   );
 
-  let litSessionInitialized = false;
   let initializationAttempted = false;
 
   $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
@@ -240,7 +239,6 @@
           try {
             // Use the stored session key and signature to restore the session
             await cipherProvider.enableDecryption(true);
-            litSessionInitialized = true;
             localStorage.setItem("isDecryptionEnabled", "true");
             console.log("Lit session restored successfully.");
             return true;
