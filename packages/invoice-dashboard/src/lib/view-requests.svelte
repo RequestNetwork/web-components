@@ -137,53 +137,247 @@
 
   let initializationAttempted = false;
 
+  // Track initialization state
+  let initialized = false;
+  let previousAddress: `0x${string}` | undefined;
+
+  // Add request network polling mechanism
+  let requestNetworkRetryAttempts = 0;
+  const MAX_RETRY_ATTEMPTS = 10;
+  const RETRY_INTERVAL = 500; // ms
+
+  /**
+   * Polls for the requestNetwork object to become available
+   * Attempts multiple times with a delay between attempts
+   * @returns {Promise<boolean>} True if requestNetwork is available, false if max retries exceeded
+   */
+  const waitForRequestNetwork = async (): Promise<boolean> => {
+    if (requestNetwork) {
+      console.log("RequestNetwork is already available");
+      return true;
+    }
+
+    return new Promise((resolve) => {
+      const checkRequestNetwork = () => {
+        requestNetworkRetryAttempts += 1;
+        console.log(`Checking for RequestNetwork (attempt ${requestNetworkRetryAttempts})`);
+
+        if (requestNetwork) {
+          console.log("RequestNetwork is now available");
+          resolve(true);
+          return;
+        }
+
+        if (requestNetworkRetryAttempts >= MAX_RETRY_ATTEMPTS) {
+          console.error("Max retry attempts reached waiting for RequestNetwork");
+          resolve(false);
+          return;
+        }
+
+        setTimeout(checkRequestNetwork, RETRY_INTERVAL);
+      };
+
+      checkRequestNetwork();
+    });
+  };
+
+  /**
+   * Handles wallet connection and loads requests
+   * Waits for requestNetwork to be available before proceeding
+   */
   const handleWalletConnection = async () => {
-    account = getAccount(wagmiConfig);
-    if (account?.address) {
-      await initializeLitSession(account);
-      await loadRequests(sliderValueForDecryption, account, requestNetwork);
+    const currentAccount = getAccount(wagmiConfig);
+    if (!currentAccount?.address) {
+      console.log("No account found during wallet connection");
+      return;
+    }
+
+    console.log("Wallet connected or changed:", currentAccount.address);
+
+    // Wait for requestNetwork to become available
+    const isRequestNetworkAvailable = await waitForRequestNetwork();
+    if (!isRequestNetworkAvailable) {
+      console.error("RequestNetwork not available after retries");
+      toast.error("Failed to load requests", {
+        description: "Connection to Request Network failed"
+      });
+      return;
+    }
+
+    // Only proceed if this is a new connection or we don't have requests yet
+    if (previousAddress === currentAccount.address && initialized && requests?.length > 0) {
+      console.log("Already initialized with requests, skipping");
+      return;
+    }
+
+    previousAddress = currentAccount.address;
+    account = currentAccount;
+
+    try {
+      loading = true;
+
+      // Initialize currency manager if needed
+      if (!currencyManager) {
+        console.log("Initializing currency manager");
+        currencyManager = await initializeCurrencyManager();
+      }
+
+      // Handle Lit Protocol initialization for encrypted requests
+      if (sliderValueForDecryption === "on") {
+        await initializeLitSession(currentAccount);
+      } else {
+        console.log("Skipping Lit initialization as decryption is off");
+        initializationAttempted = true;
+      }
+
+      console.log("Fetching requests");
+      await getRequests(currentAccount, requestNetwork);
+      initialized = true;
+    } catch (error) {
+      console.error("Error during wallet connection handling:", error);
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ? error.message : String(error)
+      });
+    } finally {
+      loading = false;
     }
   };
 
+  /**
+   * Handles wallet disconnection cleanup
+   * Resets all wallet-related state and clears storage
+   */
   const handleWalletDisconnection = () => {
+    console.log("Handling wallet disconnection");
     account = undefined;
+    previousAddress = undefined;
     requests = [];
     activeRequest = undefined;
-    cipherProvider?.disconnectWallet();
-    cipherProvider = undefined;
+    initialized = false;
+
+    // Clear Lit Protocol session data
+    clearLitStorage();
+
+    if (cipherProvider?.disconnectWallet) {
+      cipherProvider.disconnectWallet();
+    }
+
+    // Reset state
+    loading = false;
+    isRequestPayed = false;
   };
 
+  /**
+   * Handles wallet account changes
+   * Clears session data and reloads requests with new account
+   */
   const handleWalletChange = async (
-    account: GetAccountReturnType,
+    newAccount: GetAccountReturnType,
     previousAccount: GetAccountReturnType
   ) => {
-    if (account?.address !== previousAccount?.address) {
-      clearLitStorage();
-      initializationAttempted = false;
-      if (account?.address) {
-        await initializeLitSession(account);
-        await loadRequests(sliderValueForDecryption, account, requestNetwork);
+    console.log("Account change detected:",
+      newAccount?.address,
+      previousAccount?.address
+    );
+
+    if (newAccount?.address !== previousAccount?.address) {
+      // Handle disconnection if there's no new account
+      if (!newAccount?.address) {
+        handleWalletDisconnection();
+        return;
       }
+
+      // Reset state for new account
+      initializationAttempted = false;
+      initialized = false;
+      previousAddress = undefined;
+      clearLitStorage();
+
+      loading = true;
+      try {
+        // Wait for requestNetwork to become available
+        const isRequestNetworkAvailable = await waitForRequestNetwork();
+        if (!isRequestNetworkAvailable) {
+          console.error("RequestNetwork not available after retries");
+          toast.error("Failed to load requests", {
+            description: "Connection to Request Network failed"
+          });
+          return;
+        }
+
+        // Setup account
+        account = newAccount;
+        previousAddress = newAccount.address;
+
+        // Handle Lit Protocol initialization for encrypted requests
+        if (sliderValueForDecryption === "on") {
+          await initializeLitSession(newAccount);
+        } else {
+          console.log("Skipping Lit initialization as decryption is off");
+        }
+
+        await getRequests(newAccount, requestNetwork);
+        initialized = true;
+      } catch (error) {
+        console.error("Error during wallet change handling:", error);
+      } finally {
+        loading = false;
+      }
+    } else if (account?.address) {
+      await handleWalletConnection();
+    } else {
+      handleWalletDisconnection();
     }
   };
 
+  // Enhanced onMount with clearer initialization flow
   onMount(async () => {
     try {
+      console.log("Component mounting");
+
+      // Initialize currency manager first
       currencyManager = await initializeCurrencyManager();
-      account = getAccount(wagmiConfig);
-      if (account?.address) {
-        await initializeLitSession(account);
-        await loadRequests(sliderValueForDecryption, account, requestNetwork);
+      console.log("Currency manager initialized");
+
+      // Check if account is already connected on mount
+      const currentAccount = getAccount(wagmiConfig);
+      if (currentAccount?.address) {
+        console.log("Account found on mount:", currentAccount.address);
+
+        // Explicitly initialize and load requests with a slight delay to ensure
+        // the component is fully mounted and all services are ready
+        setTimeout(async () => {
+          try {
+            account = currentAccount;
+            previousAddress = currentAccount.address;
+
+            // Skip Lit initialization if decryption is off
+            if (sliderValueForDecryption === "on" && !initializationAttempted) {
+              await initializeLitSession(currentAccount);
+            }
+
+            // Always try to load requests if we have an account and requestNetwork
+            if (requestNetwork) {
+              await getRequests(currentAccount, requestNetwork);
+              initialized = true;
+            } else {
+              console.error("RequestNetwork not available during mount initialization");
+            }
+          } catch (initError) {
+            console.error("Error during initialization:", initError);
+          }
+        }, 300);
+      } else {
+        console.log("No account connected on mount");
       }
     } catch (error) {
-      console.error("Failed to initialize:", error);
+      console.error("Failed to initialize on mount:", error);
     }
 
+    // Set up account change watcher
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(
-        account: GetAccountReturnType,
-        previousAccount: GetAccountReturnType
-      ) {
+      onChange(account, previousAccount) {
+        console.log("Watch account triggered:", account?.address);
         handleWalletChange(account, previousAccount);
       },
     });
@@ -192,10 +386,49 @@
   let unwatchAccount: WatchAccountReturnType | undefined;
 
   onDestroy(() => {
-    if (typeof unwatchAccount === "function") unwatchAccount();
+    if (typeof unwatchAccount === "function") {
+      unwatchAccount();
+    }
+
+    // Clean up when component is destroyed
+    handleWalletDisconnection();
   });
 
   $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
+
+  // Clean up repeated reactive logic with a single watcher for account changes
+  $: {
+    if (account?.address && requestNetwork && !loading) {
+      const isNewAccount = previousAddress !== account.address;
+      const hasNoRequests = !requests?.length;
+
+      if (isNewAccount || hasNoRequests) {
+        console.log("Reactive detection triggered a request loading:", {
+          isNewAccount,
+          hasNoRequests,
+          address: account.address
+        });
+        handleWalletConnection();
+      }
+    }
+  }
+
+  // Modified reactive statement to wait for requestNetwork
+  $: if (requestNetwork && account?.address && !loading && !requests?.length) {
+    console.log("RequestNetwork detected, loading requests");
+    handleWalletConnection();
+  }
+
+  // Add this to actively monitor for changes in requestNetwork
+  $: if (requestNetwork && !previousRequestNetwork) {
+    console.log("requestNetwork changed from null to defined");
+    previousRequestNetwork = requestNetwork;
+    if (account?.address && !loading && !requests?.length) {
+      console.log("RequestNetwork is now available with connected account, loading requests");
+      handleWalletConnection();
+    }
+  }
+  let previousRequestNetwork: RequestNetwork | null | undefined = null;
 
   $: {
     signer = account?.address;
@@ -206,6 +439,10 @@
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
+  /**
+   * Initializes Lit Protocol session for encrypted requests
+   * Attempts to restore existing session if available
+   */
   const initializeLitSession = async (
     currentAccount: GetAccountReturnType | undefined
   ) => {
@@ -292,37 +529,66 @@
     }
   };
 
+  /**
+   * Fetches requests for the connected account
+   * Processes and formats the response data
+   */
   const getRequests = async (
     account: GetAccountReturnType,
     requestNetwork: RequestNetwork | undefined | null
   ) => {
-    if (!account?.address || !requestNetwork) return;
-    loading = true;
-    try {
-      const data = await queryClient.fetchQuery({
-        queryKey: getRequestsQueryKey(account.address, currentPage),
-        queryFn: () =>
-          fetchRequests(account.address, currentPage, itemsPerPage),
-      });
+    if (!account?.address) {
+      console.error("Cannot get requests: missing account address");
+      return;
+    }
 
-      if (data) {
-        requests = data.requests
-          ?.map((request) => request.getData())
-          .sort((a, b) => b.timestamp - a.timestamp);
-        hasMoreRequests = data?.meta?.pagination?.hasMore || false;
-      } else {
+    if (!requestNetwork) {
+      console.error("Cannot get requests: missing requestNetwork");
+      return;
+    }
+
+    loading = true;
+    console.log("Fetching requests for:", account.address);
+
+    try {
+      // Add explicit try/catch for the fetchQuery to better handle errors
+      try {
+        const data = await queryClient.fetchQuery({
+          queryKey: getRequestsQueryKey(account.address, currentPage),
+          queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage),
+          staleTime: 0, // Force a fresh fetch always
+        });
+
+        if (data) {
+          console.log(`Found ${data.requests?.length || 0} requests`);
+          requests = data.requests
+            ?.map((request) => request.getData())
+            .sort((a, b) => b.timestamp - a.timestamp);
+          hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+        } else {
+          console.log("No requests data returned");
+          requests = [];
+          hasMoreRequests = false;
+        }
+
+        // Prefetch next page if available
+        if (hasMoreRequests) {
+          queryClient.prefetchQuery({
+            queryKey: getRequestsQueryKey(account.address, currentPage + 1),
+            queryFn: () =>
+              fetchRequests(account.address, currentPage + 1, itemsPerPage),
+          });
+        }
+      } catch (queryError) {
+        console.error("Query error when fetching requests:", queryError);
+        toast.error("Error loading requests", {
+          description: queryError instanceof Error ? queryError.message : String(queryError)
+        });
         requests = [];
         hasMoreRequests = false;
       }
 
-      if (hasMoreRequests) {
-        queryClient.prefetchQuery({
-          queryKey: getRequestsQueryKey(account.address, currentPage + 1),
-          queryFn: () =>
-            fetchRequests(account.address, currentPage + 1, itemsPerPage),
-        });
-      }
-
+      // Update network options based on fetched requests
       const uniqueNetworks = new Set<string>();
       requests?.forEach((request) => {
         const network = request.currencyInfo.network;
@@ -337,6 +603,9 @@
       }));
     } catch (error) {
       console.error("Failed to fetch requests:", error);
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       loading = false;
     }
@@ -610,6 +879,8 @@
         cipherProvider?.enableDecryption(false);
         localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
       }
+
+      // Always load requests regardless of decryption state
       await getRequests(currentAccount, currentRequestNetwork);
       selectedNetworks = previousNetworks; // Restore selection
     } catch (error) {
@@ -642,6 +913,24 @@
     selectedStatuses = statuses;
     currentPage = 1;
   };
+
+  // Add this debug function to help troubleshoot
+  const debugState = () => {
+    console.log("Current state:", {
+      address: account?.address,
+      initialized,
+      initializationAttempted,
+      hasRequests: requests?.length > 0,
+      isLoading: loading,
+      decryptionEnabled: sliderValueForDecryption === "on"
+    });
+  };
+
+  $: {
+    if (signer && !loading) {
+      debugState();
+    }
+  }
 </script>
 
 <div
