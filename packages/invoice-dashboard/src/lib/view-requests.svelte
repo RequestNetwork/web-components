@@ -200,8 +200,12 @@
   const initializeLitSession = async (
     currentAccount: GetAccountReturnType | undefined
   ) => {
-    if (!currentAccount?.address || !cipherProvider || initializationAttempted)
+    if (!currentAccount?.address || !cipherProvider || initializationAttempted) {
+      console.error(
+        "Initialization skipped: Missing account, cipherProvider, or already attempted."
+      );
       return;
+    }
 
     initializationAttempted = true;
 
