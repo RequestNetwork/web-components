@@ -87,7 +87,6 @@
 
   let loading = false;
   let searchQuery = "";
-  let debouncedUpdate: any;
   let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
@@ -518,7 +517,7 @@
   };
 
   onMount(() => {
-    debouncedUpdate = debounce((value: string) => {
+    debounce((value: string) => {
       searchQuery = value.toLowerCase();
     }, 500);
   });
