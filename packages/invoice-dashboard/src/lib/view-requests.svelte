@@ -139,7 +139,10 @@
 
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
-    await loadRequests(sliderValueForDecryption, account, requestNetwork);
+    if (account?.address) {
+      await initializeLitSession(account);
+      await loadRequests(sliderValueForDecryption, account, requestNetwork);
+    }
   };
 
   const handleWalletDisconnection = () => {
@@ -159,6 +162,7 @@
       initializationAttempted = false;
       if (account?.address) {
         await initializeLitSession(account);
+        await loadRequests(sliderValueForDecryption, account, requestNetwork);
       }
     }
   };
@@ -166,8 +170,10 @@
   onMount(async () => {
     try {
       currencyManager = await initializeCurrencyManager();
+      account = getAccount(wagmiConfig);
       if (account?.address) {
         await initializeLitSession(account);
+        await loadRequests(sliderValueForDecryption, account, requestNetwork);
       }
     } catch (error) {
       console.error("Failed to initialize:", error);
@@ -193,6 +199,9 @@
 
   $: {
     signer = account?.address;
+    if (signer && requestNetwork && !loading && !requests?.length) {
+      loadRequests(sliderValueForDecryption, account, requestNetwork);
+    }
   }
 
   $: isRequestPayed, getOneRequest(activeRequest);
@@ -562,8 +571,7 @@
     currentAccount: GetAccountReturnType | undefined,
     currentRequestNetwork: RequestNetwork | undefined | null
   ) => {
-    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider)
-      return;
+    if (!currentAccount?.address || !currentRequestNetwork) return;
 
     loading = true;
     const previousNetworks = [...selectedNetworks]; // Store current selection
@@ -590,6 +598,7 @@
         } catch (error) {
           console.error("Failed to enable decryption:", error);
           toast.error("Failed to enable decryption.");
+          sliderValueForDecryption = "off";
           return;
         } finally {
           loadSessionSignatures = false;
@@ -603,14 +612,13 @@
       }
       await getRequests(currentAccount, currentRequestNetwork);
       selectedNetworks = previousNetworks; // Restore selection
+    } catch (error) {
+      console.error("Error loading requests:", error);
+      toast.error("Failed to load requests");
     } finally {
       loading = false;
     }
-    await getRequests(currentAccount, currentRequestNetwork);
-    loading = false;
   };
-
-  $: loadRequests(sliderValueForDecryption, account, requestNetwork);
 
   const handleNetworkSelection = async (networks: string[]) => {
     selectedNetworks = networks;
