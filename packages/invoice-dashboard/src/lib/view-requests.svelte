@@ -468,7 +468,7 @@
         ) {
           try {
             // Use the stored session key and signature to restore the session
-            await cipherProvider.enableDecryption(true);
+            cipherProvider.enableDecryption(true);
             sliderValueForDecryption = "on";
             localStorage.setItem("isDecryptionEnabled", "true");
             await getRequests(currentAccount, requestNetwork);
