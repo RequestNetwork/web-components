@@ -478,11 +478,17 @@
   ): Promise<boolean> => {
     if (!currentAccount?.address) {
       console.error("Cannot initialize Lit session: Missing account address");
+      toast.error("Decryption initialization failed", {
+        description: "Wallet connection required for decrypted requests"
+      });
       return false;
     }
 
     if (!cipherProvider) {
       console.error("Cannot initialize Lit session: Missing cipher provider");
+      toast.error("Decryption initialization failed", {
+        description: "Encryption service not available"
+      });
       return false;
     }
 
@@ -504,8 +510,7 @@
           const parsedSig = JSON.parse(storedSig);
 
           if (parsedSig.address?.toLowerCase() === currentAccount.address?.toLowerCase()) {
-            // Use the stored session key and signature to restore the session
-            await cipherProvider.enableDecryption(true);
+            cipherProvider.enableDecryption(true);
             sliderValueForDecryption = "on";
 
             // Ensure our UI state reflects the storage state
@@ -516,10 +521,16 @@
           } else {
             console.log("Stored signature address doesn't match current account, resetting");
             resetDecryptionState();
+            toast.info("Decryption session reset", {
+              description: "Previous session belonged to a different wallet address"
+            });
           }
         } catch (sessionError) {
           console.error("Failed to restore Lit session:", sessionError);
           resetDecryptionState();
+          toast.error("Failed to restore decryption session", {
+            description: "Try toggling decryption off and on again"
+          });
         }
       } else {
         console.log("Incomplete session data, cannot restore Lit session");
@@ -527,6 +538,9 @@
     } catch (error) {
       console.error("Failed to initialize Lit session:", error);
       resetDecryptionState();
+      toast.error("Decryption initialization failed", {
+        description: error instanceof Error ? error.message : "Unknown error occurred"
+      });
     }
     return false;
   };
@@ -895,20 +909,34 @@
             loadSessionSignatures = localStorage?.getItem("lit-wallet-sig") === null;
 
             if (loadSessionSignatures) {
-              await cipherProvider?.getSessionSignatures(
-                signer,
-                currentAccount.address,
-                window.location.host,
-                "Sign in to Lit Protocol through Request Network"
-              );
+              try {
+                await cipherProvider?.getSessionSignatures(
+                  signer,
+                  currentAccount.address,
+                  window.location.host,
+                  "Sign in to Lit Protocol through Request Network"
+                );
+              } catch (sigError) {
+                console.error("Failed to get session signatures:", sigError);
+                toast.error("Signature request failed", {
+                  description: "Couldn't obtain needed signatures for decryption"
+                });
+                resetDecryptionState();
+                return;
+              }
             }
 
-            await cipherProvider?.enableDecryption(true);
+            // No await needed - enableDecryption is not async
+            cipherProvider?.enableDecryption(true);
             localStorage?.setItem("isDecryptionEnabled", "true");
           }
         } catch (error) {
           console.error("Failed to enable decryption:", error);
-          toast.error("Failed to enable decryption.");
+          toast.error("Failed to enable decryption", {
+            description: error instanceof Error ?
+              error.message :
+              "Make sure your wallet is connected and try again"
+          });
           resetDecryptionState();
           return;
         } finally {
@@ -930,7 +958,11 @@
       selectedNetworks = previousNetworks; // Restore selection
     } catch (error) {
       console.error("Error loading requests:", error);
-      toast.error("Failed to load requests");
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ?
+          error.message :
+          "Check your connection and try again"
+      });
     } finally {
       loading = false;
     }
