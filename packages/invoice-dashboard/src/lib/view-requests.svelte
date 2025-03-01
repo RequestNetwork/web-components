@@ -244,6 +244,31 @@
   };
 
   /**
+   * Disables decryption capabilities, clears Lit Protocol session data, and resets UI state
+   */
+  const resetDecryptionState = () => {
+    try {
+      localStorage?.removeItem("lit-wallet-sig");
+      localStorage?.removeItem("lit-session-key");
+      localStorage?.setItem("isDecryptionEnabled", "false");
+      sliderValueForDecryption = "off";
+
+      if (cipherProvider) {
+        try {
+          cipherProvider.enableDecryption(false);
+        } catch (error) {
+          console.error("Error while disabling cipher provider decryption:", error);
+          // Continue execution even if this fails
+        }
+      }
+    } catch (storageError) {
+      console.error("Error while clearing storage:", storageError);
+      // We still want to update the UI state even if storage operations fail
+      sliderValueForDecryption = "off";
+    }
+  };
+
+  /**
    * Handles wallet disconnection cleanup
    * Resets all wallet-related state and clears storage
    */
@@ -255,11 +280,15 @@
     activeRequest = undefined;
     initialized = false;
 
-    // Clear Lit Protocol session data
-    clearLitStorage();
+    // Reset decryption state
+    resetDecryptionState();
 
     if (cipherProvider?.disconnectWallet) {
-      cipherProvider.disconnectWallet();
+      try {
+        cipherProvider.disconnectWallet();
+      } catch (error) {
+        console.error("Error during cipher provider disconnection:", error);
+      }
     }
 
     // Reset state
@@ -291,7 +320,7 @@
       litInitializationAttempted = false;
       initialized = false;
       previousAddress = undefined;
-      clearLitStorage();
+      resetDecryptionState();
 
       loading = true;
       try {
@@ -442,15 +471,24 @@
   /**
    * Initializes Lit Protocol session for encrypted requests
    * Attempts to restore existing session if available
+   * @returns {Promise<boolean>} Success status of the initialization
    */
   const initializeLitSession = async (
     currentAccount: GetAccountReturnType | undefined
-  ) => {
-    if (!currentAccount?.address || !cipherProvider || litInitializationAttempted) {
-      console.error(
-        "Initialization skipped: Missing account, cipherProvider, or already attempted."
-      );
-      return;
+  ): Promise<boolean> => {
+    if (!currentAccount?.address) {
+      console.error("Cannot initialize Lit session: Missing account address");
+      return false;
+    }
+
+    if (!cipherProvider) {
+      console.error("Cannot initialize Lit session: Missing cipher provider");
+      return false;
+    }
+
+    if (litInitializationAttempted) {
+      console.log("Lit initialization already attempted for this session");
+      return false;
     }
 
     litInitializationAttempted = true;
@@ -458,44 +496,39 @@
     try {
       const storedSig = localStorage?.getItem("lit-wallet-sig");
       const sessionKey = localStorage?.getItem("lit-session-key");
+      const isEnabled = localStorage?.getItem("isDecryptionEnabled") === "true";
 
-      if (storedSig && sessionKey) {
-        const parsedSig = JSON.parse(storedSig);
+      // If we have all necessary session data and they match the current account
+      if (storedSig && sessionKey && isEnabled) {
+        try {
+          const parsedSig = JSON.parse(storedSig);
 
-        if (
-          parsedSig.address?.toLowerCase() ===
-          currentAccount.address?.toLowerCase()
-        ) {
-          try {
+          if (parsedSig.address?.toLowerCase() === currentAccount.address?.toLowerCase()) {
             // Use the stored session key and signature to restore the session
-            cipherProvider.enableDecryption(true);
+            await cipherProvider.enableDecryption(true);
             sliderValueForDecryption = "on";
+
+            // Ensure our UI state reflects the storage state
             localStorage.setItem("isDecryptionEnabled", "true");
-            await getRequests(currentAccount, requestNetwork);
+
+            console.log("Successfully restored Lit session for account:", parsedSig.address);
             return true;
-          } catch (error) {
-            console.error("Failed to restore Lit session:", error);
-            clearLitStorage();
+          } else {
+            console.log("Stored signature address doesn't match current account, resetting");
+            resetDecryptionState();
           }
-        } else {
-          clearLitStorage();
+        } catch (sessionError) {
+          console.error("Failed to restore Lit session:", sessionError);
+          resetDecryptionState();
         }
+      } else {
+        console.log("Incomplete session data, cannot restore Lit session");
       }
     } catch (error) {
       console.error("Failed to initialize Lit session:", error);
-      clearLitStorage();
+      resetDecryptionState();
     }
     return false;
-  };
-
-  const clearLitStorage = () => {
-    localStorage?.removeItem("lit-wallet-sig");
-    localStorage?.removeItem("lit-session-key");
-    localStorage?.setItem("isDecryptionEnabled", "false");
-    sliderValueForDecryption = "off";
-    if (cipherProvider) {
-      cipherProvider.enableDecryption(false);
-    }
   };
 
   const getRequestsQueryKey = (address: string, currentPage: number) => [
@@ -846,38 +879,50 @@
     const previousNetworks = [...selectedNetworks]; // Store current selection
 
     try {
+      // Handle decryption state changes based on slider value
       if (sliderValue === "on") {
-        if (localStorage?.getItem("isDecryptionEnabled") === "false") {
+        const currentDecryptionState = localStorage?.getItem("isDecryptionEnabled") === "true";
+
+        // Only invalidate queries if we're changing the decryption state
+        if (!currentDecryptionState) {
           queryClient.invalidateQueries();
         }
+
         try {
           const signer = await getEthersSigner(wagmiConfig);
           if (signer && currentAccount?.address) {
-            loadSessionSignatures =
-              localStorage?.getItem("lit-wallet-sig") === null;
-            await cipherProvider?.getSessionSignatures(
-              signer,
-              currentAccount.address,
-              window.location.host,
-              "Sign in to Lit Protocol through Request Network"
-            );
-            cipherProvider?.enableDecryption(true);
-            localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
+            // Check if we need to get signatures
+            loadSessionSignatures = localStorage?.getItem("lit-wallet-sig") === null;
+
+            if (loadSessionSignatures) {
+              await cipherProvider?.getSessionSignatures(
+                signer,
+                currentAccount.address,
+                window.location.host,
+                "Sign in to Lit Protocol through Request Network"
+              );
+            }
+
+            await cipherProvider?.enableDecryption(true);
+            localStorage?.setItem("isDecryptionEnabled", "true");
           }
         } catch (error) {
           console.error("Failed to enable decryption:", error);
           toast.error("Failed to enable decryption.");
-          sliderValueForDecryption = "off";
+          resetDecryptionState();
           return;
         } finally {
           loadSessionSignatures = false;
         }
       } else {
-        if (localStorage?.getItem("isDecryptionEnabled") === "true") {
+        const currentDecryptionState = localStorage?.getItem("isDecryptionEnabled") === "true";
+
+        // Only invalidate queries if we're changing the decryption state
+        if (currentDecryptionState) {
           queryClient.invalidateQueries();
         }
-        cipherProvider?.enableDecryption(false);
-        localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
+
+        resetDecryptionState();
       }
 
       // Always load requests regardless of decryption state
