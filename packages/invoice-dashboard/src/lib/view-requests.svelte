@@ -135,7 +135,7 @@
     { value: "pending", checked: false },
   ];
 
-  let initializationAttempted = false;
+  let litInitializationAttempted = false;
 
   // Track initialization state
   let initialized = false;
@@ -227,7 +227,7 @@
         await initializeLitSession(currentAccount);
       } else {
         console.log("Skipping Lit initialization as decryption is off");
-        initializationAttempted = true;
+        litInitializationAttempted = true;
       }
 
       console.log("Fetching requests");
@@ -288,7 +288,7 @@
       }
 
       // Reset state for new account
-      initializationAttempted = false;
+      litInitializationAttempted = false;
       initialized = false;
       previousAddress = undefined;
       clearLitStorage();
@@ -352,7 +352,7 @@
             previousAddress = currentAccount.address;
 
             // Skip Lit initialization if decryption is off
-            if (sliderValueForDecryption === "on" && !initializationAttempted) {
+            if (sliderValueForDecryption === "on" && !litInitializationAttempted) {
               await initializeLitSession(currentAccount);
             }
 
@@ -446,14 +446,14 @@
   const initializeLitSession = async (
     currentAccount: GetAccountReturnType | undefined
   ) => {
-    if (!currentAccount?.address || !cipherProvider || initializationAttempted) {
+    if (!currentAccount?.address || !cipherProvider || litInitializationAttempted) {
       console.error(
         "Initialization skipped: Missing account, cipherProvider, or already attempted."
       );
       return;
     }
 
-    initializationAttempted = true;
+    litInitializationAttempted = true;
 
     try {
       const storedSig = localStorage?.getItem("lit-wallet-sig");
@@ -919,7 +919,7 @@
     console.log("Current state:", {
       address: account?.address,
       initialized,
-      initializationAttempted,
+      litInitializationAttempted,
       hasRequests: requests?.length > 0,
       isLoading: loading,
       decryptionEnabled: sliderValueForDecryption === "on"
