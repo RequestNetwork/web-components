@@ -112,9 +112,6 @@
   let sortOrder = "desc";
   let sortColumn = "timestamp";
 
-  const itemsPerPage = 10;
-  let currentPage = 1;
-  let hasMoreRequests = false;
   let selectedNetworks: string[] = [];
   let networkOptions: { value: string; checked: boolean }[] = [];
 
@@ -135,6 +132,24 @@
     { value: "overdue", checked: false },
     { value: "pending", checked: false },
   ];
+
+  // Add pagination variables
+  let currentPage = 1;
+  const itemsPerPage = 10;
+
+  // Add pagination controls to the template after the table
+  $: totalPages = Math.ceil((processedRequests?.length || 0) / itemsPerPage);
+  $: paginatedRequests = processedRequests?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Add pagination functions
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      currentPage = page;
+    }
+  };
 
   const handleWalletConnection = async () => {
     account = getAccount(wagmiConfig);
@@ -194,18 +209,20 @@
     currencyManager = await initializeCurrencyManager();
   });
 
-  const getRequestsQueryKey = (address: string, currentPage: number) => ["requestsData", address, currentPage];
+  const getRequestsQueryKey = (address: string, currentPage: number) => [
+    "requestsData",
+    address,
+    currentPage,
+  ];
 
-  const fetchRequests = async (address: string, page: number, pageSize: number) => {
+  const fetchRequests = async (address: string) => {
     if (!address || !requestNetwork) return null;
     try {
       const requestsData = await requestNetwork.fromIdentity({
         type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
         value: address,
-      }, undefined, { 
-        page: page,
-        pageSize: pageSize,
       });
+
       return requestsData;
     } catch (error) {
       console.error("Failed to fetch requests:", error);
@@ -221,38 +238,31 @@
     loading = true;
     try {
       const data = await queryClient.fetchQuery({
-        queryKey: getRequestsQueryKey(account.address, currentPage),
-        queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage)
+        queryKey: ["requestsData", account.address],
+        queryFn: () => fetchRequests(account.address),
       });
 
       if (data) {
-        requests = data.requests?.map((request) => request.getData())
-        .sort((a, b) => b.timestamp - a.timestamp);
-        hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+        requests = data
+          .map((request) => request.getData())
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        // Update network options
+        const uniqueNetworks = new Set<string>();
+        requests?.forEach((request) => {
+          const network = request.currencyInfo.network;
+          if (network) {
+            uniqueNetworks.add(network);
+          }
+        });
+
+        networkOptions = Array.from(uniqueNetworks).map((network) => ({
+          value: network,
+          checked: selectedNetworks.includes(network),
+        }));
       } else {
         requests = [];
-        hasMoreRequests = false;
       }
-
-      if (hasMoreRequests) {
-        queryClient.prefetchQuery({
-          queryKey: getRequestsQueryKey(account.address, currentPage + 1),
-          queryFn: () => fetchRequests(account.address, currentPage + 1, itemsPerPage)
-        });
-      }
-
-      const uniqueNetworks = new Set<string>();
-      requests?.forEach((request) => {
-        const network = request.currencyInfo.network;
-        if (network) {
-          uniqueNetworks.add(network);
-        }
-      });
-
-      networkOptions = Array.from(uniqueNetworks).map((network) => ({
-        value: network,
-        checked: selectedNetworks.includes(network),
-      }));
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
@@ -311,41 +321,12 @@
     const networkMatch =
       selectedNetworks.length === 0 ||
       (network && selectedNetworks.includes(network));
-
     const txTypeMatch =
       selectedTxTypes.length === 0 || selectedTxTypes.includes(txType);
-
     const statusMatch =
       selectedStatuses.length === 0 || selectedStatuses.includes(status);
 
-    if (
-      networkMatch &&
-      txTypeMatch &&
-      statusMatch &&
-      (currentTab === "All" ||
-        (currentTab === "Get Paid" &&
-          request.payee?.value?.toLowerCase() === signer?.toLowerCase()) ||
-        (currentTab === "Pay" &&
-          request.payer?.value?.toLowerCase() === signer?.toLowerCase()))
-    ) {
-      const invoiceMatches = request.contentData?.invoiceNumber
-        ?.toString()
-        .toLowerCase()
-        .includes(terms);
-
-      const payeeMatches = formatAddress(request.payee?.value ?? "")
-        .toLowerCase()
-        .includes(terms);
-      const payerMatches = formatAddress(request.payer?.value ?? "")
-        .toLowerCase()
-        .includes(terms);
-
-      const amountMatches = request.expectedAmount.toString().includes(terms);
-
-      return invoiceMatches || payeeMatches || payerMatches || amountMatches;
-    }
-
-    return false;
+    return networkMatch && txTypeMatch && statusMatch;
   });
 
   $: processedRequests = filteredRequests?.map(
@@ -426,17 +407,9 @@
     }
   );
 
-  const goToPage = (page: number) => {
-    if (page >= 1) {
-      currentPage = page;
-      getRequests(account, requestNetwork);
-    }
-  };
-
   const changeTab = (tab: string) => {
     currentTab = tab;
     activeRequest = undefined;
-    currentPage = 1;
     getRequests(account, requestNetwork);
   };
 
@@ -456,7 +429,6 @@
   const handleSearchChange = (event: Event) => {
     const { value } = event.target as HTMLInputElement;
     searchQuery = value;
-    currentPage = 1;
   };
 
   const handleSort = (column: string) => {
@@ -498,8 +470,8 @@
     try {
       if (sliderValue === "on") {
         if (localStorage?.getItem("isDecryptionEnabled") === "false") {
-          queryClient.invalidateQueries()
-        } 
+          queryClient.invalidateQueries();
+        }
         try {
           const signer = await getEthersSigner(wagmiConfig);
           if (signer && currentAccount?.address) {
@@ -523,7 +495,7 @@
         }
       } else {
         if (localStorage?.getItem("isDecryptionEnabled") === "true") {
-          queryClient.invalidateQueries()
+          queryClient.invalidateQueries();
         }
         cipherProvider?.enableDecryption(false);
         localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
@@ -533,33 +505,23 @@
     } finally {
       loading = false;
     }
-    await getRequests(currentAccount, currentRequestNetwork);
-    loading = false;
   };
 
   $: loadRequests(sliderValueForDecryption, account, requestNetwork);
 
   const handleNetworkSelection = async (networks: string[]) => {
     selectedNetworks = networks;
-    currentPage = 1;
-    if (networks.length === 0 && selectedNetworks.length > 0) {
-      loading = true;
-      try {
-        await getRequests(account!, requestNetwork!);
-      } finally {
-        loading = false;
-      }
-    }
+    getRequests(account!, requestNetwork!);
   };
 
   const handleTxTypeSelection = (types: string[]) => {
     selectedTxTypes = types;
-    currentPage = 1;
+    getRequests(account!, requestNetwork!);
   };
 
   const handleStatusSelection = (statuses: string[]) => {
     selectedStatuses = statuses;
-    currentPage = 1;
+    getRequests(account!, requestNetwork!);
   };
 </script>
 
@@ -806,8 +768,8 @@
           </tr>
         </thead>
         <tbody>
-          {#if !loading && processedRequests.length > 0}
-            {#each processedRequests as request}
+          {#if !loading && paginatedRequests?.length > 0}
+            {#each paginatedRequests as request}
               <tr class="row" on:click={(e) => handleRequestSelect(e, request)}>
                 {#if columns.issuedAt}
                   <td
@@ -825,9 +787,9 @@
                       : "-"}</td
                   >
                 {/if}
-                <td>
-                  {new Date(request.timestamp * 1000).toLocaleDateString()}
-                </td>
+                <td
+                  >{new Date(request.timestamp * 1000).toLocaleDateString()}</td
+                >
                 <td>{request.contentData.invoiceNumber || "-"}</td>
                 {#if currentTab === "All"}
                   <td
@@ -843,8 +805,8 @@
                     </div></td
                   >
                 {:else}
-                  <td>
-                    <div class="address">
+                  <td
+                    ><div class="address">
                       <span
                         >{formatAddress(
                           currentTab === "Pay"
@@ -857,16 +819,15 @@
                           ? request.payee?.value
                           : request.payer?.value || ""}
                       />
-                    </div>
-                  </td>
+                    </div></td
+                  >
                 {/if}
                 <td>
                   {#if request.formattedAmount === "Unknown"}
                     <Tooltip
                       text="Cannot calculate the expected amount due to unknown decimals"
+                      >Unknown</Tooltip
                     >
-                      Unknown
-                    </Tooltip>
                   {:else if request.formattedAmount.includes(".") && request.formattedAmount.split(".")[1].length > 5}
                     <Tooltip text={request.formattedAmount}>
                       {Number(request.formattedAmount).toFixed(5)}
@@ -884,7 +845,7 @@
                 </td>
                 <td><StatusLabel status={checkStatus(request)} /></td>
                 <td>
-                  {#if request.paymentCurrencies.length > 0}
+                  {#if request.paymentCurrencies?.length > 0}
                     <Network
                       network={request.paymentCurrencies[0]?.network}
                       showLabel={true}
@@ -893,8 +854,8 @@
                     <span class="text-gray-400">-</span>
                   {/if}
                 </td>
-                <td
-                  ><Tooltip text="Download PDF">
+                <td>
+                  <Tooltip text="Download PDF">
                     <Download
                       onClick={async () => {
                         try {
@@ -919,8 +880,8 @@
                         }
                       }}
                     />
-                  </Tooltip></td
-                >
+                  </Tooltip>
+                </td>
               </tr>
             {/each}
           {:else if loading}
@@ -947,34 +908,34 @@
         {/if}
       </Drawer>
     </div>
-    {#if processedRequests.length > 0}
-      <div class="pagination">
-        <button
-          class="chevron-button"
-          disabled={currentPage === 1}
-          on:click={() => goToPage(currentPage - 1)}
-        >
-          <i>
-            <ChevronLeft />
-          </i>
-        </button>
-
-        <button
-          class="chevron-button"
-          disabled={!hasMoreRequests}
-          on:click={() => goToPage(currentPage + 1)}
-        >
-          <i>
-            <ChevronRight />
-          </i>
-        </button>
-      </div>
-    {/if}
   </div>
   {#if !loading && processedRequests.length === 0}
     <div class="no-requests">
       <p>No requests found</p>
       <span>(Please connect a wallet or create a request)</span>
+    </div>
+  {/if}
+  {#if totalPages > 1}
+    <div class="pagination">
+      <button
+        class="chevron-button"
+        disabled={currentPage === 1}
+        on:click={() => goToPage(currentPage - 1)}
+      >
+        <i>
+          <ChevronLeft />
+        </i>
+      </button>
+      <span class="page-info">Page {currentPage} of {totalPages}</span>
+      <button
+        class="chevron-button"
+        disabled={currentPage === totalPages}
+        on:click={() => goToPage(currentPage + 1)}
+      >
+        <i>
+          <ChevronRight />
+        </i>
+      </button>
     </div>
   {/if}
   <PoweredBy />
@@ -1149,70 +1110,6 @@
     margin-right: 10px;
   }
 
-  .pagination {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: fit-content;
-    margin-right: auto;
-    background-color: white;
-    border: 1px solid #e4e4e4;
-    border-radius: 0.5rem;
-    padding: 12px;
-    transition: all 0.3s ease-in-out;
-  }
-
-  .pagination:hover {
-    box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-
-  .chevron-button {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
-    border-radius: 0.25rem;
-    transition: all 0.3s ease-in-out;
-    border: 1px solid #e4e4e4;
-  }
-
-  .chevron-button:enabled:hover {
-    color: white;
-    background-color: var(--mainColor);
-  }
-
-  .chevron-button:disabled {
-    opacity: 0.4;
-  }
-
-  .active-page {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    border-radius: 0.25rem;
-    border: 1px solid #e4e4e4;
-    transition: all 0.3s ease-in-out;
-  }
-
-  .active-page:hover {
-    color: white;
-    background-color: var(--secondaryColor);
-  }
-
-  .page-on {
-    color: white;
-    background-color: var(--mainColor);
-  }
-
-  .page-off {
-    background-color: white;
-  }
-
   .no-requests {
     display: flex;
     flex-direction: column;
@@ -1252,5 +1149,39 @@
 
   .switch-wrapper {
     margin-left: 8px;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .chevron-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .chevron-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .chevron-button:not(:disabled):hover {
+    background-color: #f3f4f6;
+  }
+
+  .page-info {
+    font-size: 0.875rem;
+    color: #6b7280;
   }
 </style>
