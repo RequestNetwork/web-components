@@ -87,7 +87,6 @@
 
   let loading = false;
   let searchQuery = "";
-  let debouncedUpdate: any;
   let isRequestPayed = false;
   let currentTab = "All";
   let requests: Types.IRequestDataWithEvents[] | undefined = [];
@@ -136,42 +135,279 @@
     { value: "pending", checked: false },
   ];
 
-  const handleWalletConnection = async () => {
-    account = getAccount(wagmiConfig);
-    await loadRequests(sliderValueForDecryption, account, requestNetwork);
+  let litInitializationAttempted = false;
+
+  // Track initialization state
+  let initialized = false;
+  let previousAddress: `0x${string}` | undefined;
+
+  // Add request network polling mechanism
+  let requestNetworkRetryAttempts = 0;
+  const MAX_RETRY_ATTEMPTS = 10;
+  const RETRY_INTERVAL = 500; // ms
+
+  /**
+   * Polls for the requestNetwork object to become available
+   * Attempts multiple times with a delay between attempts
+   * @returns {Promise<boolean>} True if requestNetwork is available, false if max retries exceeded
+   */
+  const waitForRequestNetwork = async (): Promise<boolean> => {
+    if (requestNetwork) {
+      console.log("RequestNetwork is already available");
+      return true;
+    }
+
+    return new Promise((resolve) => {
+      const checkRequestNetwork = () => {
+        requestNetworkRetryAttempts += 1;
+        console.log(`Checking for RequestNetwork (attempt ${requestNetworkRetryAttempts})`);
+
+        if (requestNetwork) {
+          console.log("RequestNetwork is now available");
+          resolve(true);
+          return;
+        }
+
+        if (requestNetworkRetryAttempts >= MAX_RETRY_ATTEMPTS) {
+          console.error("Max retry attempts reached waiting for RequestNetwork");
+          resolve(false);
+          return;
+        }
+
+        setTimeout(checkRequestNetwork, RETRY_INTERVAL);
+      };
+
+      checkRequestNetwork();
+    });
   };
 
+  /**
+   * Handles wallet connection and loads requests
+   * Waits for requestNetwork to be available before proceeding
+   */
+  const handleWalletConnection = async () => {
+    const currentAccount = getAccount(wagmiConfig);
+    if (!currentAccount?.address) {
+      console.log("No account found during wallet connection");
+      return;
+    }
+
+    console.log("Wallet connected or changed:", currentAccount.address);
+
+    // Wait for requestNetwork to become available
+    const isRequestNetworkAvailable = await waitForRequestNetwork();
+    if (!isRequestNetworkAvailable) {
+      console.error("RequestNetwork not available after retries");
+      toast.error("Failed to load requests", {
+        description: "Connection to Request Network failed"
+      });
+      return;
+    }
+
+    // Only proceed if this is a new connection or we don't have requests yet
+    if (previousAddress === currentAccount.address && initialized && requests?.length > 0) {
+      console.log("Already initialized with requests, skipping");
+      return;
+    }
+
+    previousAddress = currentAccount.address;
+    account = currentAccount;
+
+    try {
+      loading = true;
+
+      // Initialize currency manager if needed
+      if (!currencyManager) {
+        console.log("Initializing currency manager");
+        currencyManager = await initializeCurrencyManager();
+      }
+
+      // Handle Lit Protocol initialization for encrypted requests
+      if (sliderValueForDecryption === "on") {
+        await initializeLitSession(currentAccount);
+      } else {
+        console.log("Skipping Lit initialization as decryption is off");
+        litInitializationAttempted = true;
+      }
+
+      console.log("Fetching requests");
+      await getRequests(currentAccount, requestNetwork);
+      initialized = true;
+    } catch (error) {
+      console.error("Error during wallet connection handling:", error);
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ? error.message : String(error)
+      });
+    } finally {
+      loading = false;
+    }
+  };
+
+  /**
+   * Disables decryption capabilities, clears Lit Protocol session data, and resets UI state
+   */
+  const resetDecryptionState = () => {
+    try {
+      localStorage?.removeItem("lit-wallet-sig");
+      localStorage?.removeItem("lit-session-key");
+      localStorage?.setItem("isDecryptionEnabled", "false");
+      sliderValueForDecryption = "off";
+
+      if (cipherProvider) {
+        try {
+          cipherProvider.enableDecryption(false);
+        } catch (error) {
+          console.error("Error while disabling cipher provider decryption:", error);
+          // Continue execution even if this fails
+        }
+      }
+    } catch (storageError) {
+      console.error("Error while clearing storage:", storageError);
+      // We still want to update the UI state even if storage operations fail
+      sliderValueForDecryption = "off";
+    }
+  };
+
+  /**
+   * Handles wallet disconnection cleanup
+   * Resets all wallet-related state and clears storage
+   */
   const handleWalletDisconnection = () => {
+    console.log("Handling wallet disconnection");
     account = undefined;
+    previousAddress = undefined;
     requests = [];
     activeRequest = undefined;
-    cipherProvider?.disconnectWallet();
-    cipherProvider = undefined;
+    initialized = false;
+
+    // Reset decryption state
+    resetDecryptionState();
+
+    if (cipherProvider?.disconnectWallet) {
+      try {
+        cipherProvider.disconnectWallet();
+      } catch (error) {
+        console.error("Error during cipher provider disconnection:", error);
+      }
+    }
+
+    // Reset state
+    loading = false;
+    isRequestPayed = false;
   };
 
-  const handleWalletChange = (
-    account: GetAccountReturnType,
+  /**
+   * Handles wallet account changes
+   * Clears session data and reloads requests with new account
+   */
+  const handleWalletChange = async (
+    newAccount: GetAccountReturnType,
     previousAccount: GetAccountReturnType
   ) => {
-    if (account?.address !== previousAccount?.address) {
-      handleWalletDisconnection();
-      handleWalletConnection();
+    console.log("Account change detected:",
+      newAccount?.address,
+      previousAccount?.address
+    );
+
+    if (newAccount?.address !== previousAccount?.address) {
+      // Handle disconnection if there's no new account
+      if (!newAccount?.address) {
+        handleWalletDisconnection();
+        return;
+      }
+
+      // Reset state for new account
+      litInitializationAttempted = false;
+      initialized = false;
+      previousAddress = undefined;
+      resetDecryptionState();
+
+      loading = true;
+      try {
+        // Wait for requestNetwork to become available
+        const isRequestNetworkAvailable = await waitForRequestNetwork();
+        if (!isRequestNetworkAvailable) {
+          console.error("RequestNetwork not available after retries");
+          toast.error("Failed to load requests", {
+            description: "Connection to Request Network failed"
+          });
+          return;
+        }
+
+        // Setup account
+        account = newAccount;
+        previousAddress = newAccount.address;
+
+        // Handle Lit Protocol initialization for encrypted requests
+        if (sliderValueForDecryption === "on") {
+          await initializeLitSession(newAccount);
+        } else {
+          console.log("Skipping Lit initialization as decryption is off");
+        }
+
+        await getRequests(newAccount, requestNetwork);
+        initialized = true;
+      } catch (error) {
+        console.error("Error during wallet change handling:", error);
+      } finally {
+        loading = false;
+      }
     } else if (account?.address) {
-      handleWalletConnection();
+      await handleWalletConnection();
     } else {
       handleWalletDisconnection();
     }
   };
 
-  onMount(() => {
+  // Enhanced onMount with clearer initialization flow
+  onMount(async () => {
+    try {
+      console.log("Component mounting");
+
+      // Initialize currency manager first
+      currencyManager = await initializeCurrencyManager();
+      console.log("Currency manager initialized");
+
+      // Check if account is already connected on mount
+      const currentAccount = getAccount(wagmiConfig);
+      if (currentAccount?.address) {
+        console.log("Account found on mount:", currentAccount.address);
+
+        // Explicitly initialize and load requests with a slight delay to ensure
+        // the component is fully mounted and all services are ready
+        setTimeout(async () => {
+          try {
+            account = currentAccount;
+            previousAddress = currentAccount.address;
+
+            // Skip Lit initialization if decryption is off
+            if (sliderValueForDecryption === "on" && !litInitializationAttempted) {
+              await initializeLitSession(currentAccount);
+            }
+
+            // Always try to load requests if we have an account and requestNetwork
+            if (requestNetwork) {
+              await getRequests(currentAccount, requestNetwork);
+              initialized = true;
+            } else {
+              console.error("RequestNetwork not available during mount initialization");
+            }
+          } catch (initError) {
+            console.error("Error during initialization:", initError);
+          }
+        }, 300);
+      } else {
+        console.log("No account connected on mount");
+      }
+    } catch (error) {
+      console.error("Failed to initialize on mount:", error);
+    }
+
+    // Set up account change watcher
     unwatchAccount = watchAccount(wagmiConfig, {
-      onChange(
-        account: GetAccountReturnType,
-        previousAccount: GetAccountReturnType
-      ) {
-        tick().then(() => {
-          handleWalletChange(account, previousAccount);
-        });
+      onChange(account, previousAccount) {
+        console.log("Watch account triggered:", account?.address);
+        handleWalletChange(account, previousAccount);
       },
     });
   });
@@ -179,33 +415,160 @@
   let unwatchAccount: WatchAccountReturnType | undefined;
 
   onDestroy(() => {
-    if (typeof unwatchAccount === "function") unwatchAccount();
+    if (typeof unwatchAccount === "function") {
+      unwatchAccount();
+    }
+
+    // Clean up when component is destroyed
+    handleWalletDisconnection();
   });
 
   $: cipherProvider = requestNetwork?.getCipherProvider() as CipherProvider;
 
+  // Clean up repeated reactive logic with a single watcher for account changes
+  $: {
+    if (account?.address && requestNetwork && !loading) {
+      const isNewAccount = previousAddress !== account.address;
+      const hasNoRequests = !requests?.length;
+
+      if (isNewAccount || hasNoRequests) {
+        console.log("Reactive detection triggered a request loading:", {
+          isNewAccount,
+          hasNoRequests,
+          address: account.address
+        });
+        handleWalletConnection();
+      }
+    }
+  }
+
+  // Modified reactive statement to wait for requestNetwork
+  $: if (requestNetwork && account?.address && !loading && !requests?.length) {
+    console.log("RequestNetwork detected, loading requests");
+    handleWalletConnection();
+  }
+
+  // Add this to actively monitor for changes in requestNetwork
+  $: if (requestNetwork && !previousRequestNetwork) {
+    console.log("requestNetwork changed from null to defined");
+    previousRequestNetwork = requestNetwork;
+    if (account?.address && !loading && !requests?.length) {
+      console.log("RequestNetwork is now available with connected account, loading requests");
+      handleWalletConnection();
+    }
+  }
+  let previousRequestNetwork: RequestNetwork | null | undefined = null;
+
   $: {
     signer = account?.address;
+    if (signer && requestNetwork && !loading && !requests?.length) {
+      loadRequests(sliderValueForDecryption, account, requestNetwork);
+    }
   }
 
   $: isRequestPayed, getOneRequest(activeRequest);
 
-  onMount(async () => {
-    currencyManager = await initializeCurrencyManager();
-  });
+  /**
+   * Initializes Lit Protocol session for encrypted requests
+   * Attempts to restore existing session if available
+   * @returns {Promise<boolean>} Success status of the initialization
+   */
+  const initializeLitSession = async (
+    currentAccount: GetAccountReturnType | undefined
+  ): Promise<boolean> => {
+    if (!currentAccount?.address) {
+      console.error("Cannot initialize Lit session: Missing account address");
+      toast.error("Decryption initialization failed", {
+        description: "Wallet connection required for decrypted requests"
+      });
+      return false;
+    }
 
-  const getRequestsQueryKey = (address: string, currentPage: number) => ["requestsData", address, currentPage];
+    if (!cipherProvider) {
+      console.error("Cannot initialize Lit session: Missing cipher provider");
+      toast.error("Decryption initialization failed", {
+        description: "Encryption service not available"
+      });
+      return false;
+    }
 
-  const fetchRequests = async (address: string, page: number, pageSize: number) => {
+    if (litInitializationAttempted) {
+      console.log("Lit initialization already attempted for this session");
+      return false;
+    }
+
+    litInitializationAttempted = true;
+
+    try {
+      const storedSig = localStorage?.getItem("lit-wallet-sig");
+      const sessionKey = localStorage?.getItem("lit-session-key");
+      const isEnabled = localStorage?.getItem("isDecryptionEnabled") === "true";
+
+      // If we have all necessary session data and they match the current account
+      if (storedSig && sessionKey && isEnabled) {
+        try {
+          const parsedSig = JSON.parse(storedSig);
+
+          if (parsedSig.address?.toLowerCase() === currentAccount.address?.toLowerCase()) {
+            cipherProvider.enableDecryption(true);
+            sliderValueForDecryption = "on";
+
+            // Ensure our UI state reflects the storage state
+            localStorage.setItem("isDecryptionEnabled", "true");
+
+            console.log("Successfully restored Lit session for account:", parsedSig.address);
+            return true;
+          } else {
+            console.log("Stored signature address doesn't match current account, resetting");
+            resetDecryptionState();
+            toast.info("Decryption session reset", {
+              description: "Previous session belonged to a different wallet address"
+            });
+          }
+        } catch (sessionError) {
+          console.error("Failed to restore Lit session:", sessionError);
+          resetDecryptionState();
+          toast.error("Failed to restore decryption session", {
+            description: "Try toggling decryption off and on again"
+          });
+        }
+      } else {
+        console.log("Incomplete session data, cannot restore Lit session");
+      }
+    } catch (error) {
+      console.error("Failed to initialize Lit session:", error);
+      resetDecryptionState();
+      toast.error("Decryption initialization failed", {
+        description: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+    }
+    return false;
+  };
+
+  const getRequestsQueryKey = (address: string, currentPage: number) => [
+    "requestsData",
+    address,
+    currentPage,
+  ];
+
+  const fetchRequests = async (
+    address: string,
+    page: number,
+    pageSize: number
+  ) => {
     if (!address || !requestNetwork) return null;
     try {
-      const requestsData = await requestNetwork.fromIdentity({
-        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: address,
-      }, undefined, { 
-        page: page,
-        pageSize: pageSize,
-      });
+      const requestsData = await requestNetwork.fromIdentity(
+        {
+          type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+          value: address,
+        },
+        undefined,
+        {
+          page: page,
+          pageSize: pageSize,
+        }
+      );
       return requestsData;
     } catch (error) {
       console.error("Failed to fetch requests:", error);
@@ -213,34 +576,66 @@
     }
   };
 
+  /**
+   * Fetches requests for the connected account
+   * Processes and formats the response data
+   */
   const getRequests = async (
     account: GetAccountReturnType,
     requestNetwork: RequestNetwork | undefined | null
   ) => {
-    if (!account?.address || !requestNetwork) return;
-    loading = true;
-    try {
-      const data = await queryClient.fetchQuery({
-        queryKey: getRequestsQueryKey(account.address, currentPage),
-        queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage)
-      });
+    if (!account?.address) {
+      console.error("Cannot get requests: missing account address");
+      return;
+    }
 
-      if (data) {
-        requests = data.requests?.map((request) => request.getData())
-        .sort((a, b) => b.timestamp - a.timestamp);
-        hasMoreRequests = data?.meta?.pagination?.hasMore || false;
-      } else {
+    if (!requestNetwork) {
+      console.error("Cannot get requests: missing requestNetwork");
+      return;
+    }
+
+    loading = true;
+    console.log("Fetching requests for:", account.address);
+
+    try {
+      // Add explicit try/catch for the fetchQuery to better handle errors
+      try {
+        const data = await queryClient.fetchQuery({
+          queryKey: getRequestsQueryKey(account.address, currentPage),
+          queryFn: () => fetchRequests(account.address, currentPage, itemsPerPage),
+          staleTime: 0, // Force a fresh fetch always
+        });
+
+        if (data) {
+          console.log(`Found ${data.requests?.length || 0} requests`);
+          requests = data.requests
+            ?.map((request) => request.getData())
+            .sort((a, b) => b.timestamp - a.timestamp);
+          hasMoreRequests = data?.meta?.pagination?.hasMore || false;
+        } else {
+          console.log("No requests data returned");
+          requests = [];
+          hasMoreRequests = false;
+        }
+
+        // Prefetch next page if available
+        if (hasMoreRequests) {
+          queryClient.prefetchQuery({
+            queryKey: getRequestsQueryKey(account.address, currentPage + 1),
+            queryFn: () =>
+              fetchRequests(account.address, currentPage + 1, itemsPerPage),
+          });
+        }
+      } catch (queryError) {
+        console.error("Query error when fetching requests:", queryError);
+        toast.error("Error loading requests", {
+          description: queryError instanceof Error ? queryError.message : String(queryError)
+        });
         requests = [];
         hasMoreRequests = false;
       }
 
-      if (hasMoreRequests) {
-        queryClient.prefetchQuery({
-          queryKey: getRequestsQueryKey(account.address, currentPage + 1),
-          queryFn: () => fetchRequests(account.address, currentPage + 1, itemsPerPage)
-        });
-      }
-
+      // Update network options based on fetched requests
       const uniqueNetworks = new Set<string>();
       requests?.forEach((request) => {
         const network = request.currencyInfo.network;
@@ -255,6 +650,9 @@
       }));
     } catch (error) {
       console.error("Failed to fetch requests:", error);
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       loading = false;
     }
@@ -448,7 +846,7 @@
   };
 
   onMount(() => {
-    debouncedUpdate = debounce((value: string) => {
+    debounce((value: string) => {
       searchQuery = value.toLowerCase();
     }, 500);
   });
@@ -489,55 +887,86 @@
     currentAccount: GetAccountReturnType | undefined,
     currentRequestNetwork: RequestNetwork | undefined | null
   ) => {
-    if (!currentAccount?.address || !currentRequestNetwork || !cipherProvider)
-      return;
+    if (!currentAccount?.address || !currentRequestNetwork) return;
 
     loading = true;
     const previousNetworks = [...selectedNetworks]; // Store current selection
 
     try {
+      // Handle decryption state changes based on slider value
       if (sliderValue === "on") {
-        if (localStorage?.getItem("isDecryptionEnabled") === "false") {
-          queryClient.invalidateQueries()
-        } 
+        const currentDecryptionState = localStorage?.getItem("isDecryptionEnabled") === "true";
+
+        // Only invalidate queries if we're changing the decryption state
+        if (!currentDecryptionState) {
+          queryClient.invalidateQueries();
+        }
+
         try {
           const signer = await getEthersSigner(wagmiConfig);
           if (signer && currentAccount?.address) {
-            loadSessionSignatures =
-              localStorage?.getItem("lit-wallet-sig") === null;
-            await cipherProvider?.getSessionSignatures(
-              signer,
-              currentAccount.address,
-              window.location.host,
-              "Sign in to Lit Protocol through Request Network"
-            );
+            // Check if we need to get signatures
+            loadSessionSignatures = localStorage?.getItem("lit-wallet-sig") === null;
+
+            if (loadSessionSignatures) {
+              try {
+                await cipherProvider?.getSessionSignatures(
+                  signer,
+                  currentAccount.address,
+                  window.location.host,
+                  "Sign in to Lit Protocol through Request Network"
+                );
+              } catch (sigError) {
+                console.error("Failed to get session signatures:", sigError);
+                toast.error("Signature request failed", {
+                  description: "Couldn't obtain needed signatures for decryption"
+                });
+                resetDecryptionState();
+                return;
+              }
+            }
+
+            // No await needed - enableDecryption is not async
             cipherProvider?.enableDecryption(true);
-            localStorage?.setItem("isDecryptionEnabled", JSON.stringify(true));
+            localStorage?.setItem("isDecryptionEnabled", "true");
           }
         } catch (error) {
           console.error("Failed to enable decryption:", error);
-          toast.error("Failed to enable decryption.");
+          toast.error("Failed to enable decryption", {
+            description: error instanceof Error ?
+              error.message :
+              "Make sure your wallet is connected and try again"
+          });
+          resetDecryptionState();
           return;
         } finally {
           loadSessionSignatures = false;
         }
       } else {
-        if (localStorage?.getItem("isDecryptionEnabled") === "true") {
-          queryClient.invalidateQueries()
+        const currentDecryptionState = localStorage?.getItem("isDecryptionEnabled") === "true";
+
+        // Only invalidate queries if we're changing the decryption state
+        if (currentDecryptionState) {
+          queryClient.invalidateQueries();
         }
-        cipherProvider?.enableDecryption(false);
-        localStorage?.setItem("isDecryptionEnabled", JSON.stringify(false));
+
+        resetDecryptionState();
       }
+
+      // Always load requests regardless of decryption state
       await getRequests(currentAccount, currentRequestNetwork);
       selectedNetworks = previousNetworks; // Restore selection
+    } catch (error) {
+      console.error("Error loading requests:", error);
+      toast.error("Failed to load requests", {
+        description: error instanceof Error ?
+          error.message :
+          "Check your connection and try again"
+      });
     } finally {
       loading = false;
     }
-    await getRequests(currentAccount, currentRequestNetwork);
-    loading = false;
   };
-
-  $: loadRequests(sliderValueForDecryption, account, requestNetwork);
 
   const handleNetworkSelection = async (networks: string[]) => {
     selectedNetworks = networks;
@@ -561,6 +990,24 @@
     selectedStatuses = statuses;
     currentPage = 1;
   };
+
+  // Add this debug function to help troubleshoot
+  const debugState = () => {
+    console.log("Current state:", {
+      address: account?.address,
+      initialized,
+      litInitializationAttempted,
+      hasRequests: requests?.length > 0,
+      isLoading: loading,
+      decryptionEnabled: sliderValueForDecryption === "on"
+    });
+  };
+
+  $: {
+    if (signer && !loading) {
+      debugState();
+    }
+  }
 </script>
 
 <div
