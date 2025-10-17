@@ -90,5 +90,5 @@ npx changeset version
 
 Push the changes to the remote repository. Once the changes are merged, the new versions will be deployed automatically using OIDC Trusted Publisher authentication.
 
-For more info about workinng with NPM workspaces see:
+For more info about working with NPM workspaces see:
 https://docs.npmjs.com/cli/v8/using-npm/workspaces
