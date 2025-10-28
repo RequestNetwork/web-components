@@ -33,4 +33,4 @@ Each component has its own version number. The versioning scheme we use is
 
 1. Increase the version number of a given component by running `npm version <major|minor|patch>` inside the package directory or by using the `--workspace=<package>` flag from the root directory.
 2. Create a PR.
-3. When the PR is merged, the CI will automatically publish the new version to NPM.
+3. When the PR is merged, the CI will automatically publish the new version to NPM using OIDC Trusted Publisher authentication (no manual tokens required).
